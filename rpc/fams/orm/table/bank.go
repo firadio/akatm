@@ -6,6 +6,27 @@ import (
 	"gorm.io/gorm"
 )
 
+// BankCustomer 银行客户
+type BankCustomer struct {
+	gorm.Model
+	// 名字
+	FirstName string `gorm:"size:50"`
+	// 姓氏
+	LastName string `gorm:"size:64"`
+	// 手机号码
+	Phone string `gorm:"size:20;uniqueIndex"`
+	// 电子邮箱
+	Email string `gorm:"size:50;uniqueIndex"`
+	// 地址
+	Address string `gorm:"size:255"`
+	// 备注
+	Note string `gorm:"size:255"`
+	// 关联的用户ID
+	UserId uint `gorm:"index"`
+	// 关联的银行账户
+	BankAccounts []BankAccount `gorm:"foreignKey:CustomerId"`
+}
+
 // BankAccount 银行账户
 type BankAccount struct {
 	gorm.Model
