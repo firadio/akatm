@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+option go_package = ".";
+
+// ============ 登录/注册 ============
+service Sign {
+  rpc Login(LoginReq) returns (LoginResp);
+  rpc Register(RegisterReq) returns (RegisterResp);
+  rpc Logout(LogoutReq) returns (LogoutResp);
+}
+
+// ============ 会话 ============
+service Session {
+}
+
+// ============ 用户 ============
+service User {
+  // 用户管理
+  rpc CreateUser(CreateUserReq) returns (CreateUserResp);
+  rpc DeleteUser(DeleteUserReq) returns (DeleteUserResp);
+  rpc ListUsers(ListUsersReq) returns (ListUsersResp);
+  rpc GetProfile(GetProfileReq) returns (GetProfileResp);
+  rpc UpdateProfile(UpdateProfileReq) returns (UpdateProfileResp);
+
+}

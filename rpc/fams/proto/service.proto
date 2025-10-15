@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+option go_package = ".";
+
+
+// ============ 客户 ============
+service Customer {
+
+  // 添加客户资料
+  rpc CreateCustomer(CreateCustomerReq) returns (CreateCustomerResp);
+  // 获取客户资料
+  rpc GetCustomer(GetCustomerReq) returns (GetCustomerResp);
+  // 更新客户资料
+  rpc UpdateCustomer(UpdateCustomerReq) returns (UpdateCustomerResp);
+  // 删除客户资料
+  rpc DeleteCustomer(DeleteCustomerReq) returns (DeleteCustomerResp);
+  // 列出客户资料
+  rpc ListCustomers(ListCustomersReq) returns (ListCustomersResp);
+
+}
+
+// ============ 银行账号 ============
+service BankAccount {
+  // 添加银行账号请求
+  rpc CreateBankAccountRequest(CreateBankAccountRequestReq) returns (CreateBankAccountRequestResp);
+
+
+}
+

@@ -1,0 +1,10 @@
+{
+    "protoc": {
+        "options": [
+            "--proto_path=./rpc/admin/proto",
+            "--proto_path=./rpc/fams/proto",
+            "--proto_path=./rpc/iam/proto",
+            "--proto_path=./rpc/mail/proto",
+        ]
+    }
+}

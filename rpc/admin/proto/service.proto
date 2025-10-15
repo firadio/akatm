@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+option go_package = ".";
+
+// ============ 人员 ============
+service Staff {
+  // 人员管理
+  // rpc CreateStaff(CreateStaffReq) returns (CreateStaffResp);
+  // rpc GetStaff(GetStaffReq) returns (GetStaffResp);
+  // rpc UpdateStaff(UpdateStaffReq) returns (UpdateStaffResp);
+  // rpc DeleteStaff(DeleteStaffReq) returns (DeleteStaffResp);
+  // rpc ListStaffs(ListStaffsReq) returns (ListStaffsResp);
+}
