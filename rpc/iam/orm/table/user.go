@@ -11,6 +11,8 @@ type User struct {
 	gorm.Model
 	// 邀请码
 	InviteCode string `gorm:"size:20;unique"`
+	// 员工ID（关联Staff表）
+	StaffId uint `gorm:"index;default:null"`
 	// 关联的用户邮箱
 	Emails []UserEmail `gorm:"foreignKey:UserId;constraint:OnUpdate:RESTRICT,OnDelete:RESTRICT;"`
 	// 关联的用户会话
