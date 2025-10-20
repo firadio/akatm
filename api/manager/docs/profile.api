@@ -83,45 +83,12 @@ service manager {
     get / returns (ManagerProfileResp)
 
     @doc(
-        summary: "更新个人资料"
-        description: "更新邮箱/名称等。公共请求头: Authorization, X-Timestamp, X-Sign"
-        id: "manager.profile.update"
-    )
-    @handler updateProfile
-    put / (UpdateProfileReq) returns (BaseResp)
-
-    @doc(
-        summary: "修改登录密码"
-        description: "修改登录密码。公共请求头: Authorization, X-Timestamp, X-Sign"
-        id: "manager.profile.changePassword"
-    )
-    @handler changePassword
-    patch /password (ChangePasswordReq) returns (BaseResp)
-
-
-    @doc(
         summary: "上传头像"
         description: "上传个人头像。公共请求头: Authorization, X-Timestamp, X-Sign"
         id: "manager.profile.uploadAvatar"
     )
     @handler uploadAvatar
     post /avatar (UploadAvatarReq) returns (UploadAvatarResp)
-
-    @doc(
-        summary: "绑定邮箱"
-        description: "绑定新邮箱。公共请求头: Authorization, X-Timestamp, X-Sign"
-        id: "manager.profile.bindEmail"
-    )
-    @handler bindEmail
-    post /email (BindEmailReq) returns (BindEmailResp)
-
-    @doc(
-        summary: "解绑邮箱"
-        description: "解绑邮箱。公共请求头: Authorization, X-Timestamp, X-Sign"
-        id: "manager.profile.unbindEmail"
-    )
-    @handler unbindEmail
-    delete /email/:emailId (UnbindEmailReq) returns (BaseResp)
 
     @doc(
         summary: "获取资料统计"
