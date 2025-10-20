@@ -5,4 +5,13 @@ rpc/fams/fams-rpc
 rpc/iam/iam-rpc
 rpc/mail/mail-rpc
 api/adminGateway/adminGateway-api
-api/managerGateway/managerGateway-api
+api/managerGateway/managerGateway-apibin/
+build/
+dist/
+*.exe
+*.dll
+*.so
+*.dylib
+*.o
+*.a
+*.out
