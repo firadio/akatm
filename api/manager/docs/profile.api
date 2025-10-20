@@ -35,21 +35,6 @@ type (
         Data ManagerProfileInfo `json:"data"` // 数据
     }
 
-    GetFeeSettingsResp {
-        Code int32 `json:"code"`        // 响应码
-        Message string `json:"message"` // 响应消息
-        Data FeeSettings `json:"data"`  // 数据
-    }
-
-    FeeSettings {
-        ExchangeFeeRate string `json:"exchangeFeeRate"` // 换汇手续费率
-        WithdrawFee string `json:"withdrawFee"`         // 提现手续费
-    }
-
-    UpdateFeeSettingsReq {
-        ExchangeFeeRate string `json:"exchangeFeeRate"` // 换汇手续费率（如0.0600）
-        WithdrawFee string `json:"withdrawFee"`         // 提现手续费（如2.00）
-    }
 
     UploadAvatarReq {
         AvatarFile string `json:"avatarFile"` // 头像文件（base64编码）
@@ -113,21 +98,6 @@ service manager {
     @handler changePassword
     patch /password (ChangePasswordReq) returns (BaseResp)
 
-    @doc(
-        summary: "获取费率设置"
-        description: "返回换汇手续费率与提现手续费设置。公共请求头: Authorization, X-Timestamp, X-Sign"
-        id: "manager.profile.getFee"
-    )
-    @handler getFeeSettings
-    get /fee-settings returns (GetFeeSettingsResp)
-
-    @doc(
-        summary: "更新费率设置"
-        description: "修改换汇手续费率与提现手续费。公共请求头: Authorization, X-Timestamp, X-Sign"
-        id: "manager.profile.updateFee"
-    )
-    @handler updateFeeSettings
-    put /fee-settings (UpdateFeeSettingsReq) returns (BaseResp)
 
     @doc(
         summary: "上传头像"

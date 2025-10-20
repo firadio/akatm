@@ -7995,82 +7995,6 @@ paths:
       summary: 解绑邮箱
       tags:
       - 个人信息
-  /manager/profile/fee-settings:
-    get:
-      description: '返回换汇手续费率与提现手续费设置。公共请求头: Authorization, X-Timestamp, X-Sign'
-      operationId: managerProfileGetFeeSettings
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: ""
-          schema:
-            properties:
-              code:
-                description: 响应码
-                type: integer
-              data:
-                description: 数据
-                properties:
-                  exchangeFeeRate:
-                    description: 换汇手续费率
-                    type: string
-                  withdrawFee:
-                    description: 提现手续费
-                    type: string
-                required:
-                - exchangeFeeRate
-                - withdrawFee
-                type: object
-              message:
-                description: 响应消息
-                type: string
-            type: object
-      schemes:
-      - https
-      summary: 获取费率设置
-      tags:
-      - 个人信息
-    put:
-      consumes:
-      - application/json
-      description: '修改换汇手续费率与提现手续费。公共请求头: Authorization, X-Timestamp, X-Sign'
-      operationId: managerProfileUpdateFeeSettings
-      parameters:
-      - in: body
-        name: body
-        required: true
-        schema:
-          properties:
-            exchangeFeeRate:
-              description: 换汇手续费率（如0.0600）
-              type: string
-            withdrawFee:
-              description: 提现手续费（如2.00）
-              type: string
-          required:
-          - exchangeFeeRate
-          - withdrawFee
-          type: object
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: ""
-          schema:
-            properties:
-              code:
-                description: 响应码 0-成功 非0-失败
-                type: integer
-              message:
-                description: 响应消息
-                type: string
-            type: object
-      schemes:
-      - https
-      summary: 更新费率设置
-      tags:
-      - 个人信息
   /manager/profile/password:
     patch:
       consumes:
@@ -8217,7 +8141,7 @@ produces:
 schemes:
 - https
 swagger: "2.0"
-x-date: "2025-10-20 14:05:53"
+x-date: "2025-10-20 14:12:24"
 x-description: This is a goctl generated swagger file.
 x-github: https://github.com/zeromicro/go-zero
 x-go-zero-doc: https://go-zero.dev/
