@@ -1,0 +1,17 @@
+Name: manager
+Host: 0.0.0.0
+Port: 8888
+Mode: dev
+
+Log:
+  ServiceName: manager
+  Mode: console
+
+Auth:
+  AccessSecret: "change-me-manager-secret"
+  AccessExpire: 2592000 # 30 天（秒）
+
+Signature:
+  Enable: true
+  Salt: "change-me-sign-salt"
+  SkewSeconds: 300 # 允许时间偏移（秒）

@@ -1,0 +1,11 @@
+Name: fams.rpc
+ListenOn: 0.0.0.0:8082
+Etcd:
+  Hosts:
+  - 127.0.0.1:2379
+  Key: fams.rpc.test
+Log:
+  ServiceName: fams.rpc.test
+  Mode: console
+  Level: info
+  Encoding: json

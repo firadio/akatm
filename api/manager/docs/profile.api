@@ -1,0 +1,163 @@
+syntax = "v1"
+
+info(
+    title: "客户经理资料接口"
+    desc: "获取/更新个人资料与费率设置"
+    version: "v1.0"
+)
+
+import "../../common/types.api"
+
+type (
+    // 客户经理资料信息
+    ManagerProfileInfo {
+        Id int64 `json:"id"` // 用户ID
+        UserType string `json:"userType"` // 用户类型（manager-客户经理）
+        Email string `json:"email"` // 邮箱
+        InviteCode string `json:"inviteCode"` // 邀请码
+        ParentId int64 `json:"parentId"` // 父级用户ID
+        ParentTree string `json:"parentTree"` // 父级用户树（如：1,2,3）
+        StaffId int64 `json:"staffId"` // 员工ID
+        Status int32 `json:"status"` // 状态（1-启用、0-禁用）
+        StatusText string `json:"statusText"` // 状态文本（启用、禁用）
+        ExchangeFeeRate string `json:"exchangeFeeRate"` // 换汇手续费率（decimal字符串）
+        WithdrawFee string `json:"withdrawFee"` // 提现手续费（decimal字符串）
+        Profile UserProfile `json:"profile"` // 用户资料
+        Emails []UserEmail `json:"emails"` // 邮箱列表
+        CreatedAt string `json:"createdAt"` // 创建时间
+        UpdatedAt string `json:"updatedAt"` // 更新时间
+    }
+
+    // 客户经理资料响应
+    ManagerProfileResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data ManagerProfileInfo `json:"data"` // 数据
+    }
+
+    GetFeeSettingsResp {
+        Code int32 `json:"code"`        // 响应码
+        Message string `json:"message"` // 响应消息
+        Data FeeSettings `json:"data"`  // 数据
+    }
+
+    FeeSettings {
+        ExchangeFeeRate string `json:"exchangeFeeRate"` // 换汇手续费率
+        WithdrawFee string `json:"withdrawFee"`         // 提现手续费
+    }
+
+    UpdateFeeSettingsReq {
+        ExchangeFeeRate string `json:"exchangeFeeRate"` // 换汇手续费率（如0.0600）
+        WithdrawFee string `json:"withdrawFee"`         // 提现手续费（如2.00）
+    }
+
+    UploadAvatarReq {
+        AvatarFile string `json:"avatarFile"` // 头像文件（base64编码）
+    }
+
+    UploadAvatarResp {
+        Code int32 `json:"code"`        // 响应码
+        Message string `json:"message"` // 响应消息
+        Data UploadAvatarData `json:"data"` // 数据
+    }
+
+    UploadAvatarData {
+        AvatarUrl string `json:"avatarUrl"` // 头像URL
+    }
+
+    GetProfileStatsResp {
+        Code int32 `json:"code"`        // 响应码
+        Message string `json:"message"` // 响应消息
+        Data ProfileStatsData `json:"data"` // 数据
+    }
+
+    ProfileStatsData {
+        TotalCustomers int64 `json:"totalCustomers"` // 总客户数
+        TotalAccounts int64 `json:"totalAccounts"` // 总账户数
+        TotalDeposits string `json:"totalDeposits"` // 总存款金额
+        TotalWithdrawals string `json:"totalWithdrawals"` // 总提现金额
+        TotalFees string `json:"totalFees"` // 总手续费
+        MonthlyStats []MonthlyStat `json:"monthlyStats"` // 月度统计
+    }
+)
+
+@server(
+    prefix: /manager/profile
+    group: managerProfile
+    jwt: Auth
+    middleware: SignCheck, JwtAuth
+    tags: "个人信息"
+)
+service manager {
+    @doc(
+        summary: "获取个人资料"
+        description: "返回个人基础资料与费率设置。公共请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.profile.get"
+    )
+    @handler getProfile
+    get / returns (ManagerProfileResp)
+
+    @doc(
+        summary: "更新个人资料"
+        description: "更新邮箱/名称等。公共请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.profile.update"
+    )
+    @handler updateProfile
+    put / (UpdateProfileReq) returns (BaseResp)
+
+    @doc(
+        summary: "修改登录密码"
+        description: "修改登录密码。公共请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.profile.changePassword"
+    )
+    @handler changePassword
+    patch /password (ChangePasswordReq) returns (BaseResp)
+
+    @doc(
+        summary: "获取费率设置"
+        description: "返回换汇手续费率与提现手续费设置。公共请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.profile.getFee"
+    )
+    @handler getFeeSettings
+    get /fee-settings returns (GetFeeSettingsResp)
+
+    @doc(
+        summary: "更新费率设置"
+        description: "修改换汇手续费率与提现手续费。公共请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.profile.updateFee"
+    )
+    @handler updateFeeSettings
+    put /fee-settings (UpdateFeeSettingsReq) returns (BaseResp)
+
+    @doc(
+        summary: "上传头像"
+        description: "上传个人头像。公共请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.profile.uploadAvatar"
+    )
+    @handler uploadAvatar
+    post /avatar (UploadAvatarReq) returns (UploadAvatarResp)
+
+    @doc(
+        summary: "绑定邮箱"
+        description: "绑定新邮箱。公共请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.profile.bindEmail"
+    )
+    @handler bindEmail
+    post /email (BindEmailReq) returns (BindEmailResp)
+
+    @doc(
+        summary: "解绑邮箱"
+        description: "解绑邮箱。公共请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.profile.unbindEmail"
+    )
+    @handler unbindEmail
+    delete /email/:emailId (UnbindEmailReq) returns (BaseResp)
+
+    @doc(
+        summary: "获取资料统计"
+        description: "获取个人资料统计信息。公共请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.profile.getStats"
+    )
+    @handler getProfileStats
+    get /stats returns (GetProfileStatsResp)
+}

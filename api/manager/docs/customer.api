@@ -1,0 +1,205 @@
+syntax = "v1"
+
+info(
+    title: "银行客户管理"
+    desc: "客户经理管理其名下银行客户（KYC/KYB）"
+    version: "v1.0"
+)
+
+import "../../common/types.api"
+
+@server(
+    prefix: /api/customer
+    group: customer
+    jwt: Auth
+    middleware: SignCheck, JwtAuth
+    tags: "客户管理"
+)
+service manager {
+    @doc(
+        summary: "新增银行客户"
+        description: "新增银行客户资料。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.customer.create"
+    )
+    @handler createCustomer
+    post /customers (CreateCustomerReq) returns (CreateCustomerResp)
+
+    @doc(
+        summary: "客户列表"
+        description: "分页查询我名下的银行客户。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.customer.list"
+    )
+    @handler listCustomers
+    get /customers (ListCustomersReq) returns (ListCustomersResp)
+
+    @doc(
+        summary: "客户详情"
+        description: "获取客户详情。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.customer.detail"
+    )
+    @handler getCustomer
+    get /customers/:id (IdReq) returns (GetCustomerResp)
+
+    @doc(
+        summary: "更新客户"
+        description: "更新客户资料。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.customer.update"
+    )
+    @handler updateCustomer
+    put /customers/:id (UpdateCustomerReq) returns (BaseResp)
+
+    @doc(
+        summary: "删除客户"
+        description: "删除客户。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.customer.delete"
+    )
+    @handler deleteCustomer
+    delete /customers/:id (IdReq) returns (BaseResp)
+
+    @doc(
+        summary: "更新KYC状态"
+        description: "更新客户KYC状态。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.customer.updateKycStatus"
+    )
+    @handler updateCustomerKycStatus
+    put /customers/:id/kyc-status (UpdateCustomerKycStatusReq) returns (BaseResp)
+
+    @doc(
+        summary: "KYC审核"
+        description: "对客户进行KYC审核。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.customer.auditKyc"
+    )
+    @handler auditCustomerKyc
+    post /customers/:id/kyc-audit (AuditCustomerKycReq) returns (BaseResp)
+
+    @doc(
+        summary: "客户统计"
+        description: "获取客户统计信息。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.customer.getStats"
+    )
+    @handler getCustomerStats
+    get /customers/stats (GetCustomerStatsReq) returns (GetCustomerStatsResp)
+}
+
+type (
+    CreateCustomerReq {
+        Name string `json:"name"`                    // 客户姓名
+        Phone string `json:"phone"`                  // 手机号码
+        Email string `json:"email"`                  // 电子邮箱
+        Address string `json:"address"`              // 地址
+        IdNumber string `json:"idNumber,optional"`   // 证件号（个人身份证/护照）
+        BusinessLicense string `json:"businessLicense,optional"` // 营业执照（企业）
+        CustomerType string `json:"customerType"`    // 客户类型（individual-个人、enterprise-企业）
+        KycDocuments string `json:"kycDocuments,optional"` // KYC认证材料（JSON格式）
+        Note string `json:"note,optional"`           // 备注
+    }
+
+    CreateCustomerResp {
+        Code int32 `json:"code"`        // 响应码
+        Message string `json:"message"` // 响应消息
+        Data CustomerInfo `json:"data"` // 数据
+    }
+
+    CustomerInfo {
+        Id int64 `json:"id"`                     // 客户ID
+        Name string `json:"name"`                // 客户姓名
+        Phone string `json:"phone"`              // 手机号码
+        Email string `json:"email"`              // 电子邮箱
+        Address string `json:"address"`          // 地址
+        IdNumber string `json:"idNumber"`        // 证件号（个人身份证/护照）
+        BusinessLicense string `json:"businessLicense"` // 营业执照（企业）
+        CustomerType string `json:"customerType"` // 客户类型（individual-个人、enterprise-企业）
+        CustomerTypeText string `json:"customerTypeText"` // 客户类型文本（个人、企业）
+        KycStatus string `json:"kycStatus"`      // KYC状态（pending-待审核、verified-已认证、rejected-已拒绝）
+        KycStatusText string `json:"kycStatusText"` // KYC状态文本（待审核、已认证、已拒绝）
+        KycVerifiedAt string `json:"kycVerifiedAt"` // KYC认证时间
+        KycDocuments string `json:"kycDocuments"` // KYC认证材料（JSON格式）
+        Note string `json:"note"`                // 备注
+        UserId int64 `json:"userId"`             // 关联用户ID
+        ManagerId int64 `json:"managerId"`        // 客户经理ID
+        BankAccountCount int32 `json:"bankAccountCount"` // 银行账户数量
+        WalletCount int32 `json:"walletCount"`   // 钱包数量
+        TotalBalance string `json:"totalBalance"` // 总余额（decimal字符串）
+        CreatedAt string `json:"createdAt"`       // 创建时间
+        UpdatedAt string `json:"updatedAt"`      // 更新时间
+    }
+
+    ListCustomersReq {
+        Page int64 `form:"page,default=1,optional"`       // 页码（从1开始）
+        PageSize int64 `form:"pageSize,default=10,optional"` // 每页数量（默认10条）
+        Keyword string `form:"keyword,optional"`          // 关键词搜索（客户姓名、手机、邮箱）
+        CustomerType string `form:"customerType,optional"` // 客户类型筛选（individual-个人、enterprise-企业）
+        KycStatus string `form:"kycStatus,optional"`     // KYC状态筛选（pending-待审核、verified-已认证、rejected-已拒绝）
+        StartTime string `form:"startTime,optional"`     // 创建开始时间（格式：2024-01-01 00:00:00）
+        EndTime string `form:"endTime,optional"`         // 创建结束时间（格式：2024-01-31 23:59:59）
+    }
+
+    ListCustomersResp {
+        Code int32 `json:"code"`        // 响应码
+        Message string `json:"message"` // 响应消息
+        Data CustomerListData `json:"data"` // 数据
+    }
+
+    CustomerListData {
+        Total int64 `json:"total"`          // 总数
+        List []CustomerInfo `json:"list"`   // 列表
+    }
+
+    GetCustomerResp {
+        Code int32 `json:"code"`         // 响应码
+        Message string `json:"message"`  // 响应消息
+        Data CustomerInfo `json:"data"`  // 数据
+    }
+
+    UpdateCustomerReq {
+        Id int64 `path:"id"`                           // 客户ID
+        Name string `json:"name,optional"`             // 客户姓名
+        Phone string `json:"phone,optional"`           // 手机号码
+        Email string `json:"email,optional"`           // 电子邮箱
+        Address string `json:"address,optional"`       // 地址
+        IdNumber string `json:"idNumber,optional"`     // 证件号（个人身份证/护照）
+        BusinessLicense string `json:"businessLicense,optional"` // 营业执照（企业）
+        CustomerType string `json:"customerType,optional"` // 客户类型（individual-个人、enterprise-企业）
+        KycDocuments string `json:"kycDocuments,optional"` // KYC认证材料（JSON格式）
+        Note string `json:"note,optional"`             // 备注
+    }
+
+    UpdateCustomerKycStatusReq {
+        Id int64 `path:"id"`                           // 客户ID
+        KycStatus string `json:"kycStatus"`           // KYC状态（pending-待审核、verified-已认证、rejected-已拒绝）
+        KycDocuments string `json:"kycDocuments,optional"` // KYC认证材料（JSON格式）
+        Note string `json:"note,optional"`             // 备注
+    }
+
+    AuditCustomerKycReq {
+        Id int64 `path:"id"`                           // 客户ID
+        KycStatus string `json:"kycStatus"`           // 审核结果（verified-已认证、rejected-已拒绝）
+        AuditNote string `json:"auditNote"`           // 审核意见
+        KycDocuments string `json:"kycDocuments,optional"` // KYC认证材料（JSON格式）
+    }
+
+    GetCustomerStatsReq {
+        StartTime string `form:"startTime,optional"`   // 统计开始时间（格式：2024-01-01 00:00:00）
+        EndTime string `form:"endTime,optional"`       // 统计结束时间（格式：2024-01-31 23:59:59）
+    }
+
+    GetCustomerStatsResp {
+        Code int32 `json:"code"`        // 响应码
+        Message string `json:"message"` // 响应消息
+        Data CustomerStatsData `json:"data"` // 统计数据
+    }
+
+    CustomerStatsData {
+        TotalCustomers int64 `json:"totalCustomers"`   // 总客户数
+        IndividualCustomers int64 `json:"individualCustomers"` // 个人客户数
+        EnterpriseCustomers int64 `json:"enterpriseCustomers"` // 企业客户数
+        PendingKycCustomers int64 `json:"pendingKycCustomers"` // 待审核KYC客户数
+        VerifiedKycCustomers int64 `json:"verifiedKycCustomers"` // 已认证KYC客户数
+        RejectedKycCustomers int64 `json:"rejectedKycCustomers"` // 已拒绝KYC客户数
+        TotalBankAccounts int64 `json:"totalBankAccounts"` // 总银行账户数
+        TotalWallets int64 `json:"totalWallets"`       // 总钱包数
+        TotalBalance string `json:"totalBalance"`      // 总余额（decimal字符串）
+        RecentCustomers []CustomerInfo `json:"recentCustomers"` // 最近新增客户
+    }
+
+)

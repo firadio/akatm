@@ -1,0 +1,127 @@
+syntax = "v1"
+
+info(
+    title: "前台用户管理接口"
+    desc: "提供前台代理和客户经理的用户管理功能"
+    version: "v1.0"
+)
+
+import "../../common/types.api"
+
+@server(
+    prefix: /api/user
+    group: user
+    jwt: Auth
+    middleware: SignCheck, JwtAuth
+    tags: "代理管理"
+)
+service manager {
+    @doc(
+        summary: "用户列表"
+        description: "分页查询我管理的用户列表。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.user.list"
+    )
+    @handler listUsers
+    get /users (ListUsersReq) returns (ListUsersResp)
+
+    @doc(
+        summary: "用户详情"
+        description: "获取用户详细信息。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.user.detail"
+    )
+    @handler getUser
+    get /users/:id (IdReq) returns (GetUserResp)
+
+    @doc(
+        summary: "更新用户手续费"
+        description: "更新用户的换汇手续费和提现手续费。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.user.updateFees"
+    )
+    @handler updateUserFees
+    patch /users/:id/fees (UpdateUserFeesReq) returns (BaseResp)
+
+    @doc(
+        summary: "用户国家授权"
+        description: "管理用户的国家授权列表。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.user.countryAuth"
+    )
+    @handler updateUserCountryAuth
+    patch /users/:id/countries (UpdateUserCountryAuthReq) returns (BaseResp)
+
+    @doc(
+        summary: "下级用户列表"
+        description: "获取用户的下级用户列表。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.user.subUsers"
+    )
+    @handler getSubUsers
+    get /users/:id/sub-users (GetSubUsersReq) returns (ListUsersResp)
+}
+
+type (
+    // 用户列表请求
+    ListUsersReq {
+        Page int64 `form:"page,default=1,optional"` // 页码
+        PageSize int64 `form:"pageSize,default=10,optional"` // 每页数量
+        Keyword string `form:"keyword,optional"` // 关键词搜索
+        UserType string `form:"userType,optional"` // 用户类型筛选
+        Status int32 `form:"status,optional"` // 状态筛选
+    }
+
+    // 用户列表响应
+    ListUsersResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data UserListData `json:"data"` // 数据
+    }
+
+    // 用户信息
+    UserInfo {
+        Id int64 `json:"id"` // ID
+        UserType string `json:"userType"` // 用户类型
+        ParentId int64 `json:"parentId"` // 父级用户ID
+        ParentTree string `json:"parentTree"` // 父级用户树
+        Email string `json:"email"` // 邮箱
+        InviteCode string `json:"inviteCode"` // 邀请码
+        ExchangeFeeRate string `json:"exchangeFeeRate"` // 换汇手续费率
+        WithdrawFee string `json:"withdrawFee"` // 提现手续费
+        Status int32 `json:"status"` // 状态
+        CreatedAt int64 `json:"createdAt"` // 创建时间
+        UpdatedAt int64 `json:"updatedAt"` // 更新时间
+        AuthorizedCountries []CountryInfo `json:"authorizedCountries"` // 授权国家列表
+    }
+
+    // 用户列表数据
+    UserListData {
+        Total int64 `json:"total"` // 总记录数
+        List []UserInfo `json:"list"` // 列表
+    }
+
+    // 用户详情响应
+    GetUserResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data UserInfo `json:"data"` // 数据
+    }
+
+    // 更新用户手续费请求
+    UpdateUserFeesReq {
+        Id int64 `path:"id"` // 用户ID
+        ExchangeFeeRate string `json:"exchangeFeeRate"` // 换汇手续费率
+        WithdrawFee string `json:"withdrawFee"` // 提现手续费
+    }
+
+    // 更新用户国家授权请求
+    UpdateUserCountryAuthReq {
+        Id int64 `path:"id"` // 用户ID
+        CountryIds []int64 `json:"countryIds"` // 国家ID列表
+    }
+
+    // 下级用户请求
+    GetSubUsersReq {
+        Id int64 `path:"id"` // 用户ID
+        Page int64 `form:"page,default=1,optional"` // 页码
+        PageSize int64 `form:"pageSize,default=10,optional"` // 每页数量
+        UserType string `form:"userType,optional"` // 用户类型筛选
+        IncludeSubLevels bool `form:"includeSubLevels,default=false,optional"` // 是否包含子级的下级
+    }
+)

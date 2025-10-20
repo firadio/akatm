@@ -1,0 +1,208 @@
+syntax = "v1"
+
+info(
+    title: "系统通知管理"
+    desc: "客户经理接收和管理系统通知"
+    version: "v1.0"
+)
+
+import "../../common/types.api"
+
+@server(
+    prefix: /api/notification
+    group: notification
+    jwt: Auth
+    middleware: SignCheck, JwtAuth
+    tags: "消息通知"
+)
+service manager {
+    @doc(
+        summary: "通知列表"
+        description: "分页查询系统通知列表。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.notification.list"
+    )
+    @handler listNotifications
+    get /notifications (ListNotificationsReq) returns (ListNotificationsResp)
+
+    @doc(
+        summary: "通知详情"
+        description: "查看通知详情。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.notification.detail"
+    )
+    @handler getNotification
+    get /notifications/:id (IdReq) returns (GetNotificationResp)
+
+    @doc(
+        summary: "标记已读"
+        description: "标记通知为已读状态。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.notification.markRead"
+    )
+    @handler markAsRead
+    put /notifications/:id/read (MarkAsReadReq) returns (BaseResp)
+
+    @doc(
+        summary: "批量标记已读"
+        description: "批量标记通知为已读状态。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.notification.batchMarkRead"
+    )
+    @handler batchMarkAsRead
+    put /notifications/batch-read (BatchMarkAsReadReq) returns (BaseResp)
+
+    @doc(
+        summary: "全部标记已读"
+        description: "标记所有通知为已读状态。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.notification.markAllRead"
+    )
+    @handler markAllAsRead
+    put /notifications/mark-all-read returns (BaseResp)
+
+    @doc(
+        summary: "删除通知"
+        description: "删除指定通知。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.notification.delete"
+    )
+    @handler deleteNotification
+    delete /notifications/:id (IdReq) returns (BaseResp)
+
+    @doc(
+        summary: "未读数量"
+        description: "获取未读通知数量。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.notification.unreadCount"
+    )
+    @handler getUnreadCount
+    get /notifications/unread-count returns (GetUnreadCountResp)
+
+    @doc(
+        summary: "通知设置"
+        description: "获取通知设置。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.notification.getSettings"
+    )
+    @handler getNotificationSettings
+    get /notifications/settings returns (GetNotificationSettingsResp)
+
+    @doc(
+        summary: "更新通知设置"
+        description: "更新通知设置。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.notification.updateSettings"
+    )
+    @handler updateNotificationSettings
+    put /notifications/settings (UpdateNotificationSettingsReq) returns (BaseResp)
+}
+
+type (
+    ListNotificationsReq {
+        Page int64 `form:"page,default=1,optional"` // 页码
+        PageSize int64 `form:"pageSize,default=10,optional"` // 每页数量
+        Type string `form:"type,optional"` // 通知类型筛选（system-系统通知、business-业务通知、security-安全通知、promotion-推广通知）
+        Priority string `form:"priority,optional"` // 优先级筛选（high-高、medium-中、low-低）
+        IsRead string `form:"isRead,optional"` // 已读状态筛选（true-已读、false-未读）
+        StartTime string `form:"startTime,optional"` // 开始时间（格式：2024-01-01 00:00:00）
+        EndTime string `form:"endTime,optional"` // 结束时间（格式：2024-01-31 23:59:59）
+    }
+
+    ListNotificationsResp {
+        Code int32 `json:"code"`
+        Message string `json:"message"`
+        Data NotificationListData `json:"data"`
+    }
+
+    NotificationListData {
+        Total int64 `json:"total"`
+        List []NotificationInfo `json:"list"`
+    }
+
+    NotificationInfo {
+        Id int64 `json:"id"` // 通知ID
+        Title string `json:"title"` // 通知标题
+        Content string `json:"content"` // 通知内容
+        Type string `json:"type"` // 通知类型（system-系统通知、business-业务通知、security-安全通知、promotion-推广通知）
+        TypeText string `json:"typeText"` // 类型文本
+        Priority string `json:"priority"` // 优先级（high-高、medium-中、low-低）
+        PriorityText string `json:"priorityText"` // 优先级文本
+        IsRead bool `json:"isRead"` // 是否已读
+        ReadTime string `json:"readTime,optional"` // 已读时间
+        ActionUrl string `json:"actionUrl,optional"` // 操作链接
+        ActionText string `json:"actionText,optional"` // 操作按钮文本
+        ExpireTime string `json:"expireTime,optional"` // 过期时间
+        IsExpired bool `json:"isExpired"` // 是否已过期
+        CreatedAt string `json:"createdAt"` // 创建时间
+        UpdatedAt string `json:"updatedAt"` // 更新时间
+    }
+
+    GetNotificationResp {
+        Code int32 `json:"code"`
+        Message string `json:"message"`
+        Data NotificationInfo `json:"data"`
+    }
+
+    MarkAsReadReq {
+        Id int64 `path:"id"` // 通知ID
+    }
+
+    BatchMarkAsReadReq {
+        Ids []int64 `json:"ids"` // 通知ID列表
+    }
+
+    GetUnreadCountResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data UnreadCountData `json:"data"` // 未读数量数据
+    }
+
+    UnreadCountData {
+        TotalUnread int64 `json:"totalUnread"` // 总未读数量
+        TypeStats []NotificationTypeStat `json:"typeStats"` // 各类型未读统计
+        PriorityStats []NotificationPriorityStat `json:"priorityStats"` // 各优先级未读统计
+    }
+
+    NotificationTypeStat {
+        Type string `json:"type"` // 通知类型
+        TypeText string `json:"typeText"` // 类型文本
+        UnreadCount int64 `json:"unreadCount"` // 未读数量
+    }
+
+    NotificationPriorityStat {
+        Priority string `json:"priority"` // 优先级
+        PriorityText string `json:"priorityText"` // 优先级文本
+        UnreadCount int64 `json:"unreadCount"` // 未读数量
+    }
+
+    GetNotificationSettingsResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data NotificationSettingsData `json:"data"` // 通知设置数据
+    }
+
+    NotificationSettingsData {
+        EmailEnabled bool `json:"emailEnabled"` // 邮件通知是否启用
+        SmsEnabled bool `json:"smsEnabled"` // 短信通知是否启用
+        PushEnabled bool `json:"pushEnabled"` // 推送通知是否启用
+        TypeSettings []NotificationTypeSetting `json:"typeSettings"` // 各类型通知设置
+        QuietHours NotificationQuietHours `json:"quietHours"` // 免打扰时间设置
+        Language string `json:"language"` // 通知语言（zh-CN、en-US等）
+    }
+
+    NotificationTypeSetting {
+        Type string `json:"type"` // 通知类型
+        TypeText string `json:"typeText"` // 类型文本
+        EmailEnabled bool `json:"emailEnabled"` // 邮件通知是否启用
+        SmsEnabled bool `json:"smsEnabled"` // 短信通知是否启用
+        PushEnabled bool `json:"pushEnabled"` // 推送通知是否启用
+    }
+
+    NotificationQuietHours {
+        Enabled bool `json:"enabled"` // 是否启用免打扰
+        StartTime string `json:"startTime"` // 开始时间（格式：22:00）
+        EndTime string `json:"endTime"` // 结束时间（格式：08:00）
+        Timezone string `json:"timezone"` // 时区（如：Asia/Shanghai）
+    }
+
+    UpdateNotificationSettingsReq {
+        EmailEnabled bool `json:"emailEnabled,optional"` // 邮件通知是否启用
+        SmsEnabled bool `json:"smsEnabled,optional"` // 短信通知是否启用
+        PushEnabled bool `json:"pushEnabled,optional"` // 推送通知是否启用
+        TypeSettings []NotificationTypeSetting `json:"typeSettings,optional"` // 各类型通知设置
+        QuietHours NotificationQuietHours `json:"quietHours,optional"` // 免打扰时间设置
+        Language string `json:"language,optional"` // 通知语言（zh-CN、en-US等）
+    }
+)

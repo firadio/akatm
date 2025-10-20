@@ -1,0 +1,121 @@
+syntax = "v1"
+
+info(
+    title: "菜单管理接口"
+    desc: "提供菜单的增删改查及树形查询功能"
+    version: "v1.0"
+)
+
+import "../../common/types.api"
+
+@server(
+    prefix: /api/menu
+    group: menu
+    jwt: Auth
+    middleware: SignCheck, JwtAuth
+    tags: "菜单管理"
+)
+service admin {
+    @doc(
+        summary: "创建菜单"
+        description: "创建新的菜单项。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.menu.create"
+    )
+    @handler createMenu
+    post /menus (CreateMenuReq) returns (CreateMenuResp)
+
+    @doc(
+        summary: "菜单树"
+        description: "获取菜单树结构。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.menu.tree"
+    )
+    @handler getMenuTree
+    get /menus (ListMenuReq) returns (ListMenuResp)
+
+    @doc(
+        summary: "菜单详情"
+        description: "根据ID获取菜单详情。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.menu.detail"
+    )
+    @handler getMenu
+    get /menus/:id (IdReq) returns (GetMenuResp)
+
+    @doc(
+        summary: "更新菜单"
+        description: "更新菜单信息。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.menu.update"
+    )
+    @handler updateMenu
+    put /menus/:id (UpdateMenuReq) returns (BaseResp)
+
+    @doc(
+        summary: "删除菜单"
+        description: "删除菜单。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.menu.delete"
+    )
+    @handler deleteMenu
+    delete /menus/:id (IdReq) returns (BaseResp)
+}
+
+type (
+    // 创建菜单请求
+    CreateMenuReq {
+        Name string `json:"name"`          // 名称
+        Path string `json:"path"`          // 路由/路径
+        Icon string `json:"icon,optional"` // 图标
+        Component string `json:"component,optional"` // 组件路径
+        Role string `json:"role,optional"` // 角色权限
+        Label string `json:"label,optional"` // 显示标签
+        Alias string `json:"alias,optional"` // 别名路径
+        Type int32 `json:"type,default=1"`   // 类型：1-菜单, 2-按钮
+        ParentId int64 `json:"parentId,optional"` // 父级ID
+        Sort int32 `json:"sort,default=0,optional"` // 排序
+        Status int32 `json:"status,default=1,optional"` // 状态：1-启用, 0-禁用
+    }
+
+    // 创建菜单响应
+    CreateMenuResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data MenuInfo `json:"data"` // 数据
+    }
+
+
+    // 列表请求（树）
+    ListMenuReq {
+        Keyword string `form:"keyword,optional"` // 名称/路径 模糊搜索
+        Type int32 `form:"type,optional"` // 类型筛选：1-菜单, 2-按钮
+        Status int32 `form:"status,optional"` // 状态筛选：1-启用, 0-禁用
+        ParentId int64 `form:"parentId,optional"` // 父级ID筛选
+    }
+
+    // 列表响应（树）
+    ListMenuResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data []MenuInfo `json:"data"` // 数据
+    }
+
+    // 详情响应
+    GetMenuResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data MenuInfo `json:"data"` // 数据
+    }
+
+    // 更新菜单请求
+    UpdateMenuReq {
+        Id int64 `path:"id"`              // 菜单ID
+        Name string `json:"name"`          // 名称
+        Path string `json:"path"`          // 路由
+        Icon string `json:"icon,optional"` // 图标
+        Component string `json:"component,optional"` // 组件路径
+        Role string `json:"role,optional"` // 角色权限
+        Label string `json:"label,optional"` // 显示标签
+        Alias string `json:"alias,optional"` // 别名路径
+        Type int32 `json:"type,optional"`   // 类型：1-菜单, 2-按钮
+        ParentId int64 `json:"parentId,optional"` // 父级
+        Sort int32 `json:"sort,optional"`    // 排序
+        Status int32 `json:"status,optional"` // 状态：1-启用, 0-禁用
+    }
+)

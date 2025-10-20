@@ -1,0 +1,399 @@
+syntax = "v1"
+
+info(
+    title: "操作日志记录接口"
+    desc: "提供系统操作日志、审计日志的记录和查询功能"
+    version: "v1.0"
+)
+
+import "../../common/types.api"
+
+@server(
+    prefix: /admin
+    group: audit
+    jwt: Auth
+    middleware: SignCheck, JwtAuth
+    tags: "日志审核"
+)
+service admin {
+    @doc(
+        summary: "操作日志列表"
+        description: "分页查询系统操作日志。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.audit.operationLogs"
+    )
+    @handler listOperationLogs
+    get /audit/operation-logs (ListOperationLogsReq) returns (ListOperationLogsResp)
+
+    @doc(
+        summary: "操作日志详情"
+        description: "获取操作日志详细信息。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.audit.operationLogDetail"
+    )
+    @handler getOperationLog
+    get /audit/operation-logs/:id (IdReq) returns (GetOperationLogResp)
+
+    @doc(
+        summary: "审计日志列表"
+        description: "分页查询系统审计日志。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.audit.auditLogs"
+    )
+    @handler listAuditLogs
+    get /audit/audit-logs (ListAuditLogsReq) returns (ListAuditLogsResp)
+
+    @doc(
+        summary: "审计日志详情"
+        description: "获取审计日志详细信息。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.audit.auditLogDetail"
+    )
+    @handler getAuditLog
+    get /audit/audit-logs/:id (IdReq) returns (GetAuditLogResp)
+
+    @doc(
+        summary: "登录日志列表"
+        description: "分页查询用户登录日志。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.audit.loginLogs"
+    )
+    @handler listLoginLogs
+    get /audit/login-logs (ListLoginLogsReq) returns (ListLoginLogsResp)
+
+    @doc(
+        summary: "登录日志详情"
+        description: "获取登录日志详细信息。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.audit.loginLogDetail"
+    )
+    @handler getLoginLog
+    get /audit/login-logs/:id (IdReq) returns (GetLoginLogResp)
+
+    @doc(
+        summary: "日志统计"
+        description: "获取日志统计信息。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.audit.logStats"
+    )
+    @handler getLogStats
+    get /audit/stats (GetLogStatsReq) returns (GetLogStatsResp)
+
+    @doc(
+        summary: "导出日志"
+        description: "导出日志数据。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.audit.exportLogs"
+    )
+    @handler exportLogs
+    post /audit/export (ExportLogsReq) returns (ExportLogsResp)
+
+    @doc(
+        summary: "清理日志"
+        description: "清理过期日志数据。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.audit.cleanLogs"
+    )
+    @handler cleanLogs
+    post /audit/clean (CleanLogsReq) returns (CleanLogsResp)
+
+    @doc(
+        summary: "获取导出任务状态"
+        description: "获取日志导出任务状态。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.audit.exportTaskStatus"
+    )
+    @handler getExportTaskStatus
+    get /audit/export/:taskId/status (GetExportTaskStatusReq) returns (GetExportTaskStatusResp)
+
+    @doc(
+        summary: "下载导出文件"
+        description: "下载导出的日志文件。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.audit.downloadExport"
+    )
+    @handler downloadExport
+    get /audit/export/:taskId/download (GetExportTaskStatusReq) returns (DownloadExportResp)
+}
+
+type (
+    // 操作日志列表请求
+    ListOperationLogsReq {
+        Page int64 `form:"page,default=1,optional"` // 页码
+        PageSize int64 `form:"pageSize,default=10,optional"` // 每页数量
+        Keyword string `form:"keyword,optional"` // 关键词搜索
+        Module string `form:"module,optional"` // 模块筛选
+        Action string `form:"action,optional"` // 操作类型筛选
+        OperatorId int64 `form:"operatorId,optional"` // 操作人ID筛选
+        Status string `form:"status,optional"` // 状态筛选
+        StartTime string `form:"startTime,optional"` // 开始时间
+        EndTime string `form:"endTime,optional"` // 结束时间
+    }
+
+    // 操作日志列表响应
+    ListOperationLogsResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data OperationLogListData `json:"data"` // 数据
+    }
+
+    // 操作日志信息
+    OperationLogInfo {
+        Id int64 `json:"id"` // 日志ID
+        Module string `json:"module"` // 模块名称
+        Action string `json:"action"` // 操作类型
+        Description string `json:"description"` // 操作描述
+        RequestMethod string `json:"requestMethod"` // 请求方法
+        RequestUrl string `json:"requestUrl"` // 请求URL
+        RequestParams string `json:"requestParams"` // 请求参数
+        ResponseData string `json:"responseData"` // 响应数据
+        Status string `json:"status"` // 状态：success、failed
+        ErrorMessage string `json:"errorMessage"` // 错误信息
+        OperatorId int64 `json:"operatorId"` // 操作人ID
+        OperatorName string `json:"operatorName"` // 操作人姓名
+        OperatorType string `json:"operatorType"` // 操作人类型：admin、manager、user
+        IpAddress string `json:"ipAddress"` // IP地址
+        UserAgent string `json:"userAgent"` // 用户代理
+        ExecutionTime int64 `json:"executionTime"` // 执行时间（毫秒）
+        CreatedAt string `json:"createdAt"` // 创建时间
+    }
+
+    // 操作日志列表数据
+    OperationLogListData {
+        Total int64 `json:"total"` // 总记录数
+        List []OperationLogInfo `json:"list"` // 列表
+    }
+
+    // 操作日志详情响应
+    GetOperationLogResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data OperationLogInfo `json:"data"` // 数据
+    }
+
+    // 审计日志列表请求
+    ListAuditLogsReq {
+        Page int64 `form:"page,default=1,optional"` // 页码
+        PageSize int64 `form:"pageSize,default=10,optional"` // 每页数量
+        Keyword string `form:"keyword,optional"` // 关键词搜索
+        AuditType string `form:"auditType,optional"` // 审计类型筛选
+        ResourceType string `form:"resourceType,optional"` // 资源类型筛选
+        ResourceId int64 `form:"resourceId,optional"` // 资源ID筛选
+        OperatorId int64 `form:"operatorId,optional"` // 操作人ID筛选
+        StartTime string `form:"startTime,optional"` // 开始时间
+        EndTime string `form:"endTime,optional"` // 结束时间
+    }
+
+    // 审计日志列表响应
+    ListAuditLogsResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data AuditLogListData `json:"data"` // 数据
+    }
+
+    // 审计日志信息
+    AuditLogInfo {
+        Id int64 `json:"id"` // 日志ID
+        AuditType string `json:"auditType"` // 审计类型：create、update、delete、login、logout
+        ResourceType string `json:"resourceType"` // 资源类型：user、role、menu、config等
+        ResourceId int64 `json:"resourceId"` // 资源ID
+        ResourceName string `json:"resourceName"` // 资源名称
+        OldData string `json:"oldData"` // 变更前数据
+        NewData string `json:"newData"` // 变更后数据
+        ChangeFields string `json:"changeFields"` // 变更字段
+        Description string `json:"description"` // 操作描述
+        OperatorId int64 `json:"operatorId"` // 操作人ID
+        OperatorName string `json:"operatorName"` // 操作人姓名
+        OperatorType string `json:"operatorType"` // 操作人类型
+        IpAddress string `json:"ipAddress"` // IP地址
+        UserAgent string `json:"userAgent"` // 用户代理
+        CreatedAt string `json:"createdAt"` // 创建时间
+    }
+
+    // 审计日志列表数据
+    AuditLogListData {
+        Total int64 `json:"total"` // 总记录数
+        List []AuditLogInfo `json:"list"` // 列表
+    }
+
+    // 审计日志详情响应
+    GetAuditLogResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data AuditLogInfo `json:"data"` // 数据
+    }
+
+    // 登录日志列表请求
+    ListLoginLogsReq {
+        Page int64 `form:"page,default=1,optional"` // 页码
+        PageSize int64 `form:"pageSize,default=10,optional"` // 每页数量
+        Keyword string `form:"keyword,optional"` // 关键词搜索
+        UserType string `form:"userType,optional"` // 用户类型筛选
+        Status string `form:"status,optional"` // 状态筛选：success、failed
+        StartTime string `form:"startTime,optional"` // 开始时间
+        EndTime string `form:"endTime,optional"` // 结束时间
+    }
+
+    // 登录日志列表响应
+    ListLoginLogsResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data LoginLogListData `json:"data"` // 数据
+    }
+
+    // 登录日志信息
+    LoginLogInfo {
+        Id int64 `json:"id"` // 日志ID
+        UserId int64 `json:"userId"` // 用户ID
+        Username string `json:"username"` // 用户名
+        UserType string `json:"userType"` // 用户类型：admin、manager、user
+        LoginType string `json:"loginType"` // 登录类型：password、sms、email
+        Status string `json:"status"` // 状态：success、failed
+        FailureReason string `json:"failureReason"` // 失败原因
+        IpAddress string `json:"ipAddress"` // IP地址
+        UserAgent string `json:"userAgent"` // 用户代理
+        Location string `json:"location"` // 登录地点
+        Device string `json:"device"` // 设备信息
+        Browser string `json:"browser"` // 浏览器信息
+        LoginTime string `json:"loginTime"` // 登录时间
+        LogoutTime string `json:"logoutTime,optional"` // 登出时间
+        SessionDuration int64 `json:"sessionDuration,optional"` // 会话时长（秒）
+    }
+
+    // 登录日志列表数据
+    LoginLogListData {
+        Total int64 `json:"total"` // 总记录数
+        List []LoginLogInfo `json:"list"` // 列表
+    }
+
+    // 登录日志详情响应
+    GetLoginLogResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data LoginLogInfo `json:"data"` // 数据
+    }
+
+    // 日志统计请求
+    GetLogStatsReq {
+        StartTime string `form:"startTime,optional"` // 开始时间
+        EndTime string `form:"endTime,optional"` // 结束时间
+        GroupBy string `form:"groupBy,default=day,optional"` // 分组方式：day、hour、month
+    }
+
+    // 日志统计响应
+    GetLogStatsResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data LogStatsData `json:"data"` // 数据
+    }
+
+    // 日志统计数据
+    LogStatsData {
+        TotalOperationLogs int64 `json:"totalOperationLogs"` // 总操作日志数
+        TotalAuditLogs int64 `json:"totalAuditLogs"` // 总审计日志数
+        TotalLoginLogs int64 `json:"totalLoginLogs"` // 总登录日志数
+        SuccessLoginCount int64 `json:"successLoginCount"` // 成功登录次数
+        FailedLoginCount int64 `json:"failedLoginCount"` // 失败登录次数
+        ActiveUsers int64 `json:"activeUsers"` // 活跃用户数
+        TopModules []ModuleStat `json:"topModules"` // 热门模块统计
+        TopActions []ActionStat `json:"topActions"` // 热门操作统计
+        DailyStats []DailyStat `json:"dailyStats"` // 每日统计
+    }
+
+    // 模块统计
+    ModuleStat {
+        Module string `json:"module"` // 模块名称
+        Count int64 `json:"count"` // 操作次数
+    }
+
+    // 操作统计
+    ActionStat {
+        Action string `json:"action"` // 操作类型
+        Count int64 `json:"count"` // 操作次数
+    }
+
+    // 导出日志请求
+    ExportLogsReq {
+        LogType string `json:"logType"` // 日志类型：operation、audit、login
+        StartTime string `form:"startTime,optional"` // 开始时间
+        EndTime string `form:"endTime,optional"` // 结束时间
+        Format string `json:"format,default=excel,optional"` // 导出格式：excel、csv、json
+        Fields []string `json:"fields,optional"` // 导出字段
+        Filters map[string]interface{} `json:"filters,optional"` // 筛选条件
+    }
+
+    // 导出日志响应
+    ExportLogsResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data ExportLogsData `json:"data"` // 数据
+    }
+
+    // 导出日志数据
+    ExportLogsData {
+        TaskId string `json:"taskId"` // 任务ID
+        DownloadUrl string `json:"downloadUrl"` // 下载链接
+        ExpireTime string `json:"expireTime"` // 过期时间
+        FileSize int64 `json:"fileSize"` // 文件大小
+        RecordCount int64 `json:"recordCount"` // 记录数量
+    }
+
+    // 清理日志请求
+    CleanLogsReq {
+        LogType string `json:"logType"` // 日志类型：operation、audit、login、all
+        BeforeTime string `json:"beforeTime"` // 清理此时间之前的日志
+        DryRun bool `json:"dryRun,default=false,optional"` // 是否只是预览（不实际删除）
+        Reason string `json:"reason,optional"` // 清理原因
+    }
+
+    // 清理日志响应
+    CleanLogsResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data CleanLogsData `json:"data"` // 数据
+    }
+
+    // 清理日志数据
+    CleanLogsData {
+        TaskId string `json:"taskId"` // 任务ID
+        EstimatedCount int64 `json:"estimatedCount"` // 预计清理数量
+        ActualCount int64 `json:"actualCount,optional"` // 实际清理数量
+        FreedSpace int64 `json:"freedSpace,optional"` // 释放空间（字节）
+        Status string `json:"status"` // 状态：pending-待处理, processing-处理中, completed-已完成, failed-失败
+        StartTime string `json:"startTime,optional"` // 开始时间
+        EndTime string `json:"endTime,optional"` // 结束时间
+        ErrorMessage string `json:"errorMessage,optional"` // 错误信息
+    }
+
+    // 获取导出任务状态请求
+    GetExportTaskStatusReq {
+        TaskId string `path:"taskId"` // 任务ID
+    }
+
+    // 获取导出任务状态响应
+    GetExportTaskStatusResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data ExportTaskStatusData `json:"data"` // 数据
+    }
+
+    // 导出任务状态数据
+    ExportTaskStatusData {
+        TaskId string `json:"taskId"` // 任务ID
+        Status string `json:"status"` // 状态：pending-待处理, processing-处理中, completed-已完成, failed-失败
+        Progress int32 `json:"progress"` // 进度百分比（0-100）
+        TotalRecords int64 `json:"totalRecords"` // 总记录数
+        ProcessedRecords int64 `json:"processedRecords"` // 已处理记录数
+        DownloadUrl string `json:"downloadUrl,optional"` // 下载链接
+        FileSize int64 `json:"fileSize,optional"` // 文件大小
+        ExpireTime string `json:"expireTime,optional"` // 过期时间
+        StartTime string `json:"startTime"` // 开始时间
+        EndTime string `json:"endTime,optional"` // 结束时间
+        ErrorMessage string `json:"errorMessage,optional"` // 错误信息
+    }
+
+    // 下载导出文件响应
+    DownloadExportResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data DownloadExportData `json:"data"` // 数据
+    }
+
+    // 下载导出文件数据
+    DownloadExportData {
+        DownloadUrl string `json:"downloadUrl"` // 下载链接
+        FileName string `json:"fileName"` // 文件名
+        FileSize int64 `json:"fileSize"` // 文件大小
+        ContentType string `json:"contentType"` // 内容类型
+        ExpireTime string `json:"expireTime"` // 过期时间
+    }
+)

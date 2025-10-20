@@ -1,25 +1,435 @@
 syntax = "proto3";
 
-option go_package = ".";
+package iam;
+option go_package = "./iamRpc";
 
-// ============ 登录/注册 ============
-service Sign {
+// ============ 通用响应 ============
+message BaseResp {
+  int32 code = 1;        // 响应码
+  string message = 2;    // 响应消息
+  string request_id = 3; // 请求ID
+}
+
+// ============ 分页请求 ============
+message PageReq {
+  int64 page = 1;        // 页码
+  int64 page_size = 2;   // 每页数量
+  string keyword = 3;    // 关键词搜索
+}
+
+// ============ 分页响应 ============
+message PageResp {
+  int64 total = 1;       // 总数量
+  int64 page = 2;        // 当前页码
+  int64 page_size = 3;   // 每页数量
+}
+
+// ============ 用户信息 ============
+message UserInfo {
+  int64 id = 1;                    // 用户ID
+  bool is_manager = 2;              // 是否为客户经理
+  string email = 3;                  // 邮箱
+  string invite_code = 4;            // 邀请码
+  int64 staff_id = 5;              // 员工ID
+  int64 created_at = 6;             // 创建时间
+  int64 updated_at = 7;              // 更新时间
+  UserProfile profile = 8;           // 用户资料
+  repeated UserEmail emails = 9;     // 邮箱列表
+}
+
+// ============ 用户资料 ============
+message UserProfile {
+  int64 id = 1;         // 资料ID
+  int64 user_id = 2;    // 用户ID
+  string nickname = 3;   // 昵称
+  string avatar_url = 4; // 头像URL
+  string extra_info = 5; // 扩展信息
+}
+
+// ============ 用户邮箱 ============
+message UserEmail {
+  int64 id = 1;         // 邮箱ID
+  string email = 2;      // 邮箱地址
+  int64 user_id = 3;    // 用户ID
+  int64 created_at = 4;  // 创建时间
+}
+
+// ============ 用户邀请 ============
+message UserInvite {
+  int64 id = 1;                    // 邀请ID
+  string invite_code = 2;           // 邀请码
+  int64 staff_id = 3;              // 生成邀请的员工ID
+  string staff_name = 4;            // 生成邀请的员工姓名
+  double exchange_fee_rate = 5;      // 换汇手续费率
+  double withdraw_fee = 6;           // 提现手续费
+  int64 expires_at = 7;              // 过期时间
+  bool is_used = 8;                  // 是否已使用
+  int64 used_at = 9;                 // 使用时间
+  int64 used_by_user_id = 10;       // 使用人ID
+  string used_by_email = 11;         // 使用人邮箱
+  string note = 12;                  // 备注
+  int64 created_at = 13;             // 创建时间
+}
+
+// ============ 用户会话 ============
+message UserSession {
+  int64 id = 1;         // 会话ID
+  string token = 2;      // Token
+  int64 user_id = 3;    // 用户ID
+  int64 expires_at = 4;  // 过期时间
+  int64 created_at = 5; // 创建时间
+}
+
+// ============ 用户凭证 ============
+message UserCredential {
+  int64 id = 1;                    // 凭证ID
+  int64 user_id = 2;               // 用户ID
+  string credential_type = 3;       // 凭证类型
+  string credential_value = 4;      // 凭证值
+  int64 created_at = 5;             // 创建时间
+}
+
+// ============ IAM 身份认证服务 ============
+service Iam {
+  // ============ 登录注册相关 ============
+  // 登录
   rpc Login(LoginReq) returns (LoginResp);
+  // 注册
   rpc Register(RegisterReq) returns (RegisterResp);
+  // 登出
   rpc Logout(LogoutReq) returns (LogoutResp);
-}
+  // 刷新Token
+  rpc RefreshToken(RefreshTokenReq) returns (RefreshTokenResp);
 
-// ============ 会话 ============
-service Session {
-}
-
-// ============ 用户 ============
-service User {
-  // 用户管理
-  rpc CreateUser(CreateUserReq) returns (CreateUserResp);
-  rpc DeleteUser(DeleteUserReq) returns (DeleteUserResp);
-  rpc ListUsers(ListUsersReq) returns (ListUsersResp);
-  rpc GetProfile(GetProfileReq) returns (GetProfileResp);
+  // ============ 用户管理相关 ============
+  // 获取用户
+  rpc GetUser(GetUserReq) returns (GetUserResp);
+  // 更新用户资料
   rpc UpdateProfile(UpdateProfileReq) returns (UpdateProfileResp);
+  // 修改密码
+  rpc ChangePassword(ChangePasswordReq) returns (ChangePasswordResp);
+  // 绑定邮箱
+  rpc BindEmail(BindEmailReq) returns (BindEmailResp);
+  // 解绑邮箱
+  rpc UnbindEmail(UnbindEmailReq) returns (UnbindEmailResp);
+  // 获取用户列表
+  rpc ListUsers(ListUsersReq) returns (ListUsersResp);
 
+  // ============ 邀请管理相关 ============
+  // 生成邀请码
+  rpc GenerateInvite(GenerateInviteReq) returns (GenerateInviteResp);
+  // 验证邀请码
+  rpc ValidateInvite(ValidateInviteReq) returns (ValidateInviteResp);
+  // 使用邀请码
+  rpc UseInvite(UseInviteReq) returns (UseInviteResp);
+  // 获取邀请列表
+  rpc ListInvites(ListInvitesReq) returns (ListInvitesResp);
+  // 获取邀请详情
+  rpc GetInvite(GetInviteReq) returns (GetInviteResp);
+
+  // ============ 会话管理相关 ============
+  // 创建会话
+  rpc CreateSession(CreateSessionReq) returns (CreateSessionResp);
+  // 验证会话
+  rpc ValidateSession(ValidateSessionReq) returns (ValidateSessionResp);
+  // 删除会话
+  rpc DeleteSession(DeleteSessionReq) returns (DeleteSessionResp);
+  // 获取用户所有会话
+  rpc ListSessions(ListSessionsReq) returns (ListSessionsResp);
+}
+
+// ============ 登录请求 ============
+message LoginReq {
+  string email = 1;      // 邮箱
+  string password = 2;  // 密码
+  string captcha = 3;    // 验证码
+  string request_id = 4; // 请求ID
+}
+
+// ============ 登录响应 ============
+message LoginResp {
+  BaseResp base = 1;
+  LoginData data = 2;
+}
+
+message LoginData {
+  string token = 1;           // JWT Token
+  int64 expires_in = 2;       // 过期时间（秒）
+  UserInfo user = 3;          // 用户信息
+}
+
+// ============ 注册请求 ============
+message RegisterReq {
+  string email = 1;           // 邮箱
+  string password = 2;        // 密码
+  string invite_code = 3;     // 邀请码
+  string email_code = 4;      // 邮箱验证码
+  string request_id = 5;      // 请求ID
+}
+
+// ============ 注册响应 ============
+message RegisterResp {
+  BaseResp base = 1;
+  RegisterData data = 2;
+}
+
+message RegisterData {
+  string token = 1;           // JWT Token
+  int64 expires_in = 2;       // 过期时间（秒）
+  UserInfo user = 3;          // 用户信息
+}
+
+// ============ 登出请求 ============
+message LogoutReq {
+  string token = 1;           // Token
+  string request_id = 2;      // 请求ID
+}
+
+// ============ 登出响应 ============
+message LogoutResp {
+  BaseResp base = 1;
+}
+
+// ============ 刷新Token请求 ============
+message RefreshTokenReq {
+  string token = 1;           // 当前Token
+  string request_id = 2;      // 请求ID
+}
+
+// ============ 刷新Token响应 ============
+message RefreshTokenResp {
+  BaseResp base = 1;
+  RefreshTokenData data = 2;
+}
+
+message RefreshTokenData {
+  string token = 1;           // 新JWT Token
+  int64 expires_in = 2;       // 过期时间（秒）
+}
+
+// ============ 邀请管理相关 ============
+
+// ============ 获取用户请求 ============
+message GetUserReq {
+  int64 user_id = 1;         // 用户ID
+  string request_id = 2;      // 请求ID
+}
+
+// ============ 获取用户响应 ============
+message GetUserResp {
+  BaseResp base = 1;
+  UserInfo data = 2;
+}
+
+// ============ 更新资料请求 ============
+message UpdateProfileReq {
+  int64 user_id = 1;         // 用户ID
+  string nickname = 2;        // 昵称
+  string avatar_url = 3;      // 头像URL
+  string extra_info = 4;      // 扩展信息
+  string request_id = 5;      // 请求ID
+}
+
+// ============ 更新资料响应 ============
+message UpdateProfileResp {
+  BaseResp base = 1;
+  UserProfile data = 2;
+}
+
+// ============ 修改密码请求 ============
+message ChangePasswordReq {
+  int64 user_id = 1;         // 用户ID
+  string old_password = 2;    // 旧密码
+  string new_password = 3;    // 新密码
+  string request_id = 4;      // 请求ID
+}
+
+// ============ 修改密码响应 ============
+message ChangePasswordResp {
+  BaseResp base = 1;
+}
+
+// ============ 绑定邮箱请求 ============
+message BindEmailReq {
+  int64 user_id = 1;         // 用户ID
+  string email = 2;           // 邮箱
+  string email_code = 3;      // 邮箱验证码
+  string request_id = 4;      // 请求ID
+}
+
+// ============ 绑定邮箱响应 ============
+message BindEmailResp {
+  BaseResp base = 1;
+  UserEmail data = 2;
+}
+
+// ============ 解绑邮箱请求 ============
+message UnbindEmailReq {
+  int64 user_id = 1;         // 用户ID
+  int64 email_id = 2;        // 邮箱ID
+  string request_id = 3;      // 请求ID
+}
+
+// ============ 解绑邮箱响应 ============
+message UnbindEmailResp {
+  BaseResp base = 1;
+}
+
+// ============ 用户列表请求 ============
+message ListUsersReq {
+  PageReq page = 1;           // 分页参数
+  bool is_manager = 2;        // 是否为客户经理
+  string request_id = 3;     // 请求ID
+}
+
+// ============ 用户列表响应 ============
+message ListUsersResp {
+  BaseResp base = 1;
+  ListUsersData data = 2;
+}
+
+message ListUsersData {
+  repeated UserInfo users = 1; // 用户列表
+  PageResp page = 2;          // 分页信息
+}
+
+// ============ 生成邀请请求 ============
+message GenerateInviteReq {
+  int64 staff_id = 1;        // 员工ID
+  string staff_name = 2;      // 员工姓名
+  double exchange_fee_rate = 3; // 换汇手续费率
+  double withdraw_fee = 4;    // 提现手续费
+  int64 expires_at = 5;       // 过期时间
+  string note = 6;            // 备注
+  string request_id = 7;      // 请求ID
+}
+
+// ============ 生成邀请响应 ============
+message GenerateInviteResp {
+  BaseResp base = 1;
+  UserInvite data = 2;
+}
+
+// ============ 验证邀请请求 ============
+message ValidateInviteReq {
+  string invite_code = 1;     // 邀请码
+  string request_id = 2;      // 请求ID
+}
+
+// ============ 验证邀请响应 ============
+message ValidateInviteResp {
+  BaseResp base = 1;
+  ValidateInviteData data = 2;
+}
+
+message ValidateInviteData {
+  bool valid = 1;             // 是否有效
+  string message = 2;         // 消息
+  UserInvite invite = 3;      // 邀请信息
+}
+
+// ============ 使用邀请请求 ============
+message UseInviteReq {
+  string invite_code = 1;     // 邀请码
+  int64 user_id = 2;         // 用户ID
+  string user_email = 3;      // 用户邮箱
+  string request_id = 4;      // 请求ID
+}
+
+// ============ 使用邀请响应 ============
+message UseInviteResp {
+  BaseResp base = 1;
+  UserInvite data = 2;
+}
+
+// ============ 邀请列表请求 ============
+message ListInvitesReq {
+  PageReq page = 1;           // 分页参数
+  int64 staff_id = 2;        // 员工ID
+  bool is_used = 3;           // 是否已使用
+  string request_id = 4;      // 请求ID
+}
+
+// ============ 邀请列表响应 ============
+message ListInvitesResp {
+  BaseResp base = 1;
+  ListInvitesData data = 2;
+}
+
+message ListInvitesData {
+  repeated UserInvite invites = 1; // 邀请列表
+  PageResp page = 2;               // 分页信息
+}
+
+// ============ 获取邀请请求 ============
+message GetInviteReq {
+  int64 invite_id = 1;       // 邀请ID
+  string request_id = 2;      // 请求ID
+}
+
+// ============ 获取邀请响应 ============
+message GetInviteResp {
+  BaseResp base = 1;
+  UserInvite data = 2;
+}
+
+// ============ 创建会话请求 ============
+message CreateSessionReq {
+  int64 user_id = 1;         // 用户ID
+  string token = 2;            // Token
+  int64 expires_at = 3;       // 过期时间
+  string request_id = 4;      // 请求ID
+}
+
+// ============ 创建会话响应 ============
+message CreateSessionResp {
+  BaseResp base = 1;
+  UserSession data = 2;
+}
+
+// ============ 验证会话请求 ============
+message ValidateSessionReq {
+  string token = 1;           // Token
+  string request_id = 2;      // 请求ID
+}
+
+// ============ 验证会话响应 ============
+message ValidateSessionResp {
+  BaseResp base = 1;
+  ValidateSessionData data = 2;
+}
+
+message ValidateSessionData {
+  bool valid = 1;             // 是否有效
+  UserInfo user = 2;          // 用户信息
+  int64 expires_at = 3;       // 过期时间
+}
+
+// ============ 删除会话请求 ============
+message DeleteSessionReq {
+  string token = 1;           // Token
+  string request_id = 2;      // 请求ID
+}
+
+// ============ 删除会话响应 ============
+message DeleteSessionResp {
+  BaseResp base = 1;
+}
+
+// ============ 会话列表请求 ============
+message ListSessionsReq {
+  int64 user_id = 1;         // 用户ID
+  PageReq page = 2;           // 分页参数
+  string request_id = 3;      // 请求ID
+}
+
+// ============ 会话列表响应 ============
+message ListSessionsResp {
+  BaseResp base = 1;
+  ListSessionsData data = 2;
+}
+
+message ListSessionsData {
+  repeated UserSession sessions = 1; // 会话列表
+  PageResp page = 2;                 // 分页信息
 }

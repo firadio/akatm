@@ -1,0 +1,97 @@
+syntax = "v1"
+
+info(
+    title: "公共类型定义"
+    desc: "所有接口共用的基础类型"
+    version: "v1.0"
+)
+
+type (
+    // 基础响应
+    BaseResp {
+        Code int32 `json:"code"`           // 响应码 0-成功 非0-失败
+        Message string `json:"message"`    // 响应消息
+    }
+
+    // 带数据的响应（具体接口可自定义返回体）
+    DataResp {
+        Code int32 `json:"code"`
+        Message string `json:"message"`
+        Data interface{} `json:"data"`     // 响应数据
+    }
+
+    // 分页请求
+    PageReq {
+        Page int64 `form:"page,default=1,optional"`         // 页码 默认1
+        PageSize int64 `form:"pageSize,default=10,optional"` // 每页数量 默认10 最大100
+    }
+
+    // 分页数据
+    PageData {
+        Total int64 `json:"total"`        // 总记录数
+        Page int64 `json:"page"`          // 当前页码
+        PageSize int64 `json:"pageSize"`  // 每页数量
+    }
+
+    // ID路径参数
+    IdReq {
+        Id int64 `path:"id"` // 资源ID
+    }
+
+    // 国家信息
+    CountryInfo {
+        Id int64 `json:"id"` // ID
+        Code string `json:"code"` // 国家代码
+        Name string `json:"name"` // 国家名称
+        NameEn string `json:"nameEn"` // 英文名称
+        Currency string `json:"currency"` // 货币代码
+        PhoneCode string `json:"phoneCode"` // 电话区号
+        Sort int `json:"sort"` // 排序
+        Status int `json:"status"` // 状态
+        Description string `json:"description"` // 描述
+        CreatedAt int64 `json:"createdAt"` // 创建时间
+        UpdatedAt int64 `json:"updatedAt"` // 更新时间
+    }
+
+    // 币种统计
+    CurrencyStat {
+        Currency string `json:"currency"` // 币种
+        DepositAmount string `json:"depositAmount"` // 存款金额
+        WithdrawalAmount string `json:"withdrawalAmount"` // 提现金额
+        FeeAmount string `json:"feeAmount"` // 手续费金额
+        TransactionCount int64 `json:"transactionCount"` // 交易笔数
+    }
+
+    // 菜单信息
+    MenuInfo {
+        Id int64 `json:"id"` // ID
+        Name string `json:"name"` // 名称
+        Path string `json:"path"` // 路由/路径
+        Icon string `json:"icon"` // 图标
+        Component string `json:"component"` // 组件路径
+        Role string `json:"role"` // 角色权限
+        Label string `json:"label"` // 显示标签
+        Alias string `json:"alias"` // 别名路径
+        Type int32 `json:"type"` // 类型：1-菜单, 2-按钮
+        ParentId int64 `json:"parentId"` // 父级ID
+        Sort int32 `json:"sort"` // 排序
+        Status int32 `json:"status"` // 状态：1-启用, 0-禁用
+        StatusText string `json:"statusText"` // 状态文本
+        CreatedAt string `json:"createdAt"` // 创建时间
+        UpdatedAt string `json:"updatedAt"` // 更新时间
+        Children []MenuInfo `json:"children,optional"` // 子菜单
+
+        }
+                    // 每日统计
+        DailyStat {
+            Date string `json:"date"` // 日期（YYYY-MM-DD）
+            Count int64 `json:"count"` // 数量
+            Amount string `json:"amount"` // 金额（decimal字符串）
+        }
+)
+
+// 状态枚举说明：
+// 审核状态：0-待审核 1-审核通过 2-审核拒绝
+// 账户状态：0-未开户 1-待审核 2-已开户 3-已冻结 4-已关闭
+// 提现状态：0-待审核 1-审核通过 2-审核拒绝 3-处理中 4-已完成 5-已取消
+// 邀请状态：0-未使用 1-已使用 2-已撤销 3-已过期

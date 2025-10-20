@@ -1,0 +1,165 @@
+syntax = "v1"
+
+info(
+    title: "角色管理接口"
+    desc: "提供角色的增删改查及权限分配功能"
+    version: "v1.0"
+)
+
+import "../../common/types.api"
+
+@server(
+    prefix: /api/role
+    group: role
+    jwt: Auth
+    middleware: SignCheck, JwtAuth
+    tags: "角色管理"
+)
+service admin {
+    @doc(
+        summary: "创建角色"
+        description: "创建新的管理角色。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.role.create"
+    )
+    @handler createRole
+    post /roles (CreateRoleReq) returns (CreateRoleResp)
+
+    @doc(
+        summary: "获取角色列表"
+        description: "分页获取角色列表。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.role.list"
+    )
+    @handler listRoles
+    get /roles (ListRolesReq) returns (ListRolesResp)
+
+    @doc(
+        summary: "获取角色详情"
+        description: "根据ID获取角色详细信息。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.role.detail"
+    )
+    @handler getRole
+    get /roles/:id (IdReq) returns (GetRoleResp)
+
+    @doc(
+        summary: "更新角色"
+        description: "更新角色信息。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.role.update"
+    )
+    @handler updateRole
+    put /roles/:id (UpdateRoleReq) returns (BaseResp)
+
+    @doc(
+        summary: "删除角色"
+        description: "删除指定角色。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.role.delete"
+    )
+    @handler deleteRole
+    delete /roles/:id (IdReq) returns (BaseResp)
+
+    @doc(
+        summary: "分配菜单"
+        description: "为角色分配菜单权限。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.role.assignMenus"
+    )
+    @handler assignMenus
+    post /roles/:id/menus (AssignMenusReq) returns (BaseResp)
+
+    @doc(
+        summary: "获取角色菜单"
+        description: "根据角色ID获取菜单。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.role.getMenus"
+    )
+    @handler getRoleMenus
+    get /roles/:id/menus (IdReq) returns (GetRoleMenusResp)
+}
+
+type (
+    // 创建角色请求
+    CreateRoleReq {
+        Name string `json:"name"`          // 角色名称
+        Code string `json:"code"`          // 角色代码（唯一）
+        Description string `json:"description,optional"` // 角色描述
+        Status int32 `json:"status,default=1,optional"` // 状态：1-启用, 0-禁用
+    }
+
+    // 创建角色响应
+    CreateRoleResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data RoleDetail `json:"data"` // 数据
+    }
+
+    // 角色信息
+    RoleDetail {
+        Id int64 `json:"id"`               // 角色ID
+        Name string `json:"name"`          // 名称
+        Code string `json:"code"`          // 代码
+        Description string `json:"description"` // 描述
+        Status int32 `json:"status"`       // 状态：1-启用, 0-禁用
+        StatusText string `json:"statusText"` // 状态文本
+        CreatedAt string `json:"createdAt"` // 创建时间
+        UpdatedAt string `json:"updatedAt"` // 更新时间
+    }
+
+    // 列表请求
+    ListRolesReq {
+        Page int64 `form:"page,default=1,optional"` // 页码
+        PageSize int64 `form:"pageSize,default=10,optional"` // 每页数量
+        Keyword string `form:"keyword,optional"` // 名称/代码 模糊查询
+        Status int32 `form:"status,optional"`    // 状态筛选
+    }
+
+    // 列表响应
+    ListRolesResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data RoleListData `json:"data"` // 数据
+    }
+
+    RoleListData {
+        Total int64 `json:"total"` // 总记录数
+        List []RoleDetail `json:"list"` // 列表
+    }
+
+    // 详情响应
+    GetRoleResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data RoleDetail `json:"data"` // 数据
+    }
+
+    // 更新角色请求
+    UpdateRoleReq {
+        Id int64 `path:"id"`              // 角色ID
+        Name string `json:"name"`          // 名称
+        Description string `json:"description,optional"` // 描述
+        Status int32 `json:"status,optional"` // 状态：1-启用, 0-禁用
+    }
+
+    // 分配菜单请求
+    AssignMenusReq {
+        Id int64 `path:"id"`           // 角色ID
+        MenuIds []int64 `json:"menuIds"` // 菜单ID列表
+    }
+
+    // 获取角色菜单响应
+    GetRoleMenusResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data []RoleMenuItem `json:"data"` // 数据
+    }
+
+    // 菜单信息（用于关联展示）
+    RoleMenuItem {
+        Id int64 `json:"id"` // ID
+        Name string `json:"name"` // 名称
+        Path string `json:"path"` // 路径
+        Icon string `json:"icon"` // 图标
+        Component string `json:"component"` // 组件路径
+        Type int32 `json:"type"` // 类型：1-菜单, 2-按钮
+        ParentId int64 `json:"parentId"` // 父级ID
+        Sort int32 `json:"sort"` // 排序
+        Status int32 `json:"status"` // 状态：1-启用, 0-禁用
+        StatusText string `json:"statusText"` // 状态文本
+    }
+)

@@ -1,0 +1,12 @@
+Name: fams.rpc
+ListenOn: 0.0.0.0:8082
+Etcd:
+  Hosts:
+  - 127.0.0.1:2379
+  Key: fams.rpc.pro
+Log:
+  ServiceName: fams.rpc.pro
+  Mode: file
+  Level: warn
+  Encoding: json
+  Path: /var/log/akatm/fams.rpc.log

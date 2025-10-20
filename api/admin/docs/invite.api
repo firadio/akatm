@@ -1,0 +1,154 @@
+syntax = "v1"
+
+info(
+    title: "邀请链接管理接口"
+    desc: "生成与管理多层级代理系统的邀请链接，支持总代邀请代理、代理邀请客户经理、客户经理邀请其他客户经理。客户由客户经理直接添加，不需要邀请链接。"
+    version: "v1.0"
+)
+
+import "../../common/types.api"
+
+@server(
+    prefix: /api/invite
+    group: invite
+    jwt: Auth
+    middleware: SignCheck, JwtAuth
+    tags: "邀请管理"
+)
+service admin {
+    @doc(
+        summary: "生成邀请链接"
+        description: "为总代、代理、客户经理生成注册链接，支持总代邀请代理、代理邀请客户经理、客户经理邀请其他客户经理。客户由客户经理直接添加，不需要邀请链接。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.invite.create"
+    )
+    @handler createInvite
+    post /invites (CreateInviteReq) returns (CreateInviteResp)
+
+    @doc(
+        summary: "邀请链接列表"
+        description: "分页查询邀请链接列表，支持按邀请人、目标用户类型筛选。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.invite.list"
+    )
+    @handler listInvites
+    get /invites (ListInvitesReq) returns (ListInvitesResp)
+
+    @doc(
+        summary: "邀请详情"
+        description: "根据ID查询邀请详情。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.invite.detail"
+    )
+    @handler getInvite
+    get /invites/:id (IdReq) returns (GetInviteResp)
+
+    @doc(
+        summary: "撤销邀请"
+        description: "撤销未使用的邀请链接。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.invite.revoke"
+    )
+    @handler revokeInvite
+    patch /invites/:id/revoke (IdReq) returns (BaseResp)
+
+    @doc(
+        summary: "修改邀请链接"
+        description: "修改邀请链接的换汇手续费、提现手续费和授权国家。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.invite.update"
+    )
+    @handler updateInvite
+    put /invites/:id (UpdateInviteReq) returns (BaseResp)
+}
+
+type (
+    // 创建邀请请求
+    CreateInviteReq {
+        InviterUserId int64 `json:"inviterUserId"` // 邀请人用户ID
+        InviterUserType string `json:"inviterUserType"` // 邀请人用户类型：super_agent-总代, agent-代理, manager-客户经理
+        InviterEmail string `json:"inviterEmail"` // 邀请人邮箱
+        TargetUserType string `json:"targetUserType"` // 目标用户类型：super_agent-总代, agent-代理, manager-客户经理（客户由客户经理直接添加，不需要邀请）
+        ExchangeFeeRate string `json:"exchangeFeeRate"` // 换汇手续费率
+        WithdrawFee string `json:"withdrawFee"` // 提现手续费
+        CountryIds []int64 `json:"countryIds"` // 授权国家ID列表
+        ExpireHours int32 `json:"expireHours,default=24,optional"` // 有效期 默认24小时
+        Note string `json:"note,optional"` // 备注
+    }
+
+    // 创建邀请响应
+    CreateInviteResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data InviteInfo `json:"data"` // 数据
+    }
+
+    // 邀请信息
+    InviteInfo {
+        Id int64 `json:"id"` // ID
+        InviteCode string `json:"inviteCode"` // 邀请码
+        InviteUrl string `json:"inviteUrl"` // 注册链接
+        InviterUserId int64 `json:"inviterUserId"` // 邀请人用户ID
+        InviterUserType string `json:"inviterUserType"` // 邀请人用户类型：super_agent-总代, agent-代理, manager-客户经理
+        InviterEmail string `json:"inviterEmail"` // 邀请人邮箱
+        TargetUserType string `json:"targetUserType"` // 目标用户类型：super_agent-总代, agent-代理, manager-客户经理（客户由客户经理直接添加，不需要邀请）
+        ExchangeFeeRate string `json:"exchangeFeeRate"` // 换汇手续费率
+        WithdrawFee string `json:"withdrawFee"` // 提现手续费
+        CountryIds []int64 `json:"countryIds"` // 授权国家ID列表
+        Status string `json:"status"` // 状态：unused-未使用, used-已使用, revoked-已撤销, expired-已过期
+        StatusText string `json:"statusText"` // 状态文本
+        IsUsed bool `json:"isUsed"` // 是否已使用（数据库字段）
+        ExpireAt string `json:"expireAt"` // 过期时间
+        UsedAt string `json:"usedAt,optional"` // 使用时间
+        UsedByUserId int64 `json:"usedByUserId,optional"` // 使用人用户ID
+        UsedByEmail string `json:"usedByEmail,optional"` // 使用人邮箱
+        Note string `json:"note,optional"` // 备注（数据库字段名）
+        CreatedAt string `json:"createdAt"` // 创建时间
+        UpdatedAt string `json:"updatedAt"` // 更新时间
+    }
+
+    // 列表请求
+    ListInvitesReq {
+        Page int64 `form:"page,default=1,optional"` // 页码
+        PageSize int64 `form:"pageSize,default=10,optional"` // 每页数量
+        
+        // 搜索条件
+        Keyword string `form:"keyword,optional"` // 关键词搜索（邀请码、邀请人邮箱、使用人邮箱）
+        
+        // 筛选条件
+        InviterUserId int64 `form:"inviterUserId,optional"` // 邀请人用户ID
+        InviterUserType string `form:"inviterUserType,optional"` // 邀请人用户类型筛选
+        TargetUserType string `form:"targetUserType,optional"` // 目标用户类型筛选
+        Status string `form:"status,optional"` // 状态筛选：unused-未使用, used-已使用, revoked-已撤销, expired-已过期
+        IsUsed bool `form:"isUsed,optional"` // 是否已使用筛选
+        
+        // 时间范围筛选
+        StartTime string `form:"startTime,optional"` // 开始时间（时间戳）
+        EndTime string `form:"endTime,optional"` // 结束时间（时间戳）
+        ExpireTimeStart string `form:"expireTimeStart,optional"` // 过期开始时间（时间戳）
+        ExpireTimeEnd string `form:"expireTimeEnd,optional"` // 过期结束时间（时间戳）
+    }
+
+    // 列表响应
+    ListInvitesResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data InviteListData `json:"data"` // 数据
+    }
+
+    InviteListData {
+        Total int64 `json:"total"` // 总记录数
+        List []InviteInfo `json:"list"` // 列表
+    }
+
+    // 详情响应
+    GetInviteResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data InviteInfo `json:"data"` // 数据
+    }
+
+    // 更新邀请请求
+    UpdateInviteReq {
+        Id int64 `path:"id"` // 邀请ID
+        ExchangeFeeRate string `json:"exchangeFeeRate"` // 换汇手续费率
+        WithdrawFee string `json:"withdrawFee"` // 提现手续费
+        CountryIds []int64 `json:"countryIds"` // 授权国家ID列表
+        Note string `json:"note,optional"` // 备注
+    }
+)

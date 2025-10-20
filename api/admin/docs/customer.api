@@ -1,0 +1,516 @@
+syntax = "v1"
+
+info(
+    title: "客户管理接口（查看）"
+    desc: "管理端查看银行客户信息"
+    version: "v1.0"
+)
+
+import "../../common/types.api"
+
+@server(
+    prefix: /api/customer
+    group: customer
+    jwt: Auth
+    middleware: SignCheck, JwtAuth
+    tags: "客户管理"
+)
+service admin {
+    @doc(
+        summary: "客户列表"
+        description: "分页查看所有银行客户。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.customer.list"
+    )
+    @handler listCustomers
+    get /customers (ListCustomersReq) returns (ListCustomersResp)
+
+    @doc(
+        summary: "客户详情"
+        description: "查看银行客户详情。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.customer.detail"
+    )
+    @handler getCustomer
+    get /customers/:id (IdReq) returns (GetCustomerResp)
+
+    @doc(
+        summary: "更新客户信息"
+        description: "更新银行客户基础信息。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.customer.update"
+    )
+    @handler updateCustomer
+    put /customers/:id (UpdateCustomerReq) returns (BaseResp)
+
+    @doc(
+        summary: "客户账户列表"
+        description: "查看客户的银行账户列表。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.customer.accounts"
+    )
+    @handler listCustomerAccounts
+    get /customers/:id/accounts (IdReq) returns (ListCustomerAccountsResp)
+
+    @doc(
+        summary: "客户账户详情"
+        description: "查看客户的银行账户详情。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.customer.accountDetail"
+    )
+    @handler getCustomerAccount
+    get /customers/:customerId/accounts/:accountId (GetCustomerAccountReq) returns (GetCustomerAccountResp)
+
+    @doc(
+        summary: "更新KYC状态"
+        description: "更新客户KYC认证状态。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.customer.updateKycStatus"
+    )
+    @handler updateCustomerKycStatus
+    put /customers/:id/kyc-status (UpdateCustomerKycStatusReq) returns (BaseResp)
+
+    @doc(
+        summary: "KYC审核"
+        description: "审核客户KYC材料。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.customer.auditKyc"
+    )
+    @handler auditCustomerKyc
+    post /customers/:id/kyc-audit (AuditCustomerKycReq) returns (BaseResp)
+
+    @doc(
+        summary: "客户标签列表"
+        description: "获取客户标签列表。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.customer.tags"
+    )
+    @handler listCustomerTags
+    get /customers/tags (ListCustomerTagsReq) returns (ListCustomerTagsResp)
+
+    @doc(
+        summary: "创建客户标签"
+        description: "创建新的客户标签。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.customer.createTag"
+    )
+    @handler createCustomerTag
+    post /customers/tags (CreateCustomerTagReq) returns (CreateCustomerTagResp)
+
+    @doc(
+        summary: "更新客户标签"
+        description: "更新客户标签信息。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.customer.updateTag"
+    )
+    @handler updateCustomerTag
+    put /customers/tags/:id (UpdateCustomerTagReq) returns (BaseResp)
+
+    @doc(
+        summary: "删除客户标签"
+        description: "删除客户标签。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.customer.deleteTag"
+    )
+    @handler deleteCustomerTag
+    delete /customers/tags/:id (IdReq) returns (BaseResp)
+
+    @doc(
+        summary: "为客户添加标签"
+        description: "为客户添加标签。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.customer.addTags"
+    )
+    @handler addCustomerTags
+    post /customers/:id/tags (AddCustomerTagsReq) returns (BaseResp)
+
+    @doc(
+        summary: "移除客户标签"
+        description: "移除客户标签。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.customer.removeTags"
+    )
+    @handler removeCustomerTags
+    delete /customers/:id/tags (RemoveCustomerTagsReq) returns (BaseResp)
+
+    @doc(
+        summary: "获取客户标签"
+        description: "获取客户的标签列表。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.customer.getTags"
+    )
+    @handler getCustomerTags
+    get /customers/:id/tags (IdReq) returns (GetCustomerTagsResp)
+
+    @doc(
+        summary: "搜索可用标签"
+        description: "搜索可用的标签供客户经理选择。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.customer.searchTags"
+    )
+    @handler searchCustomerTags
+    get /customers/tags/search (SearchCustomerTagsReq) returns (SearchCustomerTagsResp)
+
+    @doc(
+        summary: "获取标签使用统计"
+        description: "获取标签的使用统计信息。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.customer.getTagStats"
+    )
+    @handler getCustomerTagStats
+    get /customers/tags/stats (GetCustomerTagStatsReq) returns (GetCustomerTagStatsResp)
+}
+
+type (
+    // 列表请求
+    ListCustomersReq {
+        Page int64 `form:"page,default=1,optional"` // 页码
+        PageSize int64 `form:"pageSize,default=10,optional"` // 每页数量
+        
+        // 搜索条件
+        Keyword string `form:"keyword,optional"` // 名称/邮箱/电话/证件号/营业执照
+        
+        // 筛选条件
+        CustomerType string `form:"customerType,optional"` // 客户类型：individual-个人, enterprise-企业
+        KycStatus string `form:"kycStatus,optional"` // KYC状态：pending-待审核, verified-已认证, rejected-已拒绝
+        ManagerId int64 `form:"managerId,optional"` // 客户经理ID筛选
+        
+        // 时间范围筛选
+        StartTime string `form:"startTime,optional"` // 创建开始时间（时间戳）
+        EndTime string `form:"endTime,optional"` // 创建结束时间（时间戳）
+    }
+
+    // 客户信息（只读）
+    CustomerInfo {
+        Id int64 `json:"id"` // ID
+        Name string `json:"name"` // 姓名
+        Phone string `json:"phone"` // 电话
+        Email string `json:"email"` // 邮箱
+        Address string `json:"address"` // 地址
+        IdNumber string `json:"idNumber"` // 证件号（个人）
+        BusinessLicense string `json:"businessLicense"` // 营业执照（企业）
+        CustomerType string `json:"customerType"` // 客户类型：individual-个人, enterprise-企业
+        KycStatus string `json:"kycStatus"` // KYC状态：pending-待审核, verified-已认证, rejected-已拒绝
+        ManagerId int64 `json:"managerId"` // 客户经理ID
+        ManagerName string `json:"managerName"` // 客户经理姓名
+        UserId int64 `json:"userId"` // 关联用户ID
+        Note string `json:"note"` // 备注
+        CreatedAt string `json:"createdAt"` // 创建时间
+        UpdatedAt string `json:"updatedAt"` // 更新时间
+    }
+
+    // 列表响应
+    ListCustomersResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data CustomerListData `json:"data"` // 数据
+    }
+
+    CustomerListData {
+        Total int64 `json:"total"` // 总记录数
+        List []CustomerInfo `json:"list"` // 列表
+    }
+
+    // 详情响应
+    GetCustomerResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data CustomerDetail `json:"data"` // 数据
+    }
+
+    CustomerDetail {
+        Id int64 `json:"id"` // ID
+        Name string `json:"name"` // 姓名
+        Phone string `json:"phone"` // 电话
+        Email string `json:"email"` // 邮箱
+        Address string `json:"address"` // 地址
+        IdNumber string `json:"idNumber"` // 证件号（个人）
+        BusinessLicense string `json:"businessLicense"` // 营业执照（企业）
+        CustomerType string `json:"customerType"` // 客户类型：individual-个人, enterprise-企业
+        KycStatus string `json:"kycStatus"` // KYC状态：pending-待审核, verified-已认证, rejected-已拒绝
+        KycVerifiedAt string `json:"kycVerifiedAt"` // KYC认证时间
+        KycDocuments string `json:"kycDocuments"` // KYC文档（JSON格式）
+        ManagerId int64 `json:"managerId"` // 客户经理ID
+        ManagerName string `json:"managerName"` // 客户经理姓名
+        ManagerLevel string `json:"managerLevel"` // 客户经理层级
+        UserId int64 `json:"userId"` // 关联用户ID
+        UserName string `json:"userName"` // 关联用户名
+        Note string `json:"note"` // 备注
+        BankAccountCount int32 `json:"bankAccountCount"` // 银行账户数量
+        WalletCount int32 `json:"walletCount"` // 钱包数量
+        TotalBalance string `json:"totalBalance"` // 总余额
+        CreatedAt string `json:"createdAt"` // 创建时间
+        UpdatedAt string `json:"updatedAt"` // 更新时间
+    }
+
+    // 更新客户请求
+    UpdateCustomerReq {
+        Id int64 `path:"id"` // ID
+        Name string `json:"name,optional"` // 姓名
+        Phone string `json:"phone,optional"` // 电话
+        Email string `json:"email,optional"` // 邮箱
+        Address string `json:"address,optional"` // 地址
+        IdNumber string `json:"idNumber,optional"` // 证件号（个人）
+        BusinessLicense string `json:"businessLicense,optional"` // 营业执照（企业）
+        CustomerType string `json:"customerType,optional"` // 客户类型：individual-个人, enterprise-企业
+        KycStatus string `json:"kycStatus,optional"` // KYC状态：pending-待审核, verified-已认证, rejected-已拒绝
+        KycDocuments string `json:"kycDocuments,optional"` // KYC文档（JSON格式）
+        ManagerId int64 `json:"managerId,optional"` // 客户经理ID
+        Note string `json:"note,optional"` // 备注
+    }
+
+    // 客户账户列表响应
+    ListCustomerAccountsResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data []CustomerAccountBrief `json:"data"` // 数据
+    }
+
+    CustomerAccountBrief {
+        Id int64 `json:"id"` // ID
+        AccountNumber string `json:"accountNumber"` // 账户号
+        Currency string `json:"currency"` // 币种
+        Status int32 `json:"status"` // 状态：1-正常 0-禁用
+        StatusText string `json:"statusText"` // 状态文本
+        Balance string `json:"balance"` // 账户余额
+        AvailableBalance string `json:"availableBalance"` // 可用余额
+        FrozenBalance string `json:"frozenBalance"` // 冻结余额
+        ManagerId int64 `json:"managerId"` // 客户经理ID
+        ManagerName string `json:"managerName"` // 客户经理姓名
+        ManagerLevel string `json:"managerLevel"` // 客户经理层级
+        UserId int64 `json:"userId"` // 关联用户ID
+        UserName string `json:"userName"` // 关联用户名
+        LastTransactionAt string `json:"lastTransactionAt"` // 最后交易时间
+        TransactionCount int64 `json:"transactionCount"` // 交易笔数
+        TotalDepositAmount string `json:"totalDepositAmount"` // 累计存款金额
+        TotalWithdrawalAmount string `json:"totalWithdrawalAmount"` // 累计提现金额
+        CreatedAt string `json:"createdAt"` // 创建时间
+        UpdatedAt string `json:"updatedAt"` // 更新时间
+    }
+
+    // 获取客户账户详情请求
+    GetCustomerAccountReq {
+        CustomerId int64 `path:"customerId"` // 客户ID
+        AccountId int64 `path:"accountId"` // 账户ID
+    }
+
+    // 客户账户详情响应
+    GetCustomerAccountResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data CustomerAccountDetail `json:"data"` // 数据
+    }
+
+    // 客户账户详情
+    CustomerAccountDetail {
+        Id int64 `json:"id"` // ID
+        AccountNumber string `json:"accountNumber"` // 账户号
+        Currency string `json:"currency"` // 币种
+        Status int32 `json:"status"` // 状态：1-正常 0-禁用
+        StatusText string `json:"statusText"` // 状态文本
+        Balance string `json:"balance"` // 账户余额
+        AvailableBalance string `json:"availableBalance"` // 可用余额
+        FrozenBalance string `json:"frozenBalance"` // 冻结余额
+        ManagerId int64 `json:"managerId"` // 客户经理ID
+        ManagerName string `json:"managerName"` // 客户经理姓名
+        ManagerLevel string `json:"managerLevel"` // 客户经理层级
+        UserId int64 `json:"userId"` // 关联用户ID
+        UserName string `json:"userName"` // 关联用户名
+        CustomerId int64 `json:"customerId"` // 客户ID
+        CustomerName string `json:"customerName"` // 客户姓名
+        CustomerEmail string `json:"customerEmail"` // 客户邮箱
+        CustomerPhone string `json:"customerPhone"` // 客户电话
+        LastTransactionAt string `json:"lastTransactionAt"` // 最后交易时间
+        TransactionCount int64 `json:"transactionCount"` // 交易笔数
+        TotalDepositAmount string `json:"totalDepositAmount"` // 累计存款金额
+        TotalWithdrawalAmount string `json:"totalWithdrawalAmount"` // 累计提现金额
+        TotalFeeAmount string `json:"totalFeeAmount"` // 累计手续费
+        DailyTransactionLimit string `json:"dailyTransactionLimit"` // 日交易限额
+        MonthlyTransactionLimit string `json:"monthlyTransactionLimit"` // 月交易限额
+        AccountOpeningDate string `json:"accountOpeningDate"` // 开户日期
+        RiskLevel string `json:"riskLevel"` // 风险等级：low-低, medium-中, high-高
+        ComplianceStatus string `json:"complianceStatus"` // 合规状态：compliant-合规, non_compliant-不合规, pending-待审核
+        CreatedAt string `json:"createdAt"` // 创建时间
+        UpdatedAt string `json:"updatedAt"` // 更新时间
+    }
+
+    // 更新KYC状态请求
+    UpdateCustomerKycStatusReq {
+        Id int64 `path:"id"` // 客户ID
+        KycStatus string `json:"kycStatus"` // KYC状态：pending-待审核, verified-已认证, rejected-已拒绝
+        KycDocuments string `json:"kycDocuments,optional"` // KYC文档（JSON格式）
+        Reason string `json:"reason,optional"` // 状态变更原因
+    }
+
+    // KYC审核请求
+    AuditCustomerKycReq {
+        Id int64 `path:"id"` // 客户ID
+        AuditResult string `json:"auditResult"` // 审核结果：approved-通过, rejected-拒绝
+        AuditNote string `json:"auditNote"` // 审核意见
+        KycDocuments string `json:"kycDocuments,optional"` // 更新的KYC文档
+        RequiredDocuments []string `json:"requiredDocuments,optional"` // 需要补充的材料
+    }
+
+    // 客户标签列表请求
+    ListCustomerTagsReq {
+        Page int64 `form:"page,default=1,optional"` // 页码
+        PageSize int64 `form:"pageSize,default=10,optional"` // 每页数量
+        Keyword string `form:"keyword,optional"` // 标签名称搜索
+        Status int32 `form:"status,optional"` // 状态筛选：1-启用, 0-禁用
+        ManagerId int64 `form:"managerId,optional"` // 客户经理ID筛选（可选）
+    }
+
+    // 客户标签列表响应
+    ListCustomerTagsResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data CustomerTagListData `json:"data"` // 数据
+    }
+
+    // 客户标签列表数据
+    CustomerTagListData {
+        Total int64 `json:"total"` // 总记录数
+        List []CustomerTagInfo `json:"list"` // 列表
+    }
+
+    // 客户标签信息
+    CustomerTagInfo {
+        Id int64 `json:"id"` // ID
+        Name string `json:"name"` // 标签名称
+        Description string `json:"description"` // 标签描述
+        Color string `json:"color"` // 标签颜色
+        Icon string `json:"icon"` // 标签图标
+        Status int32 `json:"status"` // 状态：1-启用, 0-禁用
+        StatusText string `json:"statusText"` // 状态文本
+        CustomerCount int64 `json:"customerCount"` // 使用此标签的客户数量
+        CreatedBy int64 `json:"createdBy"` // 创建人ID
+        CreatedByName string `json:"createdByName"` // 创建人姓名
+        CreatedAt string `json:"createdAt"` // 创建时间
+        UpdatedAt string `json:"updatedAt"` // 更新时间
+    }
+
+    // 创建客户标签请求
+    CreateCustomerTagReq {
+        Name string `json:"name"` // 标签名称
+        Description string `json:"description,optional"` // 标签描述
+        Color string `json:"color,optional"` // 标签颜色
+        Icon string `json:"icon,optional"` // 标签图标
+    }
+
+    // 创建客户标签响应
+    CreateCustomerTagResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data CustomerTagInfo `json:"data"` // 数据
+    }
+
+    // 更新客户标签请求
+    UpdateCustomerTagReq {
+        Id int64 `path:"id"` // 标签ID
+        Name string `json:"name,optional"` // 标签名称
+        Description string `json:"description,optional"` // 标签描述
+        Color string `json:"color,optional"` // 标签颜色
+        Icon string `json:"icon,optional"` // 标签图标
+        Status int32 `json:"status,optional"` // 状态：1-启用, 0-禁用
+    }
+
+    // 为客户添加标签请求
+    AddCustomerTagsReq {
+        Id int64 `path:"id"` // 客户ID
+        TagIds []int64 `json:"tagIds"` // 标签ID列表
+        Reason string `json:"reason,optional"` // 添加原因
+    }
+
+    // 移除客户标签请求
+    RemoveCustomerTagsReq {
+        Id int64 `path:"id"` // 客户ID
+        TagIds []int64 `json:"tagIds"` // 标签ID列表
+        Reason string `json:"reason,optional"` // 移除原因
+    }
+
+    // 获取客户标签响应
+    GetCustomerTagsResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data []CustomerTagAssignment `json:"data"` // 数据
+    }
+
+    // 客户标签分配
+    CustomerTagAssignment {
+        Id int64 `json:"id"` // 分配ID
+        CustomerId int64 `json:"customerId"` // 客户ID
+        TagId int64 `json:"tagId"` // 标签ID
+        TagName string `json:"tagName"` // 标签名称
+        TagColor string `json:"tagColor"` // 标签颜色
+        TagIcon string `json:"tagIcon"` // 标签图标
+        AssignedBy int64 `json:"assignedBy"` // 分配人ID
+        AssignedByName string `json:"assignedByName"` // 分配人姓名
+        Reason string `json:"reason"` // 分配原因
+        AssignedAt string `json:"assignedAt"` // 分配时间
+    }
+
+    // 搜索客户标签请求
+    SearchCustomerTagsReq {
+        Keyword string `form:"keyword,optional"` // 搜索关键词
+        Limit int64 `form:"limit,default=20,optional"` // 返回数量限制
+        ManagerId int64 `form:"managerId,optional"` // 客户经理ID筛选
+        ExcludeTagIds []int64 `form:"excludeTagIds,optional"` // 排除的标签ID列表
+    }
+
+    // 搜索客户标签响应
+    SearchCustomerTagsResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data []CustomerTagOption `json:"data"` // 数据
+    }
+
+    // 客户标签选项
+    CustomerTagOption {
+        Id int64 `json:"id"` // 标签ID
+        Name string `json:"name"` // 标签名称
+        Description string `json:"description"` // 标签描述
+        Color string `json:"color"` // 标签颜色
+        Icon string `json:"icon"` // 标签图标
+        CustomerCount int64 `json:"customerCount"` // 使用此标签的客户数量
+        CreatedByName string `json:"createdByName"` // 创建人姓名
+        IsReusable bool `json:"isReusable"` // 是否可复用
+    }
+
+    // 获取标签使用统计请求
+    GetCustomerTagStatsReq {
+        ManagerId int64 `form:"managerId,optional"` // 客户经理ID筛选
+        StartTime string `form:"startTime,optional"` // 开始时间
+        EndTime string `form:"endTime,optional"` // 结束时间
+    }
+
+    // 获取标签使用统计响应
+    GetCustomerTagStatsResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data CustomerTagStatsData `json:"data"` // 数据
+    }
+
+    // 客户标签统计数据
+    CustomerTagStatsData {
+        TotalTags int64 `json:"totalTags"` // 总标签数
+        ActiveTags int64 `json:"activeTags"` // 活跃标签数
+        TotalAssignments int64 `json:"totalAssignments"` // 总分配次数
+        TopTags []TopTagData `json:"topTags"` // 热门标签排行
+        ManagerStats []ManagerTagStat `json:"managerStats"` // 客户经理标签统计
+        RecentTags []RecentTagData `json:"recentTags"` // 最近创建的标签
+    }
+
+    // 热门标签数据
+    TopTagData {
+        TagId int64 `json:"tagId"` // 标签ID
+        TagName string `json:"tagName"` // 标签名称
+        TagColor string `json:"tagColor"` // 标签颜色
+        CustomerCount int64 `json:"customerCount"` // 使用客户数
+        AssignmentCount int64 `json:"assignmentCount"` // 分配次数
+        CreatedByName string `json:"createdByName"` // 创建人姓名
+        LastUsedAt string `json:"lastUsedAt"` // 最后使用时间
+    }
+
+    // 客户经理标签统计
+    ManagerTagStat {
+        ManagerId int64 `json:"managerId"` // 客户经理ID
+        ManagerName string `json:"managerName"` // 客户经理姓名
+        CreatedTags int64 `json:"createdTags"` // 创建的标签数
+        UsedTags int64 `json:"usedTags"` // 使用的标签数
+        TotalAssignments int64 `json:"totalAssignments"` // 总分配次数
+    }
+
+    // 最近创建的标签
+    RecentTagData {
+        TagId int64 `json:"tagId"` // 标签ID
+        TagName string `json:"tagName"` // 标签名称
+        TagColor string `json:"tagColor"` // 标签颜色
+        CreatedByName string `json:"createdByName"` // 创建人姓名
+        CreatedAt string `json:"createdAt"` // 创建时间
+        CustomerCount int64 `json:"customerCount"` // 使用客户数
+    }
+)

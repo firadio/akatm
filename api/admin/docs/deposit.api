@@ -1,0 +1,170 @@
+syntax = "v1"
+
+info(
+    title: "入账审核接口"
+    desc: "管理端审核银行入账，并按汇率转换后入USDT"
+    version: "v1.0"
+)
+
+import "../../common/types.api"
+
+@server(
+    prefix: /api/deposit
+    group: auditDeposit
+    jwt: Auth
+    middleware: SignCheck, JwtAuth
+    tags: "入账审核"
+)
+service admin {
+    @doc(
+        summary: "入账审核列表"
+        description: "分页查看入账审核列表。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.audit.deposit.list"
+    )
+    @handler listDeposits
+    get /audits/deposits (ListDepositsReq) returns (ListDepositsResp)
+
+    @doc(
+        summary: "入账审核详情"
+        description: "查看入账审核详情。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.audit.deposit.detail"
+    )
+    @handler getDeposit
+    get /audits/deposits/:id (IdReq) returns (GetDepositResp)
+
+    @doc(
+        summary: "审核通过"
+        description: "审核通过后执行汇率转换，扣手续费并入账USDT。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.audit.deposit.approve"
+    )
+    @handler approveDeposit
+    post /audits/deposits/:id/approve (ApproveDepositReq) returns (BaseResp)
+
+    @doc(
+        summary: "审核拒绝"
+        description: "入账审核拒绝。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.audit.deposit.reject"
+    )
+    @handler rejectDeposit
+    post /audits/deposits/:id/reject (RejectDepositReq) returns (BaseResp)
+}
+
+type (
+    ListDepositsReq {
+        Page int64 `form:"page,default=1,optional"` // 页码
+        PageSize int64 `form:"pageSize,default=10,optional"` // 每页数量
+        
+        // 搜索条件
+        Keyword string `form:"keyword,optional"` // 存款单号/客户姓名/客户邮箱/客户电话
+        
+        // 筛选条件
+        Status string `form:"status,optional"` // 审核状态：pending-待审核, approved-已通过, rejected-已拒绝
+        Currency string `form:"currency,optional"` // 币种筛选
+        CustomerId int64 `form:"customerId,optional"` // 客户ID筛选
+        ManagerId int64 `form:"managerId,optional"` // 客户经理ID筛选
+        AuditorId int64 `form:"auditorId,optional"` // 审核人ID筛选
+        
+        // 金额范围筛选
+        MinAmount string `form:"minAmount,optional"` // 最小金额
+        MaxAmount string `form:"maxAmount,optional"` // 最大金额
+        
+        // 时间范围筛选
+        DepositTimeStart string `form:"depositTimeStart,optional"` // 存款开始时间（时间戳）
+        DepositTimeEnd string `form:"depositTimeEnd,optional"` // 存款结束时间（时间戳）
+        AuditTimeStart string `form:"auditTimeStart,optional"` // 审核开始时间（时间戳）
+        AuditTimeEnd string `form:"auditTimeEnd,optional"` // 审核结束时间（时间戳）
+    }
+
+    DepositBrief {
+        Id int64 `json:"id"` // ID
+        DepositNumber string `json:"depositNumber"` // 存款单号
+        CustomerId int64 `json:"customerId"` // 客户ID
+        CustomerName string `json:"customerName"` // 客户姓名
+        CustomerEmail string `json:"customerEmail"` // 客户邮箱
+        CustomerPhone string `json:"customerPhone"` // 客户电话
+        ManagerId int64 `json:"managerId"` // 客户经理ID
+        ManagerName string `json:"managerName"` // 客户经理姓名
+        ManagerLevel string `json:"managerLevel"` // 客户经理层级
+        BankAccountId int64 `json:"bankAccountId"` // 银行账户ID
+        BankAccountNumber string `json:"bankAccountNumber"` // 银行账户号
+        DepositAmount string `json:"depositAmount"` // 存款金额
+        Currency string `json:"currency"` // 币种
+        ExchangeAmount string `json:"exchangeAmount"` // 换汇后金额
+        ExchangeFee string `json:"exchangeFee"` // 换汇手续费
+        Status string `json:"status"` // 审核状态：pending-待审核, approved-已通过, rejected-已拒绝
+        StatusText string `json:"statusText"` // 状态文本
+        DepositTime string `json:"depositTime"` // 存款时间
+        AuditorId int64 `json:"auditorId"` // 审核人ID
+        AuditorName string `json:"auditorName"` // 审核人姓名
+        AuditTime string `json:"auditTime"` // 审核时间
+        AuditNote string `json:"auditNote"` // 审核意见
+        AuditResult string `json:"auditResult"` // 审核结果
+        Note string `json:"note"` // 备注
+        CreatedAt string `json:"createdAt"` // 创建时间
+        UpdatedAt string `json:"updatedAt"` // 更新时间
+    }
+
+    ListDepositsResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data DepositListData `json:"data"` // 数据
+    }
+
+    DepositListData {
+        Total int64 `json:"total"` // 总记录数
+        List []DepositBrief `json:"list"` // 列表
+    }
+
+    GetDepositResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data DepositDetail `json:"data"` // 数据
+    }
+
+    DepositDetail {
+        Id int64 `json:"id"` // ID
+        DepositNumber string `json:"depositNumber"` // 存款单号
+        CustomerId int64 `json:"customerId"` // 客户ID
+        CustomerName string `json:"customerName"` // 客户姓名
+        CustomerEmail string `json:"customerEmail"` // 客户邮箱
+        CustomerPhone string `json:"customerPhone"` // 客户电话
+        CustomerType string `json:"customerType"` // 客户类型：individual-个人, enterprise-企业
+        CustomerKycStatus string `json:"customerKycStatus"` // 客户KYC状态
+        ManagerId int64 `json:"managerId"` // 客户经理ID
+        ManagerName string `json:"managerName"` // 客户经理姓名
+        ManagerLevel string `json:"managerLevel"` // 客户经理层级
+        ManagerEmail string `json:"managerEmail"` // 客户经理邮箱
+        BankAccountId int64 `json:"bankAccountId"` // 银行账户ID
+        BankAccountNumber string `json:"bankAccountNumber"` // 银行账户号
+        BankAccountCurrency string `json:"bankAccountCurrency"` // 银行账户币种
+        BankAccountStatus string `json:"bankAccountStatus"` // 银行账户状态
+        DepositAmount string `json:"depositAmount"` // 存款金额
+        Currency string `json:"currency"` // 币种
+        ExchangeAmount string `json:"exchangeAmount"` // 换汇后金额
+        ExchangeFee string `json:"exchangeFee"` // 换汇手续费
+        ExchangeRate string `json:"exchangeRate"` // 汇率
+        WithdrawFee string `json:"withdrawFee"` // 提现手续费
+        Status string `json:"status"` // 审核状态：pending-待审核, approved-已通过, rejected-已拒绝
+        StatusText string `json:"statusText"` // 状态文本
+        DepositTime string `json:"depositTime"` // 存款时间
+        AuditorId int64 `json:"auditorId"` // 审核人ID
+        AuditorName string `json:"auditorName"` // 审核人姓名
+        AuditorEmail string `json:"auditorEmail"` // 审核人邮箱
+        AuditTime string `json:"auditTime"` // 审核时间
+        AuditNote string `json:"auditNote"` // 审核意见
+        AuditResult string `json:"auditResult"` // 审核结果
+        Note string `json:"note"` // 备注
+        CreatedAt string `json:"createdAt"` // 创建时间
+        UpdatedAt string `json:"updatedAt"` // 更新时间
+    }
+
+    ApproveDepositReq {
+        Id int64 `path:"id"` // ID
+        Note string `json:"note,optional"` // 备注
+    }
+
+    RejectDepositReq {
+        Id int64 `path:"id"` // ID
+        Note string `json:"note"` // 备注
+    }
+)

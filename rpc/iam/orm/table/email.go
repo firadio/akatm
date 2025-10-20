@@ -1,7 +1,7 @@
 package table
 
 import (
-	"akatm/rpc/fams/orm"
+	"akatm/rpc/iam/orm"
 
 	"gorm.io/gorm"
 )

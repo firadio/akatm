@@ -1,0 +1,167 @@
+syntax = "v1"
+
+info(
+    title: "资金明细"
+    desc: "客户经理查看名下客户资金明细"
+    version: "v1.0"
+)
+
+import "../../common/types.api"
+
+@server(
+    prefix: /api/transaction
+    group: transaction
+    jwt: Auth
+    middleware: SignCheck, JwtAuth
+    tags: "资金明细"
+)
+service manager {
+    @doc(
+        summary: "明细列表"
+        description: "分页查看资金明细。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.transaction.list"
+    )
+    @handler listTransactions
+    get /transactions (ListTransactionsReq) returns (ListTransactionsResp)
+
+    @doc(
+        summary: "明细详情"
+        description: "查看单条明细详情。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.transaction.detail"
+    )
+    @handler getTransaction
+    get /transactions/:id (IdReq) returns (GetTransactionResp)
+
+    @doc(
+        summary: "资金总览"
+        description: "我名下客户资金总览。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.transaction.summary"
+    )
+    @handler getSummary
+    get /transactions/summary returns (GetSummaryResp)
+
+    @doc(
+        summary: "导出明细"
+        description: "导出资金明细为Excel文件。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.transaction.export"
+    )
+    @handler exportTransactions
+    post /transactions/export (ExportTransactionsReq) returns (ExportTransactionsResp)
+}
+
+type (
+    ListTransactionsReq {
+        Page int64 `form:"page,default=1,optional"` // 页码
+        PageSize int64 `form:"pageSize,default=10,optional"` // 每页数量
+        Keyword string `form:"keyword,optional"` // 关键词搜索（交易单号）
+        Currency string `form:"currency,optional"` // 币种筛选（如：USD、CNY、EUR等）
+        TransactionType string `form:"transactionType,optional"` // 交易类型筛选（deposit-存款、withdrawal-提现、exchange-换汇、fee-手续费）
+        Status string `form:"status,optional"` // 状态筛选（pending-待处理、completed-已完成、failed-失败、cancelled-已取消）
+        StartTime string `form:"startTime,optional"` // 开始时间（格式：2024-01-01 00:00:00）
+        EndTime string `form:"endTime,optional"` // 结束时间（格式：2024-01-31 23:59:59）
+        MinAmount string `form:"minAmount,optional"` // 最小金额（decimal字符串）
+        MaxAmount string `form:"maxAmount,optional"` // 最大金额（decimal字符串）
+        UserId int64 `form:"userId,optional"` // 用户ID筛选
+    }
+
+    TransactionBrief {
+        Id int64 `json:"id"` // 明细ID
+        TransactionNumber string `json:"transactionNumber"` // 交易单号
+        UserId int64 `json:"userId"` // 用户ID
+        UserType string `json:"userType"` // 用户类型（super_agent-总代、agent-代理、manager-客户经理、customer-客户）
+        ParentUserId int64 `json:"parentUserId"` // 父级用户ID
+        TransactionType string `json:"transactionType"` // 交易类型（deposit-存款、withdrawal-提现、exchange-换汇、fee-手续费）
+        Amount string `json:"amount"` // 交易金额（decimal字符串）
+        Currency string `json:"currency"` // 币种（如：USD、CNY、EUR等）
+        Fee string `json:"fee"` // 手续费（decimal字符串）
+        ActualAmount string `json:"actualAmount"` // 实际到账金额（decimal字符串）
+        Status string `json:"status"` // 状态（pending-待处理、completed-已完成、failed-失败、cancelled-已取消）
+        Description string `json:"description"` // 描述
+        DepositId int64 `json:"depositId,optional"` // 存款记录ID
+        WithdrawalId int64 `json:"withdrawalId,optional"` // 提现记录ID
+        TransactionTime string `json:"transactionTime"` // 交易时间
+        CreatedAt string `json:"createdAt"` // 创建时间
+        UpdatedAt string `json:"updatedAt"` // 更新时间
+    }
+
+    ListTransactionsResp {
+        Code int32 `json:"code"`
+        Message string `json:"message"`
+        Data TransactionListData `json:"data"`
+    }
+
+    TransactionListData {
+        Total int64 `json:"total"`
+        List []TransactionBrief `json:"list"`
+    }
+
+    GetTransactionResp {
+        Code int32 `json:"code"`
+        Message string `json:"message"`
+        Data TransactionDetail `json:"data"`
+    }
+
+    TransactionDetail {
+        Id int64 `json:"id"` // 明细ID
+        TransactionNumber string `json:"transactionNumber"` // 交易单号
+        UserId int64 `json:"userId"` // 用户ID
+        UserType string `json:"userType"` // 用户类型（super_agent-总代、agent-代理、manager-客户经理、customer-客户）
+        ParentUserId int64 `json:"parentUserId"` // 父级用户ID
+        TransactionType string `json:"transactionType"` // 交易类型（deposit-存款、withdrawal-提现、exchange-换汇、fee-手续费）
+        Amount string `json:"amount"` // 交易金额（decimal字符串）
+        Currency string `json:"currency"` // 币种（如：USD、CNY、EUR等）
+        Fee string `json:"fee"` // 手续费（decimal字符串）
+        ActualAmount string `json:"actualAmount"` // 实际到账金额（decimal字符串）
+        Status string `json:"status"` // 状态（pending-待处理、completed-已完成、failed-失败、cancelled-已取消）
+        Description string `json:"description"` // 描述
+        DepositId int64 `json:"depositId,optional"` // 存款记录ID
+        WithdrawalId int64 `json:"withdrawalId,optional"` // 提现记录ID
+        TransactionTime string `json:"transactionTime"` // 交易时间
+        Note string `json:"note,optional"` // 备注
+        CreatedAt string `json:"createdAt"` // 创建时间
+        UpdatedAt string `json:"updatedAt"` // 更新时间
+    }
+
+    GetSummaryResp {
+        Code int32 `json:"code"`
+        Message string `json:"message"`
+        Data SummaryInfo `json:"data"`
+    }
+
+    SummaryInfo {
+        TotalDeposit string `json:"totalDeposit"` // 总存款（decimal字符串）
+        TotalWithdrawal string `json:"totalWithdrawal"` // 总提现（decimal字符串）
+        TotalFee string `json:"totalFee"` // 总手续费（decimal字符串）
+        NetAmount string `json:"netAmount"` // 净金额（decimal字符串）
+        ActiveUsers int64 `json:"activeUsers"` // 活跃用户数
+        TransactionCount int64 `json:"transactionCount"` // 交易笔数
+        CurrencyStats []CurrencyStat `json:"currencyStats"` // 币种统计
+    }
+
+    ExportTransactionsReq {
+        Keyword string `json:"keyword,optional"` // 关键词搜索（交易单号）
+        Currency string `json:"currency,optional"` // 币种筛选（如：USD、CNY、EUR等）
+        TransactionType string `json:"transactionType,optional"` // 交易类型筛选（deposit-存款、withdrawal-提现、exchange-换汇、fee-手续费）
+        Status string `json:"status,optional"` // 状态筛选（pending-待处理、completed-已完成、failed-失败、cancelled-已取消）
+        StartTime string `json:"startTime,optional"` // 开始时间（格式：2024-01-01 00:00:00）
+        EndTime string `json:"endTime,optional"` // 结束时间（格式：2024-01-31 23:59:59）
+        MinAmount string `json:"minAmount,optional"` // 最小金额（decimal字符串）
+        MaxAmount string `json:"maxAmount,optional"` // 最大金额（decimal字符串）
+        UserId int64 `json:"userId,optional"` // 用户ID筛选
+    }
+
+    ExportTransactionsResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data ExportTransactionsData `json:"data"` // 数据
+    }
+
+    ExportTransactionsData {
+        TaskId string `json:"taskId"` // 任务ID
+        FileName string `json:"fileName"` // 文件名
+        FileSize int64 `json:"fileSize"` // 文件大小（字节）
+        DownloadUrl string `json:"downloadUrl"` // 下载链接
+        ExpireAt string `json:"expireAt"` // 过期时间
+    }
+
+)

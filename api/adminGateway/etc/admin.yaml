@@ -1,0 +1,17 @@
+Name: admin
+Host: 0.0.0.0
+Port: 8888
+Mode: dev
+
+Log:
+  ServiceName: admin
+  Mode: console
+
+Auth:
+  AccessSecret: "change-me-admin-secret"
+  AccessExpire: 2592000 # 30 天（秒）
+
+Signature:
+  Enable: true
+  Salt: "change-me-sign-salt"
+  SkewSeconds: 300 # 允许时间偏移（秒）

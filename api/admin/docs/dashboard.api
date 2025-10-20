@@ -1,0 +1,547 @@
+syntax = "v1"
+
+info(
+    title: "仪表盘统计接口"
+    desc: "提供系统数据概览、图表统计、实时监控等功能"
+    version: "v1.0"
+)
+
+import "../../common/types.api"
+
+@server(
+    prefix: /api/dashboard
+    group: dashboard
+    jwt: Auth
+    middleware: SignCheck, JwtAuth
+    tags: "仪表盘"
+)
+service admin {
+    @doc(
+        summary: "仪表盘概览"
+        description: "获取仪表盘数据概览。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.dashboard.overview"
+    )
+    @handler getDashboardOverview
+    get /dashboard/overview (GetDashboardOverviewReq) returns (GetDashboardOverviewResp)
+
+    @doc(
+        summary: "用户统计"
+        description: "获取用户相关统计数据。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.dashboard.userStats"
+    )
+    @handler getUserStats
+    get /dashboard/user-stats (GetUserStatsReq) returns (GetUserStatsResp)
+
+    @doc(
+        summary: "资金统计"
+        description: "获取资金相关统计数据。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.dashboard.fundStats"
+    )
+    @handler getFundStats
+    get /dashboard/fund-stats (GetFundStatsReq) returns (GetFundStatsResp)
+
+    @doc(
+        summary: "交易统计"
+        description: "获取交易相关统计数据。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.dashboard.transactionStats"
+    )
+    @handler getTransactionStats
+    get /dashboard/transaction-stats (GetTransactionStatsReq) returns (GetTransactionStatsResp)
+
+    @doc(
+        summary: "审核统计"
+        description: "获取审核相关统计数据。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.dashboard.auditStats"
+    )
+    @handler getAuditStats
+    get /dashboard/audit-stats (GetAuditStatsReq) returns (GetAuditStatsResp)
+
+    @doc(
+        summary: "趋势图表"
+        description: "获取数据趋势图表。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.dashboard.trendCharts"
+    )
+    @handler getTrendCharts
+    get /dashboard/trend-charts (GetTrendChartsReq) returns (GetTrendChartsResp)
+
+    @doc(
+        summary: "实时监控"
+        description: "获取系统实时监控数据。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.dashboard.realtimeMonitor"
+    )
+    @handler getRealtimeMonitor
+    get /dashboard/realtime-monitor returns (GetRealtimeMonitorResp)
+
+    @doc(
+        summary: "告警信息"
+        description: "获取系统告警信息。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.dashboard.alerts"
+    )
+    @handler getAlerts
+    get /dashboard/alerts (GetAlertsReq) returns (GetAlertsResp)
+
+    @doc(
+        summary: "客户统计"
+        description: "获取客户相关统计数据。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.dashboard.customerStats"
+    )
+    @handler getCustomerStats
+    get /dashboard/customer-stats (GetCustomerStatsReq) returns (GetCustomerStatsResp)
+
+    @doc(
+        summary: "账户统计"
+        description: "获取银行账户相关统计数据。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.dashboard.accountStats"
+    )
+    @handler getAccountStats
+    get /dashboard/account-stats (GetAccountStatsReq) returns (GetAccountStatsResp)
+
+    @doc(
+        summary: "KYC统计"
+        description: "获取KYC认证相关统计数据。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.dashboard.kycStats"
+    )
+    @handler getKycStats
+    get /dashboard/kyc-stats (GetKycStatsReq) returns (GetKycStatsResp)
+}
+
+type (
+    // 仪表盘概览请求
+    GetDashboardOverviewReq {
+        TimeRange string `form:"timeRange,default=7d,optional"` // 时间范围：1d、7d、30d、90d
+    }
+
+    // 仪表盘概览响应
+    GetDashboardOverviewResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data DashboardOverviewData `json:"data"` // 数据
+    }
+
+    // 仪表盘概览数据
+    DashboardOverviewData {
+        SummaryCards []SummaryCard `json:"summaryCards"` // 概览卡片
+        QuickStats QuickStats `json:"quickStats"` // 快速统计
+        RecentActivities []RecentActivity `json:"recentActivities"` // 最近活动
+        SystemHealth SystemHealth `json:"systemHealth"` // 系统健康状态
+    }
+
+    // 概览卡片
+    SummaryCard {
+        Title string `json:"title"` // 标题
+        Value string `json:"value"` // 数值
+        Unit string `json:"unit"` // 单位
+        Change string `json:"change"` // 变化
+        ChangeType string `json:"changeType"` // 变化类型：increase、decrease、stable
+        Icon string `json:"icon"` // 图标
+        Color string `json:"color"` // 颜色
+    }
+
+    // 快速统计
+    QuickStats {
+        TotalUsers int64 `json:"totalUsers"` // 总用户数
+        ActiveUsers int64 `json:"activeUsers"` // 活跃用户数
+        TotalTransactions int64 `json:"totalTransactions"` // 总交易数
+        TotalAmount string `json:"totalAmount"` // 总金额
+        PendingAudits int64 `json:"pendingAudits"` // 待审核数
+        SystemUptime int64 `json:"systemUptime"` // 系统运行时间
+    }
+
+    // 最近活动
+    RecentActivity {
+        Id int64 `json:"id"` // 活动ID
+        Type string `json:"type"` // 活动类型
+        Description string `json:"description"` // 描述
+        UserName string `json:"userName"` // 用户名
+        UserType string `json:"userType"` // 用户类型
+        Time string `json:"time"` // 时间
+        Status string `json:"status"` // 状态
+    }
+
+    // 系统健康状态
+    SystemHealth {
+        Status string `json:"status"` // 状态：healthy、warning、critical
+        CpuUsage float64 `json:"cpuUsage"` // CPU使用率
+        MemoryUsage float64 `json:"memoryUsage"` // 内存使用率
+        DiskUsage float64 `json:"diskUsage"` // 磁盘使用率
+        DatabaseStatus string `json:"databaseStatus"` // 数据库状态
+        RedisStatus string `json:"redisStatus"` // Redis状态
+        LastCheck string `json:"lastCheck"` // 最后检查时间
+    }
+
+    // 用户统计请求
+    GetUserStatsReq {
+        TimeRange string `form:"timeRange,default=30d,optional"` // 时间范围
+        UserType string `form:"userType,optional"` // 用户类型筛选
+    }
+
+    // 用户统计响应
+    GetUserStatsResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data UserStatsData `json:"data"` // 数据
+    }
+
+    // 用户统计数据
+    UserStatsData {
+        TotalUsers int64 `json:"totalUsers"` // 总用户数
+        NewUsers int64 `json:"newUsers"` // 新增用户数
+        ActiveUsers int64 `json:"activeUsers"` // 活跃用户数
+        UserGrowth []GrowthData `json:"userGrowth"` // 用户增长趋势
+        UserDistribution []DistributionData `json:"userDistribution"` // 用户分布
+        TopUsers []TopUserData `json:"topUsers"` // 活跃用户排行
+    }
+
+    // 增长数据
+    GrowthData {
+        Date string `json:"date"` // 日期
+        Value int64 `json:"value"` // 数值
+    }
+
+    // 分布数据
+    DistributionData {
+        Name string `json:"name"` // 名称
+        Value int64 `json:"value"` // 数值
+        Percentage float64 `json:"percentage"` // 百分比
+    }
+
+    // 活跃用户数据
+    TopUserData {
+        UserId int64 `json:"userId"` // 用户ID
+        UserName string `json:"userName"` // 用户名
+        UserType string `json:"userType"` // 用户类型
+        ActivityCount int64 `json:"activityCount"` // 活动次数
+        LastActive string `json:"lastActive"` // 最后活跃时间
+    }
+
+    // 资金统计请求
+    GetFundStatsReq {
+        TimeRange string `form:"timeRange,default=30d,optional"` // 时间范围
+        Currency string `form:"currency,optional"` // 币种筛选
+    }
+
+    // 资金统计响应
+    GetFundStatsResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data FundStatsData `json:"data"` // 数据
+    }
+
+    // 资金统计数据
+    FundStatsData {
+        TotalDeposit string `json:"totalDeposit"` // 总存款
+        TotalWithdrawal string `json:"totalWithdrawal"` // 总提现
+        TotalFee string `json:"totalFee"` // 总手续费
+        NetAmount string `json:"netAmount"` // 净金额
+        FundFlow []FundFlowData `json:"fundFlow"` // 资金流向
+        CurrencyStats []CurrencyStat `json:"currencyStats"` // 币种统计
+        DailyFunds []DailyFundData `json:"dailyFunds"` // 每日资金
+    }
+
+    // 资金流向数据
+    FundFlowData {
+        Type string `json:"type"` // 类型：deposit、withdrawal、fee
+        Amount string `json:"amount"` // 金额
+        Percentage float64 `json:"percentage"` // 百分比
+    }
+
+    // 每日资金数据
+    DailyFundData {
+        Date string `json:"date"` // 日期
+        Deposit string `json:"deposit"` // 存款
+        Withdrawal string `json:"withdrawal"` // 提现
+        Fee string `json:"fee"` // 手续费
+        Net string `json:"net"` // 净额
+    }
+
+    // 交易统计请求
+    GetTransactionStatsReq {
+        TimeRange string `form:"timeRange,default=30d,optional"` // 时间范围
+        TransactionType string `form:"transactionType,optional"` // 交易类型筛选
+    }
+
+    // 交易统计响应
+    GetTransactionStatsResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data TransactionStatsData `json:"data"` // 数据
+    }
+
+    // 交易统计数据
+    TransactionStatsData {
+        TotalTransactions int64 `json:"totalTransactions"` // 总交易数
+        SuccessTransactions int64 `json:"successTransactions"` // 成功交易数
+        FailedTransactions int64 `json:"failedTransactions"` // 失败交易数
+        SuccessRate float64 `json:"successRate"` // 成功率
+        TransactionTrend []TransactionTrendData `json:"transactionTrend"` // 交易趋势
+        TransactionTypes []TransactionTypeData `json:"transactionTypes"` // 交易类型统计
+        HourlyDistribution []HourlyData `json:"hourlyDistribution"` // 小时分布
+    }
+
+    // 交易趋势数据
+    TransactionTrendData {
+        Date string `json:"date"` // 日期
+        Count int64 `json:"count"` // 交易数
+        Amount string `json:"amount"` // 交易金额
+    }
+
+    // 交易类型数据
+    TransactionTypeData {
+        Type string `json:"type"` // 交易类型
+        Count int64 `json:"count"` // 交易数
+        Amount string `json:"amount"` // 交易金额
+        Percentage float64 `json:"percentage"` // 百分比
+    }
+
+    // 小时分布数据
+    HourlyData {
+        Hour int `json:"hour"` // 小时
+        Count int64 `json:"count"` // 交易数
+    }
+
+    // 审核统计请求
+    GetAuditStatsReq {
+        TimeRange string `form:"timeRange,default=30d,optional"` // 时间范围
+        AuditType string `form:"auditType,optional"` // 审核类型筛选
+    }
+
+    // 审核统计响应
+    GetAuditStatsResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data AuditStatsData `json:"data"` // 数据
+    }
+
+    // 审核统计数据
+    AuditStatsData {
+        TotalAudits int64 `json:"totalAudits"` // 总审核数
+        PendingAudits int64 `json:"pendingAudits"` // 待审核数
+        ApprovedAudits int64 `json:"approvedAudits"` // 已通过审核数
+        RejectedAudits int64 `json:"rejectedAudits"` // 已拒绝审核数
+        ApprovalRate float64 `json:"approvalRate"` // 通过率
+        AverageProcessTime int64 `json:"averageProcessTime"` // 平均处理时间（分钟）
+        AuditTrend []AuditTrendData `json:"auditTrend"` // 审核趋势
+        AuditTypes []AuditTypeData `json:"auditTypes"` // 审核类型统计
+        AuditorStats []AuditorStat `json:"auditorStats"` // 审核员统计
+    }
+
+    // 审核趋势数据
+    AuditTrendData {
+        Date string `json:"date"` // 日期
+        Pending int64 `json:"pending"` // 待审核
+        Approved int64 `json:"approved"` // 已通过
+        Rejected int64 `json:"rejected"` // 已拒绝
+    }
+
+    // 审核类型数据
+    AuditTypeData {
+        Type string `json:"type"` // 审核类型
+        Count int64 `json:"count"` // 审核数
+        Pending int64 `json:"pending"` // 待审核
+        Approved int64 `json:"approved"` // 已通过
+        Rejected int64 `json:"rejected"` // 已拒绝
+    }
+
+    // 审核员统计
+    AuditorStat {
+        AuditorId int64 `json:"auditorId"` // 审核员ID
+        AuditorName string `json:"auditorName"` // 审核员姓名
+        TotalAudits int64 `json:"totalAudits"` // 总审核数
+        ApprovedAudits int64 `json:"approvedAudits"` // 已通过审核数
+        RejectedAudits int64 `json:"rejectedAudits"` // 已拒绝审核数
+        AverageProcessTime int64 `json:"averageProcessTime"` // 平均处理时间
+    }
+
+    // 趋势图表请求
+    GetTrendChartsReq {
+        ChartType string `form:"chartType"` // 图表类型：user、fund、transaction、audit
+        TimeRange string `form:"timeRange,default=30d,optional"` // 时间范围
+        Granularity string `form:"granularity,default=day,optional"` // 粒度：hour、day、week、month
+    }
+
+    // 趋势图表响应
+    GetTrendChartsResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data TrendChartData `json:"data"` // 数据
+    }
+
+    // 趋势图表数据
+    TrendChartData {
+        ChartType string `json:"chartType"` // 图表类型
+        Title string `json:"title"` // 图表标题
+        XAxis []string `json:"xAxis"` // X轴数据
+        Series []ChartSeries `json:"series"` // 系列数据
+        Legend []string `json:"legend"` // 图例
+    }
+
+    // 图表系列
+    ChartSeries {
+        Name string `json:"name"` // 系列名称
+        Type string `json:"type"` // 图表类型：line、bar、pie
+        Data []interface{} `json:"data"` // 数据
+        Color string `json:"color"` // 颜色
+    }
+
+    // 实时监控响应
+    GetRealtimeMonitorResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data RealtimeMonitorData `json:"data"` // 数据
+    }
+
+    // 实时监控数据
+    RealtimeMonitorData {
+        OnlineUsers int64 `json:"onlineUsers"` // 在线用户数
+        ActiveConnections int64 `json:"activeConnections"` // 活跃连接数
+        RequestRate int64 `json:"requestRate"` // 请求速率（每分钟）
+        ResponseTime float64 `json:"responseTime"` // 平均响应时间（毫秒）
+        ErrorRate float64 `json:"errorRate"` // 错误率
+        SystemLoad SystemLoad `json:"systemLoad"` // 系统负载
+        RecentRequests []RecentRequest `json:"recentRequests"` // 最近请求
+    }
+
+    // 系统负载
+    SystemLoad {
+        CpuUsage float64 `json:"cpuUsage"` // CPU使用率
+        MemoryUsage float64 `json:"memoryUsage"` // 内存使用率
+        DiskUsage float64 `json:"diskUsage"` // 磁盘使用率
+        NetworkIn float64 `json:"networkIn"` // 网络入流量
+        NetworkOut float64 `json:"networkOut"` // 网络出流量
+    }
+
+    // 最近请求
+    RecentRequest {
+        Method string `json:"method"` // 请求方法
+        Path string `json:"path"` // 请求路径
+        StatusCode int `json:"statusCode"` // 状态码
+        ResponseTime int64 `json:"responseTime"` // 响应时间
+        Timestamp int64 `json:"timestamp"` // 时间戳
+    }
+
+    // 告警信息请求
+    GetAlertsReq {
+        Level string `form:"level,optional"` // 告警级别筛选
+        Status string `form:"status,optional"` // 状态筛选：active、resolved
+        Page int64 `form:"page,default=1,optional"` // 页码
+        PageSize int64 `form:"pageSize,default=10,optional"` // 每页数量
+    }
+
+    // 告警信息响应
+    GetAlertsResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data AlertListData `json:"data"` // 数据
+    }
+
+    // 告警列表数据
+    AlertListData {
+        Total int64 `json:"total"` // 总记录数
+        List []AlertInfo `json:"list"` // 告警列表
+        Summary AlertSummary `json:"summary"` // 告警摘要
+    }
+
+    // 告警信息
+    AlertInfo {
+        Id int64 `json:"id"` // 告警ID
+        Title string `json:"title"` // 告警标题
+        Description string `json:"description"` // 告警描述
+        Level string `json:"level"` // 告警级别：info、warning、error、critical
+        Status string `json:"status"` // 状态：active、resolved
+        Source string `json:"source"` // 告警源
+        Metric string `json:"metric"` // 指标
+        Threshold string `json:"threshold"` // 阈值
+        CurrentValue string `json:"currentValue"` // 当前值
+        CreatedAt string `json:"createdAt"` // 创建时间
+        ResolvedAt string `json:"resolvedAt,optional"` // 解决时间
+        ResolvedBy string `json:"resolvedBy,optional"` // 解决人
+    }
+
+    // 告警摘要
+    AlertSummary {
+        TotalAlerts int64 `json:"totalAlerts"` // 总告警数
+        ActiveAlerts int64 `json:"activeAlerts"` // 活跃告警数
+        CriticalAlerts int64 `json:"criticalAlerts"` // 严重告警数
+        WarningAlerts int64 `json:"warningAlerts"` // 警告告警数
+        ResolvedToday int64 `json:"resolvedToday"` // 今日解决数
+    }
+
+    // 客户统计请求
+    GetCustomerStatsReq {
+        TimeRange string `form:"timeRange,default=30d,optional"` // 时间范围
+        CustomerType string `form:"customerType,optional"` // 客户类型筛选
+        KycStatus string `form:"kycStatus,optional"` // KYC状态筛选
+    }
+
+    // 客户统计响应
+    GetCustomerStatsResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data CustomerStatsData `json:"data"` // 数据
+    }
+
+    // 客户统计数据
+    CustomerStatsData {
+        TotalCustomers int64 `json:"totalCustomers"` // 总客户数
+        NewCustomers int64 `json:"newCustomers"` // 新增客户数
+        VerifiedCustomers int64 `json:"verifiedCustomers"` // 已认证客户数
+        PendingKycCustomers int64 `json:"pendingKycCustomers"` // 待KYC客户数
+        CustomerGrowth []GrowthData `json:"customerGrowth"` // 客户增长趋势
+        CustomerTypeDistribution []DistributionData `json:"customerTypeDistribution"` // 客户类型分布
+        KycStatusDistribution []DistributionData `json:"kycStatusDistribution"` // KYC状态分布
+        CountryDistribution []CountryDistributionData `json:"countryDistribution"` // 国家分布
+        TopCustomers []TopCustomerData `json:"topCustomers"` // 活跃客户排行
+    }
+
+    // 国家分布数据
+    CountryDistributionData {
+        CountryCode string `json:"countryCode"` // 国家代码
+        CountryName string `json:"countryName"` // 国家名称
+        CustomerCount int64 `json:"customerCount"` // 客户数量
+        Percentage float64 `json:"percentage"` // 百分比
+    }
+
+    // 活跃客户数据
+    TopCustomerData {
+        CustomerId int64 `json:"customerId"` // 客户ID
+        CustomerName string `json:"customerName"` // 客户姓名
+        CustomerType string `json:"customerType"` // 客户类型
+        AccountCount int64 `json:"accountCount"` // 账户数量
+        TotalBalance string `json:"totalBalance"` // 总余额
+        LastTransactionAt string `json:"lastTransactionAt"` // 最后交易时间
+    }
+
+    // KYC统计请求
+    GetKycStatsReq {
+        TimeRange string `form:"timeRange,default=30d,optional"` // 时间范围
+        CustomerType string `form:"customerType,optional"` // 客户类型筛选
+    }
+
+    // KYC统计响应
+    GetKycStatsResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data KycStatsData `json:"data"` // 数据
+    }
+
+    // KYC统计数据
+    KycStatsData {
+        TotalKycApplications int64 `json:"totalKycApplications"` // 总KYC申请数
+        PendingKycApplications int64 `json:"pendingKycApplications"` // 待审核KYC申请数
+        ApprovedKycApplications int64 `json:"approvedKycApplications"` // 已通过KYC申请数
+        RejectedKycApplications int64 `json:"rejectedKycApplications"` // 已拒绝KYC申请数
+        KycApprovalRate float64 `json:"kycApprovalRate"` // KYC通过率
+        AverageKycProcessTime int64 `json:"averageKycProcessTime"` // 平均KYC处理时间（小时）
+        KycTrend []KycTrendData `json:"kycTrend"` // KYC趋势
+        KycTypeDistribution []DistributionData `json:"kycTypeDistribution"` // KYC类型分布
+        KycCountryDistribution []CountryDistributionData `json:"kycCountryDistribution"` // KYC国家分布
+    }
+
+    // KYC趋势数据
+    KycTrendData {
+        Date string `json:"date"` // 日期
+        Pending int64 `json:"pending"` // 待审核
+        Approved int64 `json:"approved"` // 已通过
+        Rejected int64 `json:"rejected"` // 已拒绝
+    }
+)

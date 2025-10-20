@@ -1,0 +1,264 @@
+syntax = "v1"
+
+info(
+    title: "数字钱包管理"
+    desc: "客户经理查看数字钱包、余额与提现地址管理"
+    version: "v1.0"
+)
+
+import "../../common/types.api"
+
+@server(
+    prefix: /api/wallet
+    group: wallet
+    jwt: Auth
+    middleware: SignCheck, JwtAuth
+    tags: "数字钱包管理"
+)
+service manager {
+    @doc(
+        summary: "钱包列表"
+        description: "查看我名下客户的数字钱包列表。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.wallet.list"
+    )
+    @handler listWallets
+    get /wallets (ListWalletsReq) returns (ListWalletsResp)
+
+    @doc(
+        summary: "钱包详情"
+        description: "查看数字钱包详情。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.wallet.detail"
+    )
+    @handler getWallet
+    get /wallets/:id (IdReq) returns (GetWalletResp)
+
+    @doc(
+        summary: "钱包余额"
+        description: "查询数字钱包余额。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.wallet.balance"
+    )
+    @handler getBalance
+    get /wallets/:id/balance (IdReq) returns (GetBalanceResp)
+
+    @doc(
+        summary: "创建钱包"
+        description: "为客户创建数字钱包。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.wallet.create"
+    )
+    @handler createWallet
+    post /wallets (CreateWalletReq) returns (CreateWalletResp)
+
+    @doc(
+        summary: "更新钱包"
+        description: "更新数字钱包信息。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.wallet.update"
+    )
+    @handler updateWallet
+    put /wallets/:id (UpdateWalletReq) returns (BaseResp)
+
+    @doc(
+        summary: "绑定提现地址"
+        description: "为数字钱包绑定提现地址。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.wallet.addAddress"
+    )
+    @handler addAddress
+    post /wallets/:id/addresses (AddAddressReq) returns (BaseResp)
+
+    @doc(
+        summary: "提现地址列表"
+        description: "查看提现地址列表。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.wallet.listAddresses"
+    )
+    @handler listAddresses
+    get /wallets/:id/addresses (IdReq) returns (ListAddressesResp)
+
+    @doc(
+        summary: "更新提现地址"
+        description: "更新提现地址信息。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.wallet.updateAddress"
+    )
+    @handler updateAddress
+    put /wallets/:id/addresses/:addressId (UpdateAddressReq) returns (BaseResp)
+
+    @doc(
+        summary: "删除提现地址"
+        description: "删除提现地址。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.wallet.deleteAddress"
+    )
+    @handler deleteAddress
+    delete /wallets/:id/addresses/:addressId (DeleteAddressReq) returns (BaseResp)
+
+    @doc(
+        summary: "审核提现地址"
+        description: "审核提现地址。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.wallet.auditAddress"
+    )
+    @handler auditAddress
+    post /wallets/:id/addresses/:addressId/audit (AuditAddressReq) returns (BaseResp)
+
+    @doc(
+        summary: "钱包统计"
+        description: "获取钱包统计信息。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.wallet.stats"
+    )
+    @handler getWalletStats
+    get /wallets/stats returns (GetWalletStatsResp)
+}
+
+type (
+    ListWalletsReq {
+        Page int64 `form:"page,default=1,optional"` // 页码
+        PageSize int64 `form:"pageSize,default=10,optional"` // 每页数量
+        Keyword string `form:"keyword,optional"` // 关键词搜索（客户姓名、邮箱）
+        Currency string `form:"currency,optional"` // 币种筛选（如：USDT、BTC、ETH等）
+        CustomerId int64 `form:"customerId,optional"` // 客户ID筛选
+        UserId int64 `form:"userId,optional"` // 用户ID筛选
+    }
+
+    WalletBrief {
+        Id int64 `json:"id"` // 钱包ID
+        UserId int64 `json:"userId"` // 用户ID
+        CustomerId int64 `json:"customerId"` // 客户ID
+        ManagerId int64 `json:"managerId"` // 客户经理ID
+        Currency string `json:"currency"` // 币种（如：USDT、BTC、ETH等）
+        AvailableBalance string `json:"availableBalance"` // 可用余额（decimal字符串）
+        FrozenAmount string `json:"frozenAmount"` // 冻结余额（decimal字符串）
+        TotalBalance string `json:"totalBalance"` // 总余额（decimal字符串）
+        CreatedAt string `json:"createdAt"` // 创建时间
+        UpdatedAt string `json:"updatedAt"` // 更新时间
+    }
+
+    ListWalletsResp {
+        Code int32 `json:"code"`
+        Message string `json:"message"`
+        Data WalletListData `json:"data"`
+    }
+
+    WalletListData {
+        Total int64 `json:"total"`
+        List []WalletBrief `json:"list"`
+    }
+
+    GetWalletResp {
+        Code int32 `json:"code"`
+        Message string `json:"message"`
+        Data WalletDetail `json:"data"`
+    }
+
+    WalletDetail {
+        Id int64 `json:"id"` // 钱包ID
+        UserId int64 `json:"userId"` // 用户ID
+        CustomerId int64 `json:"customerId"` // 客户ID
+        ManagerId int64 `json:"managerId"` // 客户经理ID
+        Currency string `json:"currency"` // 币种（如：USDT、BTC、ETH等）
+        AvailableBalance string `json:"availableBalance"` // 可用余额（decimal字符串）
+        FrozenAmount string `json:"frozenAmount"` // 冻结余额（decimal字符串）
+        TotalBalance string `json:"totalBalance"` // 总余额（decimal字符串）
+        AddressCount int64 `json:"addressCount"` // 地址数量
+        CreatedAt string `json:"createdAt"` // 创建时间
+        UpdatedAt string `json:"updatedAt"` // 更新时间
+    }
+
+    GetBalanceResp {
+        Code int32 `json:"code"`
+        Message string `json:"message"`
+        Data WalletBalanceInfo `json:"data"`
+    }
+
+    WalletBalanceInfo {
+        Available string `json:"available"` // 可用余额（decimal字符串）
+        Frozen string `json:"frozen"` // 冻结余额（decimal字符串）
+        Total string `json:"total"` // 总余额（decimal字符串）
+        Currency string `json:"currency"` // 币种（如：USDT、BTC、ETH等）
+    }
+
+    CreateWalletReq {
+        CustomerId int64 `json:"customerId"` // 客户ID
+        Currency string `json:"currency"` // 币种（如：USDT、BTC、ETH等）
+        Note string `json:"note,optional"` // 备注
+    }
+
+    CreateWalletResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data WalletDetail `json:"data"` // 钱包详情
+    }
+
+    UpdateWalletReq {
+        Id int64 `path:"id"` // 钱包ID
+        Note string `json:"note,optional"` // 备注
+    }
+
+
+    AddAddressReq {
+        Id int64 `path:"id"` // 钱包ID
+        Address string `json:"address"` // 提现地址
+        AddressType string `json:"addressType,optional"` // 地址类型（withdrawal-提现地址、deposit-收款地址）
+        Network string `json:"network,optional"` // 网络类型（如：ERC20、TRC20、BEP20等）
+        Tag string `json:"tag,optional"` // 标签/备注
+        IsDefault bool `json:"isDefault,optional"` // 是否默认地址
+        Note string `json:"note,optional"` // 备注
+    }
+
+    ListAddressesResp {
+        Code int32 `json:"code"`
+        Message string `json:"message"`
+        Data []AddressInfo `json:"data"`
+    }
+
+    AddressInfo {
+        Id int64 `json:"id"` // 地址ID
+        UserWalletId int64 `json:"userWalletId"` // 钱包ID
+        UserId int64 `json:"userId"` // 用户ID
+        AddressType string `json:"addressType"` // 地址类型（withdrawal-提现地址、deposit-收款地址）
+        Network string `json:"network"` // 网络类型（如：ERC20、TRC20、BEP20等）
+        Address string `json:"address"` // 地址
+        Tag string `json:"tag"` // 标签/备注
+        IsDefault bool `json:"isDefault"` // 是否默认地址
+        AuditStatus int32 `json:"auditStatus"` // 审核状态（0-待审核、1-已审核、2-拒绝）
+        AuditStatusText string `json:"auditStatusText"` // 审核状态文本
+        AuditTime string `json:"auditTime"` // 审核时间
+        Note string `json:"note"` // 备注
+        CreatedAt string `json:"createdAt"` // 创建时间
+        UpdatedAt string `json:"updatedAt"` // 更新时间
+    }
+
+    UpdateAddressReq {
+        Id int64 `path:"id"` // 钱包ID
+        AddressId int64 `path:"addressId"` // 地址ID
+        Address string `json:"address,optional"` // 提现地址
+        AddressType string `json:"addressType,optional"` // 地址类型（withdrawal-提现地址、deposit-收款地址）
+        Network string `json:"network,optional"` // 网络类型（如：ERC20、TRC20、BEP20等）
+        Tag string `json:"tag,optional"` // 标签/备注
+        IsDefault bool `json:"isDefault,optional"` // 是否默认地址
+        Note string `json:"note,optional"` // 备注
+    }
+
+    AuditAddressReq {
+        Id int64 `path:"id"` // 钱包ID
+        AddressId int64 `path:"addressId"` // 地址ID
+        AuditStatus int32 `json:"auditStatus"` // 审核状态（1-通过、2-拒绝）
+        AuditNote string `json:"auditNote,optional"` // 审核意见
+    }
+
+    GetWalletStatsResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data WalletStatsData `json:"data"` // 统计数据
+    }
+
+    WalletStatsData {
+        TotalWallets int64 `json:"totalWallets"` // 总钱包数
+        TotalAddresses int64 `json:"totalAddresses"` // 总地址数
+        TotalBalance string `json:"totalBalance"` // 总余额（decimal字符串）
+        TotalAvailableBalance string `json:"totalAvailableBalance"` // 总可用余额（decimal字符串）
+        TotalFrozenAmount string `json:"totalFrozenAmount"` // 总冻结余额（decimal字符串）
+        CurrencyStats []CurrencyStat `json:"currencyStats"` // 币种统计
+        PendingAuditCount int64 `json:"pendingAuditCount"` // 待审核地址数
+    }
+
+    DeleteAddressReq {
+        Id int64 `path:"id"` // 钱包ID
+        AddressId int64 `path:"addressId"` // 地址ID
+    }
+)

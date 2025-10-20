@@ -1,0 +1,129 @@
+syntax = "v1"
+
+info(
+    title: "管理员认证接口"
+    desc: "管理员登录、登出、密码管理，登录需图片验证码"
+    version: "v1.0"
+)
+
+import "../../common/types.api"
+
+@server(
+    prefix: /api/auth
+    group: adminAuth
+    middleware: SignCheck
+    tags: "登录认证"
+)
+service admin {
+    @doc(
+        summary: "获取图片验证码"
+        description: "生成图片验证码。公共请求头: X-Timestamp, X-Sign"
+        id: "admin.auth.getCaptcha"
+    )
+    @handler getCaptcha
+    get /captcha returns (CaptchaResp)
+
+    @doc(
+        summary: "管理员登录"
+        description: "通过账号、密码和图片验证码登录。公共请求头: X-Timestamp, X-Sign"
+        id: "admin.auth.login"
+    )
+    @handler login
+    post /login (AdminLoginReq) returns (AdminLoginResp)
+}
+
+@server(
+    prefix: /api/auth
+    group: adminAuth
+    jwt: Auth
+    middleware: SignCheck, JwtAuth
+    tags: "登录认证"
+)
+service admin {
+    @doc(
+        summary: "管理员登出"
+        description: "退出登录。公共请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.auth.logout"
+    )
+    @handler logout
+    post /logout returns (BaseResp)
+
+    @doc(
+        summary: "获取当前管理员信息"
+        description: "获取登录管理员的信息、角色、权限"
+        id: "admin.auth.getInfo"
+    )
+    @handler getInfo
+    get /info returns (AdminInfoResp)
+
+    @doc(
+        summary: "修改密码"
+        description: "修改当前管理员的登录密码"
+        id: "admin.auth.changePassword"
+    )
+    @handler changePassword
+    patch /password (ChangePasswordReq) returns (BaseResp)
+}
+
+type (
+    CaptchaResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data CaptchaData `json:"data"` // 数据
+    }
+
+    CaptchaData {
+        CaptchaId string `json:"captchaId"`       // 验证码ID 有效期5分钟
+        CaptchaImage string `json:"captchaImage"` // 验证码图片base64
+        ExpireAt string `json:"expireAt"`          // 过期时间戳（毫秒）
+    }
+
+    AdminLoginReq {
+        Username string `json:"username"`   // 用户名/账号
+        Password string `json:"password"`   // 密码
+        CaptchaId string `json:"captchaId"` // 验证码ID
+        Captcha string `json:"captcha"`     // 验证码值（不区分大小写）
+    }
+
+    AdminLoginResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data AdminLoginData `json:"data"` // 数据
+    }
+
+    AdminLoginData {
+        Token string `json:"token"`               // JWT令牌
+        RefreshToken string `json:"refreshToken"` // 刷新令牌
+        ExpiresIn string `json:"expiresIn"`        // 过期时间（秒）
+        StaffInfo StaffInfo `json:"staffInfo"`    // 员工信息
+    }
+
+    StaffInfo {
+        Id int64 `json:"id"`                      // 员工ID
+        Name string `json:"name"`                 // 姓名
+        Username string `json:"username"`         // 用户名
+        Email string `json:"email"`               // 邮箱
+        Status int32 `json:"status"`              // 状态 0-禁用 1-启用
+        Roles []RoleInfo `json:"roles"`           // 角色列表
+        Menus []MenuInfo `json:"menus"`           // 菜单列表（用户权限菜单）
+        CreatedAt string `json:"createdAt"`        // 创建时间
+    }
+
+    RoleInfo {
+        Id int64 `json:"id"`       // 角色ID
+        Name string `json:"name"`  // 角色名称
+        Code string `json:"code"`  // 角色代码
+    }
+
+    AdminInfoResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data StaffInfo `json:"data"` // 数据
+    }
+
+    ChangePasswordReq {
+        OldPassword string `json:"oldPassword"` // 旧密码
+        NewPassword string `json:"newPassword"` // 新密码 长度8-20位
+        ConfirmPassword string `json:"confirmPassword"` // 确认新密码
+    }
+)

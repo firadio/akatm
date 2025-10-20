@@ -1,0 +1,334 @@
+syntax = "v1"
+
+info(
+    title: "账户管理接口（查看）"
+    desc: "管理端查看银行账户信息与状态"
+    version: "v1.0"
+)
+
+import "../../common/types.api"
+
+@server(
+    prefix: /admin
+    group: account
+    jwt: Auth
+    middleware: SignCheck, JwtAuth
+    tags: "银行账户"
+)
+service admin {
+    @doc(
+        summary: "账户列表"
+        description: "分页查看所有银行账户。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.account.list"
+    )
+    @handler listAccounts
+    get /accounts (ListAccountsReq) returns (ListAccountsResp)
+
+    @doc(
+        summary: "账户详情"
+        description: "查看银行账户详情。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.account.detail"
+    )
+    @handler getAccount
+    get /accounts/:id (IdReq) returns (GetAccountResp)
+
+    @doc(
+        summary: "更新账户状态"
+        description: "变更账户状态（冻结/关闭等）。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.account.updateStatus"
+    )
+    @handler updateAccountStatus
+    patch /accounts/:id/status (UpdateAccountStatusReq) returns (BaseResp)
+
+    @doc(
+        summary: "账户余额"
+        description: "查看账户余额。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.account.balance"
+    )
+    @handler getAccountBalance
+    get /accounts/:id/balance (IdReq) returns (GetAccountBalanceResp)
+
+    @doc(
+        summary: "账户流水"
+        description: "查看账户交易流水。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.account.transactions"
+    )
+    @handler listAccountTransactions
+    get /accounts/:id/transactions (ListAccountTransactionsReq) returns (ListAccountTransactionsResp)
+
+    @doc(
+        summary: "创建账户"
+        description: "为客户创建新的银行账户。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.account.create"
+    )
+    @handler createAccount
+    post /accounts (CreateAccountReq) returns (CreateAccountResp)
+
+    @doc(
+        summary: "更新账户信息"
+        description: "更新银行账户信息。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.account.update"
+    )
+    @handler updateAccount
+    put /accounts/:id (UpdateAccountReq) returns (BaseResp)
+
+    @doc(
+        summary: "删除账户"
+        description: "删除银行账户（软删除）。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.account.delete"
+    )
+    @handler deleteAccount
+    delete /accounts/:id (IdReq) returns (BaseResp)
+
+    @doc(
+        summary: "账户统计"
+        description: "获取账户统计信息。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.account.stats"
+    )
+    @handler getAccountStats
+    get /accounts/stats (GetAccountStatsReq) returns (GetAccountStatsResp)
+}
+
+type (
+    // 列表请求
+    ListAccountsReq {
+        Page int64 `form:"page,default=1,optional"` // 页码
+        PageSize int64 `form:"pageSize,default=10,optional"` // 每页数量
+        Currency string `form:"currency,optional"` // 币种
+        Status int32 `form:"status,optional"` // 状态
+        Keyword string `form:"keyword,optional"` // 账户号/客户名/客户邮箱
+        CustomerId int64 `form:"customerId,optional"` // 客户ID筛选
+        ManagerId int64 `form:"managerId,optional"` // 客户经理ID筛选
+        CustomerType string `form:"customerType,optional"` // 客户类型筛选：individual-个人, enterprise-企业
+        KycStatus string `form:"kycStatus,optional"` // KYC状态筛选：pending-待审核, verified-已认证, rejected-已拒绝
+        StartTime string `form:"startTime,optional"` // 创建开始时间
+        EndTime string `form:"endTime,optional"` // 创建结束时间
+    }
+
+    // 账户摘要
+    AccountBrief {
+        Id int64 `json:"id"` // ID
+        AccountNumber string `json:"accountNumber"` // 账户号
+        Currency string `json:"currency"` // 币种
+        Status int32 `json:"status"` // 状态
+        StatusText string `json:"statusText"` // 状态文本
+        
+        // 客户信息
+        CustomerId int64 `json:"customerId"` // 客户ID
+        CustomerName string `json:"customerName"` // 客户姓名
+        CustomerEmail string `json:"customerEmail"` // 客户邮箱
+        CustomerPhone string `json:"customerPhone"` // 客户电话
+        CustomerType string `json:"customerType"` // 客户类型：individual-个人, enterprise-企业
+        KycStatus string `json:"kycStatus"` // KYC状态：pending-待审核, verified-已认证, rejected-已拒绝
+        KycStatusText string `json:"kycStatusText"` // KYC状态文本
+        
+        // 客户经理信息
+        ManagerId int64 `json:"managerId"` // 客户经理ID
+        ManagerName string `json:"managerName"` // 客户经理姓名
+        ManagerLevel string `json:"managerLevel"` // 客户经理层级：super_agent-总代, agent-代理, manager-客户经理
+        
+        CreatedAt string `json:"createdAt"` // 创建时间
+        UpdatedAt string `json:"updatedAt"` // 更新时间
+    }
+
+    // 列表响应
+    ListAccountsResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data AccountListData `json:"data"` // 数据
+    }
+
+    AccountListData {
+        Total int64 `json:"total"` // 总记录数
+        List []AccountBrief `json:"list"` // 列表
+    }
+
+    // 详情响应
+    GetAccountResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data AccountDetail `json:"data"` // 数据
+    }
+
+    AccountDetail {
+        Id int64 `json:"id"` // ID
+        AccountNumber string `json:"accountNumber"` // 账户号
+        Currency string `json:"currency"` // 币种
+        Status int32 `json:"status"` // 状态
+        StatusText string `json:"statusText"` // 状态文本
+        CreatedAt string `json:"createdAt"` // 创建时间
+        UpdatedAt string `json:"updatedAt"` // 更新时间
+        
+        // 客户信息
+        CustomerId int64 `json:"customerId"` // 客户ID
+        CustomerName string `json:"customerName"` // 客户姓名
+        CustomerEmail string `json:"customerEmail"` // 客户邮箱
+        CustomerPhone string `json:"customerPhone"` // 客户电话
+        CustomerAddress string `json:"customerAddress"` // 客户地址
+        CustomerIdNumber string `json:"customerIdNumber"` // 客户证件号
+        CustomerBusinessLicense string `json:"customerBusinessLicense"` // 客户营业执照
+        CustomerType string `json:"customerType"` // 客户类型：individual-个人, enterprise-企业
+        CustomerTypeText string `json:"customerTypeText"` // 客户类型文本
+        KycStatus string `json:"kycStatus"` // KYC状态：pending-待审核, verified-已认证, rejected-已拒绝
+        KycStatusText string `json:"kycStatusText"` // KYC状态文本
+        KycVerifiedAt string `json:"kycVerifiedAt"` // KYC认证时间
+        KycDocuments string `json:"kycDocuments"` // KYC认证材料（JSON格式）
+        CustomerNote string `json:"customerNote"` // 客户备注
+        
+        // 客户经理信息
+        ManagerId int64 `json:"managerId"` // 客户经理ID
+        ManagerName string `json:"managerName"` // 客户经理姓名
+        ManagerEmail string `json:"managerEmail"` // 客户经理邮箱
+        ManagerLevel string `json:"managerLevel"` // 客户经理层级：super_agent-总代, agent-代理, manager-客户经理
+        
+        // 层级关系信息
+        HierarchyInfo HierarchyInfo `json:"hierarchyInfo"` // 层级关系信息
+        
+        // 账户统计信息
+        TotalDepositAmount string `json:"totalDepositAmount"` // 总存款金额
+        TotalWithdrawalAmount string `json:"totalWithdrawalAmount"` // 总提现金额
+        TransactionCount int64 `json:"transactionCount"` // 交易笔数
+        LastTransactionAt string `json:"lastTransactionAt"` // 最后交易时间
+    }
+    
+    // 层级关系信息
+    HierarchyInfo {
+        SuperAgentId int64 `json:"superAgentId"` // 总代ID
+        SuperAgentName string `json:"superAgentName"` // 总代姓名
+        AgentId int64 `json:"agentId"` // 代理ID
+        AgentName string `json:"agentName"` // 代理姓名
+        ManagerId int64 `json:"managerId"` // 客户经理ID
+        ManagerName string `json:"managerName"` // 客户经理姓名
+        CustomerId int64 `json:"customerId"` // 客户ID
+        CustomerName string `json:"customerName"` // 客户姓名
+    }
+
+    // 更新状态请求
+    UpdateAccountStatusReq {
+        Id int64 `path:"id"` // ID
+        Status int32 `json:"status"` // 1-待审核 2-已开户 3-已冻结 4-已关闭
+    }
+
+    // 余额响应
+    GetAccountBalanceResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data BalanceInfo `json:"data"` // 数据
+    }
+
+    BalanceInfo {
+        Available string `json:"available"` // 可用余额
+        Frozen string `json:"frozen"` // 冻结余额
+        Symbol string `json:"symbol"` // 币种
+    }
+
+    // 账户流水请求
+    ListAccountTransactionsReq {
+        Id int64 `path:"id"` // ID
+        Page int64 `form:"page,default=1,optional"` // 页码
+        PageSize int64 `form:"pageSize,default=10,optional"` // 每页数量
+        TransactionType string `form:"transactionType,optional"` // 交易类型筛选：deposit-存款, withdrawal-提现, transfer-转账, fee-手续费
+        Status string `form:"status,optional"` // 状态筛选：pending-待处理, success-成功, failed-失败, cancelled-已取消
+        StartTime string `form:"startTime,optional"` // 开始时间（时间戳）
+        EndTime string `form:"endTime,optional"` // 结束时间（时间戳）
+        MinAmount string `form:"minAmount,optional"` // 最小金额
+        MaxAmount string `form:"maxAmount,optional"` // 最大金额
+        Keyword string `form:"keyword,optional"` // 关键词搜索（交易单号、备注等）
+    }
+
+    // 账户流水响应
+    ListAccountTransactionsResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data TransactionListData `json:"data"` // 数据
+    }
+
+    TransactionListData {
+        Total int64 `json:"total"` // 总记录数
+        List []TransactionBrief `json:"list"` // 列表
+    }
+
+    TransactionBrief {
+        Id int64 `json:"id"` // ID
+        TransactionNumber string `json:"transactionNumber"` // 交易单号
+        Type string `json:"type"` // 交易类型：deposit-存款, withdrawal-提现, transfer-转账, fee-手续费
+        Amount string `json:"amount"` // 交易金额
+        Symbol string `json:"symbol"` // 币种
+        Status string `json:"status"` // 状态：pending-待处理, success-成功, failed-失败, cancelled-已取消
+        Fee string `json:"fee"` // 手续费
+        ActualAmount string `json:"actualAmount"` // 实际到账金额
+        Description string `json:"description"` // 交易描述/备注
+        RelatedAccountId int64 `json:"relatedAccountId"` // 关联账户ID（转账时使用）
+        RelatedAccountNumber string `json:"relatedAccountNumber"` // 关联账户号
+        CreatedAt string `json:"createdAt"` // 创建时间
+        UpdatedAt string `json:"updatedAt"` // 更新时间
+    }
+
+    // 创建账户请求
+    CreateAccountReq {
+        CustomerId int64 `json:"customerId"` // 客户ID
+        Currency string `json:"currency"` // 币种
+        AccountNumber string `json:"accountNumber"` // 银行账号
+        Note string `json:"note,optional"` // 备注
+    }
+
+    // 创建账户响应
+    CreateAccountResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data AccountBrief `json:"data"` // 数据
+    }
+
+    // 更新账户请求
+    UpdateAccountReq {
+        Id int64 `path:"id"` // ID
+        Currency string `json:"currency,optional"` // 币种
+        AccountNumber string `json:"accountNumber,optional"` // 银行账号
+        Note string `json:"note,optional"` // 备注
+    }
+
+    // 账户统计请求
+    GetAccountStatsReq {
+        StartTime string `form:"startTime,optional"` // 开始时间
+        EndTime string `form:"endTime,optional"` // 结束时间
+        Currency string `form:"currency,optional"` // 币种筛选
+        CustomerType string `form:"customerType,optional"` // 客户类型筛选
+        KycStatus string `form:"kycStatus,optional"` // KYC状态筛选
+    }
+
+    // 账户统计响应
+    GetAccountStatsResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data AccountStatsData `json:"data"` // 数据
+    }
+
+    // 账户统计数据
+    AccountStatsData {
+        TotalCount int64 `json:"totalCount"` // 总账户数
+        ActiveCount int64 `json:"activeCount"` // 活跃账户数
+        FrozenCount int64 `json:"frozenCount"` // 冻结账户数
+        ClosedCount int64 `json:"closedCount"` // 关闭账户数
+        TotalBalance string `json:"totalBalance"` // 总余额
+        CurrencyStats []CurrencyStat `json:"currencyStats"` // 币种统计
+        CustomerTypeStats []CustomerTypeStat `json:"customerTypeStats"` // 客户类型统计
+        KycStatusStats []KycStatusStat `json:"kycStatusStats"` // KYC状态统计
+        DailyStats []DailyStat `json:"dailyStats"` // 每日统计
+    }
+
+    // 客户类型统计
+    CustomerTypeStat {
+        CustomerType string `json:"customerType"` // 客户类型
+        CustomerTypeText string `json:"customerTypeText"` // 客户类型文本
+        Count int64 `json:"count"` // 数量
+        Percentage string `json:"percentage"` // 百分比
+    }
+
+    // KYC状态统计
+    KycStatusStat {
+        KycStatus string `json:"kycStatus"` // KYC状态
+        KycStatusText string `json:"kycStatusText"` // KYC状态文本
+        Count int64 `json:"count"` // 数量
+        Percentage string `json:"percentage"` // 百分比
+    }
+)

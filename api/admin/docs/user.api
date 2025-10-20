@@ -1,0 +1,291 @@
+syntax = "v1"
+
+info(
+    title: "前台用户管理接口"
+    desc: "提供多层级代理系统的用户管理功能，包括总代、代理、客户经理的管理"
+    version: "v1.0"
+)
+
+import "../../common/types.api"
+
+@server(
+    prefix: /api/user
+    group: user
+    jwt: Auth
+    middleware: SignCheck, JwtAuth
+    tags: "代理管理"
+)
+service admin {
+    @doc(
+        summary: "创建总代"
+        description: "后台创建总代账号，设置换汇手续费、提现手续费、授权国家。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.user.createSuperAgent"
+    )
+    @handler createSuperAgent
+    post /users/super-agents (CreateSuperAgentReq) returns (CreateSuperAgentResp)
+
+    @doc(
+        summary: "用户列表"
+        description: "分页查询前台用户列表，支持按用户类型筛选。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.user.list"
+    )
+    @handler listUsers
+    get /users (ListUsersReq) returns (ListUsersResp)
+
+    @doc(
+        summary: "用户详情"
+        description: "获取用户详细信息，包括层级关系。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.user.detail"
+    )
+    @handler getUser
+    get /users/:id (IdReq) returns (GetUserResp)
+
+    @doc(
+        summary: "更新用户信息"
+        description: "更新用户基础信息。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.user.update"
+    )
+    @handler updateUser
+    put /users/:id (UpdateUserReq) returns (BaseResp)
+
+    @doc(
+        summary: "更新用户状态"
+        description: "启用或禁用用户。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.user.updateStatus"
+    )
+    @handler updateUserStatus
+    patch /users/:id/status (UpdateUserStatusReq) returns (BaseResp)
+
+    @doc(
+        summary: "更新用户手续费"
+        description: "更新用户的换汇手续费和提现手续费。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.user.updateFees"
+    )
+    @handler updateUserFees
+    patch /users/:id/fees (UpdateUserFeesReq) returns (BaseResp)
+
+    @doc(
+        summary: "用户国家授权"
+        description: "管理用户的国家授权列表。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.user.countryAuth"
+    )
+    @handler updateUserCountryAuth
+    patch /users/:id/countries (UpdateUserCountryAuthReq) returns (BaseResp)
+
+    @doc(
+        summary: "用户层级关系"
+        description: "获取用户的层级关系树。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.user.hierarchy"
+    )
+    @handler getUserHierarchy
+    get /users/:id/hierarchy (IdReq) returns (GetUserHierarchyResp)
+
+    @doc(
+        summary: "下级用户列表"
+        description: "获取用户的下级用户列表。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.user.subUsers"
+    )
+    @handler getSubUsers
+    get /users/:id/sub-users (GetSubUsersReq) returns (ListUsersResp)
+
+    @doc(
+        summary: "更新用户资料"
+        description: "更新用户资料信息。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.user.updateProfile"
+    )
+    @handler updateUserProfile
+    put /users/:id/profile (UpdateUserProfileReq) returns (BaseResp)
+
+    @doc(
+        summary: "获取用户邮箱列表"
+        description: "获取用户的所有邮箱。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.user.getEmails"
+    )
+    @handler getUserEmails
+    get /users/:id/emails (IdReq) returns (GetUserEmailsResp)
+
+    @doc(
+        summary: "添加用户邮箱"
+        description: "为用户添加新邮箱。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.user.addEmail"
+    )
+    @handler addUserEmail
+    post /users/:id/emails (AddUserEmailReq) returns (BaseResp)
+
+    @doc(
+        summary: "删除用户邮箱"
+        description: "删除用户的指定邮箱。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.user.removeEmail"
+    )
+    @handler removeUserEmail
+    delete /users/:id/emails/:emailId (IdReq) returns (BaseResp)
+}
+
+type (
+    // 创建总代请求
+    CreateSuperAgentReq {
+        Email string `json:"email"` // 邮箱
+        ExchangeFeeRate string `json:"exchangeFeeRate"` // 换汇手续费率
+        WithdrawFee string `json:"withdrawFee"` // 提现手续费
+        CountryIds []int64 `json:"countryIds"` // 授权国家ID列表
+        Note string `json:"note,optional"` // 备注
+    }
+
+    // 创建总代响应
+    CreateSuperAgentResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data UserInfo `json:"data"` // 用户信息
+    }
+
+    // 用户列表请求
+    ListUsersReq {
+        Page int64 `form:"page,default=1,optional"` // 页码
+        PageSize int64 `form:"pageSize,default=10,optional"` // 每页数量
+        Keyword string `form:"keyword,optional"` // 关键词搜索（邮箱、邀请码、昵称）
+        UserType string `form:"userType,optional"` // 用户类型筛选：super_agent-总代, agent-代理, manager-客户经理, customer-客户
+        Status int32 `form:"status,optional"` // 状态筛选：1-启用, 0-禁用
+        ParentId int64 `form:"parentId,optional"` // 父级用户ID筛选
+        ParentTree string `form:"parentTree,optional"` // 父级用户树筛选
+        StaffId int64 `form:"staffId,optional"` // 员工ID筛选（客户经理）
+        InviteCode string `form:"inviteCode,optional"` // 邀请码筛选
+        StartTime string `form:"startTime,optional"` // 创建开始时间
+        EndTime string `form:"endTime,optional"` // 创建结束时间
+        CountryId int64 `form:"countryId,optional"` // 授权国家ID筛选
+    }
+
+    // 用户列表响应
+    ListUsersResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data UserListData `json:"data"` // 数据
+    }
+
+    // 用户信息
+    UserInfo {
+        Id int64 `json:"id"` // ID
+        UserType string `json:"userType"` // 用户类型：super_agent-总代, agent-代理, manager-客户经理, customer-客户
+        UserTypeText string `json:"userTypeText"` // 用户类型文本
+        ParentId int64 `json:"parentId"` // 父级用户ID
+        ParentTree string `json:"parentTree"` // 父级用户树
+        Email string `json:"email"` // 主邮箱
+        InviteCode string `json:"inviteCode"` // 邀请码
+        StaffId int64 `json:"staffId"` // 员工ID（客户经理）
+        StaffName string `json:"staffName"` // 员工姓名（客户经理）
+        ExchangeFeeRate string `json:"exchangeFeeRate"` // 换汇手续费率
+        WithdrawFee string `json:"withdrawFee"` // 提现手续费
+        Status int32 `json:"status"` // 状态：1-启用, 0-禁用
+        StatusText string `json:"statusText"` // 状态文本
+        Profile UserProfile `json:"profile,optional"` // 用户资料
+        Emails []UserEmail `json:"emails,optional"` // 用户邮箱列表
+        CreatedAt string `json:"createdAt"` // 创建时间
+        UpdatedAt string `json:"updatedAt"` // 更新时间
+        AuthorizedCountries []CountryInfo `json:"authorizedCountries"` // 授权国家列表
+    }
+
+    // 用户列表数据
+    UserListData {
+        Total int64 `json:"total"` // 总记录数
+        List []UserInfo `json:"list"` // 列表
+    }
+
+    // 用户详情响应
+    GetUserResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data UserInfo `json:"data"` // 数据
+    }
+
+    // 更新用户请求
+    UpdateUserReq {
+        Id int64 `path:"id"` // 用户ID
+        Email string `json:"email"` // 邮箱
+        Note string `json:"note,optional"` // 备注
+    }
+
+    // 更新用户状态请求
+    UpdateUserStatusReq {
+        Id int64 `path:"id"` // 用户ID
+        Status int32 `json:"status"` // 状态：1启用 0禁用
+    }
+
+    // 更新用户手续费请求
+    UpdateUserFeesReq {
+        Id int64 `path:"id"` // 用户ID
+        ExchangeFeeRate string `json:"exchangeFeeRate"` // 换汇手续费率
+        WithdrawFee string `json:"withdrawFee"` // 提现手续费
+    }
+
+    // 更新用户国家授权请求
+    UpdateUserCountryAuthReq {
+        Id int64 `path:"id"` // 用户ID
+        CountryIds []int64 `json:"countryIds"` // 国家ID列表
+    }
+
+    // 用户层级关系响应
+    GetUserHierarchyResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data UserHierarchyData `json:"data"` // 数据
+    }
+
+    // 用户层级关系数据
+    UserHierarchyData {
+        User UserInfo `json:"user"` // 当前用户
+        Parent UserInfo `json:"parent,optional"` // 父级用户
+        Children []UserInfo `json:"children"` // 子级用户列表
+        Ancestors []UserInfo `json:"ancestors"` // 祖先用户列表
+    }
+
+    // 下级用户请求
+    GetSubUsersReq {
+        Id int64 `path:"id"` // 用户ID
+        Page int64 `form:"page,default=1,optional"` // 页码
+        PageSize int64 `form:"pageSize,default=10,optional"` // 每页数量
+        UserType string `form:"userType,optional"` // 用户类型筛选
+        IncludeSubLevels bool `form:"includeSubLevels,default=false,optional"` // 是否包含子级的下级
+    }
+
+    // 用户资料
+    UserProfile {
+        Id int64 `json:"id"` // 资料ID
+        UserId int64 `json:"userId"` // 用户ID
+        Nickname string `json:"nickname"` // 昵称
+        AvatarURL string `json:"avatarUrl"` // 头像URL
+        ExtraInfo string `json:"extraInfo,optional"` // 扩展信息（JSON）
+        CreatedAt string `json:"createdAt"` // 创建时间
+        UpdatedAt string `json:"updatedAt"` // 更新时间
+    }
+
+    // 用户邮箱
+    UserEmail {
+        Id int64 `json:"id"` // 邮箱ID
+        UserId int64 `json:"userId"` // 用户ID
+        Email string `json:"email"` // 邮箱地址
+        IsPrimary bool `json:"isPrimary"` // 是否主邮箱
+        CreatedAt string `json:"createdAt"` // 创建时间
+        UpdatedAt string `json:"updatedAt"` // 更新时间
+    }
+
+    // 更新用户资料请求
+    UpdateUserProfileReq {
+        Id int64 `path:"id"` // 用户ID
+        Nickname string `json:"nickname,optional"` // 昵称
+        AvatarURL string `json:"avatarUrl,optional"` // 头像URL
+        ExtraInfo string `json:"extraInfo,optional"` // 扩展信息（JSON）
+    }
+
+    // 获取用户邮箱响应
+    GetUserEmailsResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data []UserEmail `json:"data"` // 邮箱列表
+    }
+
+    // 添加用户邮箱请求
+    AddUserEmailReq {
+        Id int64 `path:"id"` // 用户ID
+        Email string `json:"email"` // 邮箱地址
+        IsPrimary bool `json:"isPrimary,default=false,optional"` // 是否设为主邮箱
+    }
+)

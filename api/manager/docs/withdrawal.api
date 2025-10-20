@@ -1,0 +1,191 @@
+syntax = "v1"
+
+info(
+    title: "USDT提现管理"
+    desc: "客户经理代客户从USDT银行账户提现到虚拟钱包地址"
+    version: "v1.0"
+)
+
+import "../../common/types.api"
+
+@server(
+    prefix: /api/withdrawal
+    group: withdrawal
+    jwt: Auth
+    middleware: SignCheck, JwtAuth
+    tags: "提现管理"
+)
+service manager {
+    @doc(
+        summary: "申请提现"
+        description: "代客户从USDT银行账户提现到虚拟钱包地址。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.withdrawal.create"
+    )
+    @handler createWithdrawal
+    post /withdrawals (CreateWithdrawalReq) returns (CreateWithdrawalResp)
+
+    @doc(
+        summary: "提现列表"
+        description: "查看我名下客户的USDT提现记录。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.withdrawal.list"
+    )
+    @handler listWithdrawals
+    get /withdrawals (ListWithdrawalsReq) returns (ListWithdrawalsResp)
+
+    @doc(
+        summary: "提现详情"
+        description: "查看USDT提现详情。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.withdrawal.detail"
+    )
+    @handler getWithdrawal
+    get /withdrawals/:id (IdReq) returns (GetWithdrawalResp)
+
+    @doc(
+        summary: "取消提现"
+        description: "在审核前取消USDT提现。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.withdrawal.cancel"
+    )
+    @handler cancelWithdrawal
+    post /withdrawals/:id/cancel (CancelWithdrawalReq) returns (BaseResp)
+
+    @doc(
+        summary: "提现统计"
+        description: "获取USDT提现统计信息。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.withdrawal.stats"
+    )
+    @handler getWithdrawalStats
+    get /withdrawals/stats returns (GetWithdrawalStatsResp)
+
+    @doc(
+        summary: "导出提现记录"
+        description: "导出USDT提现记录为Excel文件。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.withdrawal.export"
+    )
+    @handler exportWithdrawals
+    post /withdrawals/export (ExportWithdrawalsReq) returns (ExportWithdrawalsResp)
+}
+
+type (
+    CreateWithdrawalReq {
+        CustomerId int64 `json:"customerId"` // 客户ID
+        BankAccountId int64 `json:"bankAccountId"` // USDT银行账户ID
+        Amount string `json:"amount"` // 提现USDT数量（decimal字符串）
+        CryptoAddress string `json:"cryptoAddress"` // 目标虚拟钱包地址
+        Network string `json:"network,optional"` // 网络类型（如：ERC20、TRC20、BEP20等）
+        Tag string `json:"tag,optional"` // 地址标签/备注
+        FundPassword string `json:"fundPassword"` // 资金密码
+        Note string `json:"note,optional"` // 备注
+    }
+
+    CreateWithdrawalResp {
+        Code int32 `json:"code"`
+        Message string `json:"message"`
+        Data WithdrawalInfo `json:"data"`
+    }
+
+    WithdrawalInfo {
+        Id int64 `json:"id"` // 提现ID
+        WithdrawNumber string `json:"withdrawNumber"` // 提现单号
+        UserId int64 `json:"userId"` // 用户ID
+        CustomerId int64 `json:"customerId"` // 客户ID
+        ManagerId int64 `json:"managerId"` // 客户经理ID
+        BankAccountId int64 `json:"bankAccountId"` // USDT银行账户ID
+        BankAccountNumber string `json:"bankAccountNumber"` // USDT银行账户号
+        Amount string `json:"amount"` // 提现USDT数量（decimal字符串）
+        WithdrawFee string `json:"withdrawFee"` // 提现手续费（decimal字符串）
+        ActualAmount string `json:"actualAmount"` // 实际到账USDT数量（decimal字符串）
+        CryptoAddress string `json:"cryptoAddress"` // 目标虚拟钱包地址
+        Network string `json:"network"` // 网络类型（如：ERC20、TRC20、BEP20等）
+        Tag string `json:"tag"` // 地址标签/备注
+        Status string `json:"status"` // 提现状态（Requested-已申请、UnderReview-审核中、Approved-已通过、Rejected-已拒绝、Settled-已结算）
+        StatusText string `json:"statusText"` // 状态文本
+        WithdrawTime string `json:"withdrawTime"` // 提现时间
+        AuditorId int64 `json:"auditorId,optional"` // 审核人ID
+        AuditorName string `json:"auditorName,optional"` // 审核人姓名
+        AuditTime string `json:"auditTime,optional"` // 审核时间
+        AuditNote string `json:"auditNote,optional"` // 审核意见
+        AuditResult string `json:"auditResult,optional"` // 审核结果
+        Note string `json:"note,optional"` // 备注
+        CreatedAt string `json:"createdAt"` // 创建时间
+        UpdatedAt string `json:"updatedAt"` // 更新时间
+    }
+
+    ListWithdrawalsReq {
+        Page int64 `form:"page,default=1,optional"` // 页码
+        PageSize int64 `form:"pageSize,default=10,optional"` // 每页数量
+        Keyword string `form:"keyword,optional"` // 关键词搜索（提现单号、客户姓名、银行账户号）
+        Status string `form:"status,optional"` // 状态筛选（Requested-已申请、UnderReview-审核中、Approved-已通过、Rejected-已拒绝、Settled-已结算）
+        CustomerId int64 `form:"customerId,optional"` // 客户ID筛选
+        BankAccountId int64 `form:"bankAccountId,optional"` // USDT银行账户ID筛选
+        StartTime string `form:"startTime,optional"` // 开始时间（格式：2024-01-01 00:00:00）
+        EndTime string `form:"endTime,optional"` // 结束时间（格式：2024-01-31 23:59:59）
+        MinAmount string `form:"minAmount,optional"` // 最小USDT数量（decimal字符串）
+        MaxAmount string `form:"maxAmount,optional"` // 最大USDT数量（decimal字符串）
+    }
+
+    ListWithdrawalsResp {
+        Code int32 `json:"code"`
+        Message string `json:"message"`
+        Data WithdrawalListData `json:"data"`
+    }
+
+    WithdrawalListData {
+        Total int64 `json:"total"`
+        List []WithdrawalInfo `json:"list"`
+    }
+
+    GetWithdrawalResp {
+        Code int32 `json:"code"`
+        Message string `json:"message"`
+        Data WithdrawalInfo `json:"data"`
+    }
+
+    CancelWithdrawalReq {
+        Id int64 `path:"id"` // 提现ID
+        Reason string `json:"reason,optional"` // 取消原因
+    }
+
+    GetWithdrawalStatsResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data WithdrawalStatsData `json:"data"` // 统计数据
+    }
+
+    WithdrawalStatsData {
+        TotalWithdrawals int64 `json:"totalWithdrawals"` // 总提现数
+        TotalAmount string `json:"totalAmount"` // 总提现USDT数量（decimal字符串）
+        TotalFee string `json:"totalFee"` // 总提现手续费（decimal字符串）
+        TotalActualAmount string `json:"totalActualAmount"` // 总实际到账USDT数量（decimal字符串）
+        PendingCount int64 `json:"pendingCount"` // 待审核数量
+        ApprovedCount int64 `json:"approvedCount"` // 已通过数量
+        RejectedCount int64 `json:"rejectedCount"` // 已拒绝数量
+        SettledCount int64 `json:"settledCount"` // 已结算数量
+        DailyStats []DailyStat `json:"dailyStats"` // 每日统计
+    }
+
+    ExportWithdrawalsReq {
+        Keyword string `json:"keyword,optional"` // 关键词搜索（提现单号、客户姓名、银行账户号）
+        Status string `json:"status,optional"` // 状态筛选（Requested-已申请、UnderReview-审核中、Approved-已通过、Rejected-已拒绝、Settled-已结算）
+        CustomerId int64 `json:"customerId,optional"` // 客户ID筛选
+        BankAccountId int64 `json:"bankAccountId,optional"` // USDT银行账户ID筛选
+        StartTime string `json:"startTime,optional"` // 开始时间（格式：2024-01-01 00:00:00）
+        EndTime string `json:"endTime,optional"` // 结束时间（格式：2024-01-31 23:59:59）
+        MinAmount string `json:"minAmount,optional"` // 最小USDT数量（decimal字符串）
+        MaxAmount string `json:"maxAmount,optional"` // 最大USDT数量（decimal字符串）
+    }
+
+    ExportWithdrawalsResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data ExportWithdrawalsData `json:"data"` // 数据
+    }
+
+    ExportWithdrawalsData {
+        TaskId string `json:"taskId"` // 任务ID
+        FileName string `json:"fileName"` // 文件名
+        FileSize int64 `json:"fileSize"` // 文件大小（字节）
+        DownloadUrl string `json:"downloadUrl"` // 下载链接
+        ExpireAt string `json:"expireAt"` // 过期时间
+    }
+
+)

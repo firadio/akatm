@@ -1,0 +1,304 @@
+syntax = "v1"
+
+info(
+    title: "开户审核接口"
+    desc: "管理端审核银行账户开户申请"
+    version: "v1.0"
+)
+
+import "../../common/types.api"
+
+@server(
+    prefix: /admin
+    group: auditAccountApplication
+    jwt: Auth
+    middleware: SignCheck, JwtAuth
+    tags: "开户申请"
+)
+service admin {
+    @doc(
+        summary: "开户申请列表"
+        description: "分页查看开户申请列表。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.audit.accountApplication.list"
+    )
+    @handler listAccountApplications
+    get /audits/account-applications (ListAccountApplicationsReq) returns (ListAccountApplicationsResp)
+
+    @doc(
+        summary: "开户申请详情"
+        description: "查看开户申请详情。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.audit.accountApplication.detail"
+    )
+    @handler getAccountApplication
+    get /audits/account-applications/:id (IdReq) returns (GetAccountApplicationResp)
+
+    @doc(
+        summary: "审核通过"
+        description: "开户申请审核通过。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.audit.accountApplication.approve"
+    )
+    @handler approveAccountApplication
+    post /audits/account-applications/:id/approve (ApproveAccountApplicationReq) returns (BaseResp)
+
+    @doc(
+        summary: "审核拒绝"
+        description: "开户申请审核拒绝。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.audit.accountApplication.reject"
+    )
+    @handler rejectAccountApplication
+    post /audits/account-applications/:id/reject (RejectAccountApplicationReq) returns (BaseResp)
+
+    @doc(
+        summary: "批量审核通过"
+        description: "批量审核通过开户申请。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.audit.accountApplication.batchApprove"
+    )
+    @handler batchApproveAccountApplications
+    post /audits/account-applications/batch-approve (BatchApproveAccountApplicationsReq) returns (BaseResp)
+
+    @doc(
+        summary: "批量审核拒绝"
+        description: "批量审核拒绝开户申请。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.audit.accountApplication.batchReject"
+    )
+    @handler batchRejectAccountApplications
+    post /audits/account-applications/batch-reject (BatchRejectAccountApplicationsReq) returns (BaseResp)
+
+    @doc(
+        summary: "申请统计"
+        description: "获取开户申请统计信息。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.audit.accountApplication.stats"
+    )
+    @handler getAccountApplicationStats
+    get /audits/account-applications/stats (GetAccountApplicationStatsReq) returns (GetAccountApplicationStatsResp)
+
+    @doc(
+        summary: "申请流程跟踪"
+        description: "获取开户申请流程跟踪信息。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.audit.accountApplication.track"
+    )
+    @handler trackAccountApplication
+    get /audits/account-applications/:id/track (IdReq) returns (TrackAccountApplicationResp)
+}
+
+type (
+    // 列表请求
+    ListAccountApplicationsReq {
+        Page int64 `form:"page,default=1,optional"` // 页码
+        PageSize int64 `form:"pageSize,default=10,optional"` // 每页数量
+        
+        // 基础筛选条件
+        Status string `form:"status,optional"` // 申请状态：Draft-草稿, Submitted-已提交, UnderReview-审核中, Approved-已通过, Rejected-已拒绝
+        ApplicationStatus int32 `form:"applicationStatus,optional"` // 申请状态（数字）：0-待审核 1-通过 2-拒绝（兼容旧版本）
+        
+        // 关联筛选条件
+        ManagerId int64 `form:"managerId,optional"` // 客户经理ID筛选
+        CustomerId int64 `form:"customerId,optional"` // 客户ID筛选
+        UserId int64 `form:"userId,optional"` // 用户ID筛选
+        AuditorId int64 `form:"auditorId,optional"` // 审核人ID筛选
+        
+        // 搜索条件
+        Keyword string `form:"keyword,optional"` // 关键词搜索（申请单号、客户姓名、客户邮箱、审核人姓名）
+        
+        // 时间范围筛选
+        ApplicationTimeStart string `form:"applicationTimeStart,optional"` // 申请开始时间（时间戳）
+        ApplicationTimeEnd string `form:"applicationTimeEnd,optional"` // 申请结束时间（时间戳）
+        AuditTimeStart string `form:"auditTimeStart,optional"` // 审核开始时间（时间戳）
+        AuditTimeEnd string `form:"auditTimeEnd,optional"` // 审核结束时间（时间戳）
+        
+        // 审核结果筛选
+        AuditResult string `form:"auditResult,optional"` // 审核结果筛选：Approved-通过, Rejected-拒绝
+    }
+
+    // 申请摘要
+    AccountApplicationBrief {
+        Id int64 `json:"id"` // ID
+        ApplicationNumber string `json:"applicationNumber"` // 申请单号
+        CustomerId int64 `json:"customerId"` // 客户ID
+        CustomerName string `json:"customerName"` // 客户姓名
+        CustomerEmail string `json:"customerEmail"` // 客户邮箱
+        CustomerPhone string `json:"customerPhone"` // 客户电话
+        UserId int64 `json:"userId"` // 用户ID
+        ManagerId int64 `json:"managerId"` // 客户经理ID
+        ManagerName string `json:"managerName"` // 客户经理姓名
+        ManagerLevel string `json:"managerLevel"` // 客户经理层级
+        Status string `json:"status"` // 申请状态：Draft-草稿, Submitted-已提交, UnderReview-审核中, Approved-已通过, Rejected-已拒绝
+        StatusText string `json:"statusText"` // 状态文本
+        Materials string `json:"materials"` // 申请材料（JSON格式）
+        ApplicationTime string `json:"applicationTime"` // 申请时间
+        AuditorId int64 `json:"auditorId"` // 审核人ID
+        AuditorName string `json:"auditorName"` // 审核人姓名
+        AuditTime string `json:"auditTime"` // 审核时间
+        AuditNote string `json:"auditNote"` // 审核意见
+        AuditResult string `json:"auditResult"` // 审核结果
+        Note string `json:"note"` // 备注
+        CreatedAt string `json:"createdAt"` // 创建时间
+        UpdatedAt string `json:"updatedAt"` // 更新时间
+    }
+
+    // 列表响应
+    ListAccountApplicationsResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data AccountApplicationListData `json:"data"` // 数据
+    }
+
+    AccountApplicationListData {
+        Total int64 `json:"total"` // 总记录数
+        List []AccountApplicationBrief `json:"list"` // 列表
+    }
+
+    // 详情响应
+    GetAccountApplicationResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data AccountApplicationDetail `json:"data"` // 数据
+    }
+
+    AccountApplicationDetail {
+        Id int64 `json:"id"` // ID
+        ApplicationNumber string `json:"applicationNumber"` // 申请单号
+        CustomerId int64 `json:"customerId"` // 客户ID
+        CustomerName string `json:"customerName"` // 客户姓名
+        CustomerEmail string `json:"customerEmail"` // 客户邮箱
+        CustomerPhone string `json:"customerPhone"` // 客户电话
+        UserId int64 `json:"userId"` // 用户ID
+        ManagerId int64 `json:"managerId"` // 客户经理ID
+        ManagerName string `json:"managerName"` // 客户经理姓名
+        ManagerLevel string `json:"managerLevel"` // 客户经理层级
+        Status string `json:"status"` // 申请状态：Draft-草稿, Submitted-已提交, UnderReview-审核中, Approved-已通过, Rejected-已拒绝
+        StatusText string `json:"statusText"` // 状态文本
+        Materials string `json:"materials"` // 申请材料（JSON格式）
+        ApplicationTime string `json:"applicationTime"` // 申请时间
+        AuditorId int64 `json:"auditorId"` // 审核人ID
+        AuditorName string `json:"auditorName"` // 审核人姓名
+        AuditTime string `json:"auditTime"` // 审核时间
+        AuditNote string `json:"auditNote"` // 审核意见
+        AuditResult string `json:"auditResult"` // 审核结果
+        Note string `json:"note"` // 备注
+        CreatedAt string `json:"createdAt"` // 创建时间
+        UpdatedAt string `json:"updatedAt"` // 更新时间
+    }
+
+    // 审核通过请求
+    ApproveAccountApplicationReq {
+        Id int64 `path:"id"` // ID
+        Note string `json:"note,optional"` // 备注
+    }
+
+    // 审核拒绝请求
+    RejectAccountApplicationReq {
+        Id int64 `path:"id"` // ID
+        Note string `json:"note"` // 备注
+    }
+
+    // 批量审核通过请求
+    BatchApproveAccountApplicationsReq {
+        ApplicationIds []int64 `json:"applicationIds"` // 申请ID列表
+        Note string `json:"note,optional"` // 批量审核备注
+    }
+
+    // 批量审核拒绝请求
+    BatchRejectAccountApplicationsReq {
+        ApplicationIds []int64 `json:"applicationIds"` // 申请ID列表
+        Note string `json:"note"` // 批量审核备注
+    }
+
+    // 申请统计请求
+    GetAccountApplicationStatsReq {
+        StartTime string `form:"startTime,optional"` // 开始时间
+        EndTime string `form:"endTime,optional"` // 结束时间
+        ManagerId int64 `form:"managerId,optional"` // 客户经理ID筛选
+        CustomerType string `form:"customerType,optional"` // 客户类型筛选：individual-个人, enterprise-企业
+        Status string `form:"status,optional"` // 申请状态筛选
+        AuditResult string `form:"auditResult,optional"` // 审核结果筛选
+    }
+
+    // 申请统计响应
+    GetAccountApplicationStatsResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data AccountApplicationStatsData `json:"data"` // 数据
+    }
+
+    // 申请统计数据
+    AccountApplicationStatsData {
+        TotalCount int64 `json:"totalCount"` // 总申请数
+        DraftCount int64 `json:"draftCount"` // 草稿数量
+        SubmittedCount int64 `json:"submittedCount"` // 已提交数量
+        UnderReviewCount int64 `json:"underReviewCount"` // 审核中数量
+        ApprovedCount int64 `json:"approvedCount"` // 已通过数量
+        RejectedCount int64 `json:"rejectedCount"` // 已拒绝数量
+        ApprovalRate string `json:"approvalRate"` // 通过率
+        AverageProcessTime string `json:"averageProcessTime"` // 平均处理时间（小时）
+        StatusStats []StatusStat `json:"statusStats"` // 状态统计
+        CustomerTypeStats []CustomerTypeStat `json:"customerTypeStats"` // 客户类型统计
+        ManagerStats []ManagerStat `json:"managerStats"` // 客户经理统计
+        DailyStats []DailyStat `json:"dailyStats"` // 每日统计
+        MonthlyStats []MonthlyStat `json:"monthlyStats"` // 月度统计
+    }
+
+    // 状态统计
+    StatusStat {
+        Status string `json:"status"` // 状态
+        StatusText string `json:"statusText"` // 状态文本
+        Count int64 `json:"count"` // 数量
+        Percentage string `json:"percentage"` // 百分比
+    }
+
+    // 客户经理统计
+    ManagerStat {
+        ManagerId int64 `json:"managerId"` // 客户经理ID
+        ManagerName string `json:"managerName"` // 客户经理姓名
+        ManagerLevel string `json:"managerLevel"` // 客户经理层级
+        TotalCount int64 `json:"totalCount"` // 总申请数
+        ApprovedCount int64 `json:"approvedCount"` // 通过数量
+        RejectedCount int64 `json:"rejectedCount"` // 拒绝数量
+        ApprovalRate string `json:"approvalRate"` // 通过率
+        AverageProcessTime string `json:"averageProcessTime"` // 平均处理时间
+    }
+
+    // 申请流程跟踪响应
+    TrackAccountApplicationResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data ApplicationTrackData `json:"data"` // 数据
+    }
+
+    // 申请流程跟踪数据
+    ApplicationTrackData {
+        ApplicationId int64 `json:"applicationId"` // 申请ID
+        ApplicationNumber string `json:"applicationNumber"` // 申请单号
+        CurrentStatus string `json:"currentStatus"` // 当前状态
+        CurrentStatusText string `json:"currentStatusText"` // 当前状态文本
+        ProcessSteps []ProcessStep `json:"processSteps"` // 流程步骤
+        EstimatedCompletionTime string `json:"estimatedCompletionTime,optional"` // 预计完成时间
+        NextStep string `json:"nextStep,optional"` // 下一步操作
+        NextStepDescription string `json:"nextStepDescription,optional"` // 下一步描述
+    }
+
+    // 流程步骤
+    ProcessStep {
+        StepName string `json:"stepName"` // 步骤名称
+        StepDescription string `json:"stepDescription"` // 步骤描述
+        Status string `json:"status"` // 步骤状态：pending-待处理, processing-处理中, completed-已完成, skipped-已跳过
+        StatusText string `json:"statusText"` // 状态文本
+        StartTime string `json:"startTime,optional"` // 开始时间
+        EndTime string `json:"endTime,optional"` // 结束时间
+        Duration string `json:"duration,optional"` // 持续时间
+        OperatorId int64 `json:"operatorId,optional"` // 操作人ID
+        OperatorName string `json:"operatorName,optional"` // 操作人姓名
+        Note string `json:"note,optional"` // 备注
+        Attachments []Attachment `json:"attachments,optional"` // 附件
+    }
+
+    // 附件
+    Attachment {
+        Id int64 `json:"id"` // 附件ID
+        Name string `json:"name"` // 附件名称
+        Type string `json:"type"` // 附件类型
+        Size int64 `json:"size"` // 附件大小（字节）
+        Url string `json:"url"` // 附件URL
+        UploadTime string `json:"uploadTime"` // 上传时间
+    }
+)

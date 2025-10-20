@@ -24,6 +24,10 @@ type UserWallet struct {
 	gorm.Model
 	// 关联的用户ID
 	UserId uint `gorm:"index"`
+	// 关联的客户ID（业务客户）
+	CustomerId uint `gorm:"index"`
+	// 关联的客户经理ID
+	ManagerId uint `gorm:"index"`
 	// 资产代号 (如 USDT, BTC)
 	Symbol string `gorm:"index;size:10;default:'USDT'"`
 	// 用户提现地址列表
@@ -85,16 +89,36 @@ type UserWalletLedger struct {
 // UserWalletWithdrawal 用户钱包提现记录
 type UserWalletWithdrawal struct {
 	gorm.Model
+	// 提现单号
+	WithdrawNumber string `gorm:"size:30;uniqueIndex"`
 	// 关联的用户钱包ID
 	UserWalletId uint `gorm:"index"`
 	// 关联的用户ID
 	UserId uint `gorm:"index"`
+	// 关联的客户经理ID
+	ManagerId uint `gorm:"index"`
+	// 关联的钱包地址ID
+	WalletAddressId uint `gorm:"index"`
 	// 提现金额
 	WithdrawAmount decimal.Decimal `gorm:"type:decimal(20,8)"`
-	// 提现状态（待处理、已处理、拒绝等）
-	Status string `gorm:"size:50"`
+	// 提现手续费
+	WithdrawFee decimal.Decimal `gorm:"type:decimal(20,8)"`
+	// 实际到账金额
+	ActualAmount decimal.Decimal `gorm:"type:decimal(20,8)"`
+	// 提现状态（Requested、UnderReview、Approved、Rejected、Settled）
+	Status string `gorm:"size:20;index"`
 	// 提现时间
-	WithdrawTime time.Time `gorm:"index"`
+	WithdrawTime int64 `gorm:"index"`
+	// 审核人ID
+	AuditorId uint `gorm:"index"`
+	// 审核人姓名
+	AuditorName string `gorm:"size:50"`
+	// 审核时间
+	AuditTime int64 `gorm:"index"`
+	// 审核意见
+	AuditNote string `gorm:"size:255"`
+	// 审核结果
+	AuditResult string `gorm:"size:20"`
 	// 备注
 	Note string `gorm:"size:255"`
 }

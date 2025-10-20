@@ -1,13 +1,540 @@
 syntax = "proto3";
 
-option go_package = ".";
+package admin;
+option go_package = "./adminRpc";
 
-// ============ 人员 ============
-service Staff {
-  // 人员管理
-  // rpc CreateStaff(CreateStaffReq) returns (CreateStaffResp);
-  // rpc GetStaff(GetStaffReq) returns (GetStaffResp);
-  // rpc UpdateStaff(UpdateStaffReq) returns (UpdateStaffResp);
-  // rpc DeleteStaff(DeleteStaffReq) returns (DeleteStaffResp);
-  // rpc ListStaffs(ListStaffsReq) returns (ListStaffsResp);
+// ============ 通用响应 ============
+message BaseResp {
+  int32 code = 1;        // 响应码
+  string message = 2;    // 响应消息
+  string request_id = 3; // 请求ID
+}
+
+// ============ 分页请求 ============
+message PageReq {
+  int64 page = 1;        // 页码
+  int64 page_size = 2;   // 每页数量
+  string keyword = 3;    // 关键词搜索
+}
+
+// ============ 分页响应 ============
+message PageResp {
+  int64 total = 1;       // 总数量
+  int64 page = 2;        // 当前页码
+  int64 page_size = 3;   // 每页数量
+}
+
+// ============ 员工信息 ============
+message StaffInfo {
+  int64 id = 1;                    // 员工ID
+  string name = 2;                  // 员工姓名
+  string email = 3;                 // 邮箱
+  int32 status = 4;                 // 状态 (1启用 0禁用)
+  int64 created_at = 5;             // 创建时间
+  int64 updated_at = 6;              // 更新时间
+  repeated RoleInfo roles = 7;       // 角色列表
+}
+
+// ============ 角色信息 ============
+message RoleInfo {
+  int64 id = 1;                    // 角色ID
+  string name = 2;                  // 角色名称
+  string code = 3;                  // 角色代码
+  string description = 4;            // 角色描述
+  int32 status = 5;                 // 状态 (1启用 0禁用)
+  int64 created_at = 6;             // 创建时间
+  repeated MenuInfo menus = 7;       // 菜单列表
+}
+
+// ============ 菜单信息 ============
+message MenuInfo {
+  int64 id = 1;                    // 菜单ID
+  string name = 2;                  // 菜单名称
+  string path = 3;                  // 菜单路径
+  string icon = 4;                   // 菜单图标
+  string component = 5;              // 组件路径
+  string role = 6;                   // 角色权限
+  string label = 7;                  // 显示标签
+  string alias = 8;                  // 别名路径
+  int32 type = 9;                   // 类型：1菜单 2按钮
+  int64 parent_id = 10;             // 父菜单ID
+  int32 sort = 11;                  // 排序
+  int32 status = 12;                // 状态 (1启用 0禁用)
+  int64 created_at = 13;            // 创建时间
+  repeated MenuInfo children = 14;   // 子菜单
+}
+
+// ============ 权限信息 ============
+message PermissionInfo {
+  int64 id = 1;                    // 权限ID
+  string name = 2;                  // 权限名称
+  string code = 3;                  // 权限代码
+  string resource = 4;               // 资源
+  string action = 5;                 // 动作
+  string description = 6;            // 权限描述
+  int32 status = 7;                 // 状态 (1启用 0禁用)
+  int64 created_at = 8;             // 创建时间
+}
+
+// ============ 国家信息 ============
+message CountryInfo {
+  int64 id = 1;                    // 国家ID
+  string code = 2;                  // 国家代码
+  string name = 3;                  // 国家名称
+  string name_en = 4;               // 英文名称
+  string currency = 5;              // 货币代码
+  string phone_code = 6;            // 电话区号
+  int32 sort = 7;                   // 排序
+  int32 status = 8;                 // 状态 (1启用 0禁用)
+  string description = 9;           // 描述
+  int64 created_at = 10;            // 创建时间
+  int64 updated_at = 11;            // 更新时间
+}
+
+// ============ 管理端服务 ============
+service Admin {
+  // ============ 员工管理相关 ============
+  // 创建员工
+  rpc CreateStaff(CreateStaffReq) returns (CreateStaffResp);
+  // 获取员工
+  rpc GetStaff(GetStaffReq) returns (GetStaffResp);
+  // 更新员工
+  rpc UpdateStaff(UpdateStaffReq) returns (UpdateStaffResp);
+  // 删除员工
+  rpc DeleteStaff(DeleteStaffReq) returns (DeleteStaffResp);
+  // 获取员工列表
+  rpc ListStaffs(ListStaffsReq) returns (ListStaffsResp);
+
+  // ============ 角色管理相关 ============
+  // 创建角色
+  rpc CreateRole(CreateRoleReq) returns (CreateRoleResp);
+  // 获取角色
+  rpc GetRole(GetRoleReq) returns (GetRoleResp);
+  // 更新角色
+  rpc UpdateRole(UpdateRoleReq) returns (UpdateRoleResp);
+  // 删除角色
+  rpc DeleteRole(DeleteRoleReq) returns (DeleteRoleResp);
+  // 获取角色列表
+  rpc ListRoles(ListRolesReq) returns (ListRolesResp);
+
+  // ============ 菜单管理相关 ============
+  // 创建菜单
+  rpc CreateMenu(CreateMenuReq) returns (CreateMenuResp);
+  // 获取菜单
+  rpc GetMenu(GetMenuReq) returns (GetMenuResp);
+  // 更新菜单
+  rpc UpdateMenu(UpdateMenuReq) returns (UpdateMenuResp);
+  // 删除菜单
+  rpc DeleteMenu(DeleteMenuReq) returns (DeleteMenuResp);
+  // 获取菜单列表
+  rpc ListMenus(ListMenusReq) returns (ListMenusResp);
+
+  // ============ 权限管理相关 ============
+  // 创建权限
+  rpc CreatePermission(CreatePermissionReq) returns (CreatePermissionResp);
+  // 获取权限
+  rpc GetPermission(GetPermissionReq) returns (GetPermissionResp);
+  // 更新权限
+  rpc UpdatePermission(UpdatePermissionReq) returns (UpdatePermissionResp);
+  // 删除权限
+  rpc DeletePermission(DeletePermissionReq) returns (DeletePermissionResp);
+  // 获取权限列表
+  rpc ListPermissions(ListPermissionsReq) returns (ListPermissionsResp);
+
+  // ============ 权限分配相关 ============
+  // 分配角色给员工
+  rpc AssignRoleToStaff(AssignRoleToStaffReq) returns (AssignRoleToStaffResp);
+  // 分配菜单给角色
+  rpc AssignMenuToRole(AssignMenuToRoleReq) returns (AssignMenuToRoleResp);
+  // 获取员工角色
+  rpc GetStaffRoles(GetStaffRolesReq) returns (GetStaffRolesResp);
+  // 获取角色菜单
+  rpc GetRoleMenus(GetRoleMenusReq) returns (GetRoleMenusResp);
+
+  // ============ 国家管理相关 ============
+  // 创建国家
+  rpc CreateCountry(CreateCountryReq) returns (CreateCountryResp);
+  // 获取国家
+  rpc GetCountry(GetCountryReq) returns (GetCountryResp);
+  // 更新国家
+  rpc UpdateCountry(UpdateCountryReq) returns (UpdateCountryResp);
+  // 删除国家
+  rpc DeleteCountry(DeleteCountryReq) returns (DeleteCountryResp);
+  // 获取国家列表
+  rpc ListCountries(ListCountriesReq) returns (ListCountriesResp);
+  // 更新国家状态
+  rpc UpdateCountryStatus(UpdateCountryStatusReq) returns (UpdateCountryStatusResp);
+}
+
+// ============ 员工管理请求/响应 ============
+message CreateStaffReq {
+  string name = 1;                  // 员工姓名
+  string email = 2;                  // 邮箱
+  string password = 3;               // 密码
+  string request_id = 4;             // 请求ID
+}
+
+message CreateStaffResp {
+  BaseResp base = 1;
+  StaffInfo data = 2;
+}
+
+message GetStaffReq {
+  int64 staff_id = 1;               // 员工ID
+  string request_id = 2;             // 请求ID
+}
+
+message GetStaffResp {
+  BaseResp base = 1;
+  StaffInfo data = 2;
+}
+
+message UpdateStaffReq {
+  int64 staff_id = 1;               // 员工ID
+  string name = 2;                  // 员工姓名
+  string email = 3;                  // 邮箱
+  int32 status = 4;                 // 状态
+  string request_id = 5;             // 请求ID
+}
+
+message UpdateStaffResp {
+  BaseResp base = 1;
+  StaffInfo data = 2;
+}
+
+message DeleteStaffReq {
+  int64 staff_id = 1;               // 员工ID
+  string request_id = 2;             // 请求ID
+}
+
+message DeleteStaffResp {
+  BaseResp base = 1;
+}
+
+message ListStaffsReq {
+  PageReq page_req = 1;
+  string keyword = 2;                // 关键词搜索
+  int32 status = 3;                 // 状态筛选
+  string request_id = 4;             // 请求ID
+}
+
+message ListStaffsResp {
+  BaseResp base = 1;
+  PageResp page_resp = 2;
+  repeated StaffInfo staffs = 3;    // 员工列表
+}
+
+// ============ 角色管理请求/响应 ============
+message CreateRoleReq {
+  string name = 1;                  // 角色名称
+  string code = 2;                  // 角色代码
+  string description = 3;            // 角色描述
+  string request_id = 4;             // 请求ID
+}
+
+message CreateRoleResp {
+  BaseResp base = 1;
+  RoleInfo data = 2;
+}
+
+message GetRoleReq {
+  int64 role_id = 1;                // 角色ID
+  string request_id = 2;             // 请求ID
+}
+
+message GetRoleResp {
+  BaseResp base = 1;
+  RoleInfo data = 2;
+}
+
+message UpdateRoleReq {
+  int64 role_id = 1;                // 角色ID
+  string name = 2;                  // 角色名称
+  string code = 3;                  // 角色代码
+  string description = 4;            // 角色描述
+  int32 status = 5;                 // 状态
+  string request_id = 6;             // 请求ID
+}
+
+message UpdateRoleResp {
+  BaseResp base = 1;
+  RoleInfo data = 2;
+}
+
+message DeleteRoleReq {
+  int64 role_id = 1;                // 角色ID
+  string request_id = 2;             // 请求ID
+}
+
+message DeleteRoleResp {
+  BaseResp base = 1;
+}
+
+message ListRolesReq {
+  PageReq page_req = 1;
+  string keyword = 2;                // 关键词搜索
+  int32 status = 3;                 // 状态筛选
+  string request_id = 4;             // 请求ID
+}
+
+message ListRolesResp {
+  BaseResp base = 1;
+  PageResp page_resp = 2;
+  repeated RoleInfo roles = 3;       // 角色列表
+}
+
+// ============ 菜单管理请求/响应 ============
+message CreateMenuReq {
+  string name = 1;                  // 菜单名称
+  string path = 2;                  // 菜单路径
+  string icon = 3;                   // 菜单图标
+  string component = 4;              // 组件路径
+  string role = 5;                   // 角色权限
+  string label = 6;                  // 显示标签
+  string alias = 7;                  // 别名路径
+  int32 type = 8;                   // 类型：1菜单 2按钮
+  int64 parent_id = 9;              // 父菜单ID
+  int32 sort = 10;                  // 排序
+  string request_id = 11;            // 请求ID
+}
+
+message CreateMenuResp {
+  BaseResp base = 1;
+  MenuInfo data = 2;
+}
+
+message GetMenuReq {
+  int64 menu_id = 1;                // 菜单ID
+  string request_id = 2;             // 请求ID
+}
+
+message GetMenuResp {
+  BaseResp base = 1;
+  MenuInfo data = 2;
+}
+
+message UpdateMenuReq {
+  int64 menu_id = 1;                // 菜单ID
+  string name = 2;                  // 菜单名称
+  string path = 3;                  // 菜单路径
+  string icon = 4;                   // 菜单图标
+  string component = 5;              // 组件路径
+  string role = 6;                   // 角色权限
+  string label = 7;                  // 显示标签
+  string alias = 8;                  // 别名路径
+  int32 type = 9;                   // 类型：1菜单 2按钮
+  int64 parent_id = 10;             // 父菜单ID
+  int32 sort = 11;                  // 排序
+  int32 status = 12;                // 状态
+  string request_id = 13;            // 请求ID
+}
+
+message UpdateMenuResp {
+  BaseResp base = 1;
+  MenuInfo data = 2;
+}
+
+message DeleteMenuReq {
+  int64 menu_id = 1;                // 菜单ID
+  string request_id = 2;             // 请求ID
+}
+
+message DeleteMenuResp {
+  BaseResp base = 1;
+}
+
+message ListMenusReq {
+  PageReq page_req = 1;
+  string keyword = 2;                // 关键词搜索
+  int32 type = 3;                   // 类型筛选：1菜单 2按钮
+  int64 parent_id = 4;              // 父菜单ID
+  int32 status = 5;                 // 状态筛选
+  string request_id = 6;             // 请求ID
+}
+
+message ListMenusResp {
+  BaseResp base = 1;
+  PageResp page_resp = 2;
+  repeated MenuInfo menus = 3;       // 菜单列表
+}
+
+// ============ 权限管理请求/响应 ============
+message CreatePermissionReq {
+  string name = 1;                  // 权限名称
+  string code = 2;                  // 权限代码
+  string resource = 3;               // 资源
+  string action = 4;                 // 动作
+  string description = 5;            // 权限描述
+  string request_id = 6;             // 请求ID
+}
+
+message CreatePermissionResp {
+  BaseResp base = 1;
+  PermissionInfo data = 2;
+}
+
+message GetPermissionReq {
+  int64 permission_id = 1;          // 权限ID
+  string request_id = 2;             // 请求ID
+}
+
+message GetPermissionResp {
+  BaseResp base = 1;
+  PermissionInfo data = 2;
+}
+
+message UpdatePermissionReq {
+  int64 permission_id = 1;          // 权限ID
+  string name = 2;                  // 权限名称
+  string code = 3;                  // 权限代码
+  string resource = 4;               // 资源
+  string action = 5;                 // 动作
+  string description = 6;            // 权限描述
+  int32 status = 7;                 // 状态
+  string request_id = 8;             // 请求ID
+}
+
+message UpdatePermissionResp {
+  BaseResp base = 1;
+  PermissionInfo data = 2;
+}
+
+message DeletePermissionReq {
+  int64 permission_id = 1;          // 权限ID
+  string request_id = 2;             // 请求ID
+}
+
+message DeletePermissionResp {
+  BaseResp base = 1;
+}
+
+message ListPermissionsReq {
+  PageReq page_req = 1;
+  string keyword = 2;                // 关键词搜索
+  string resource = 3;               // 资源筛选
+  int32 status = 4;                 // 状态筛选
+  string request_id = 5;             // 请求ID
+}
+
+message ListPermissionsResp {
+  BaseResp base = 1;
+  PageResp page_resp = 2;
+  repeated PermissionInfo permissions = 3; // 权限列表
+}
+
+// ============ 权限分配请求/响应 ============
+message AssignRoleToStaffReq {
+  int64 staff_id = 1;               // 员工ID
+  int64 role_id = 2;                // 角色ID
+  string request_id = 3;             // 请求ID
+}
+
+message AssignRoleToStaffResp {
+  BaseResp base = 1;
+}
+
+message AssignMenuToRoleReq {
+  int64 role_id = 1;                // 角色ID
+  int64 menu_id = 2;                // 菜单ID
+  string request_id = 3;             // 请求ID
+}
+
+message AssignMenuToRoleResp {
+  BaseResp base = 1;
+}
+
+message GetStaffRolesReq {
+  int64 staff_id = 1;               // 员工ID
+  string request_id = 2;             // 请求ID
+}
+
+message GetStaffRolesResp {
+  BaseResp base = 1;
+  repeated RoleInfo roles = 2;       // 角色列表
+}
+
+message GetRoleMenusReq {
+  int64 role_id = 1;                // 角色ID
+  string request_id = 2;             // 请求ID
+}
+
+message GetRoleMenusResp {
+  BaseResp base = 1;
+  repeated MenuInfo menus = 2;       // 菜单列表
+}
+
+// ============ 国家管理请求/响应 ============
+message CreateCountryReq {
+  string code = 1;                  // 国家代码
+  string name = 2;                  // 国家名称
+  string name_en = 3;               // 英文名称
+  string currency = 4;              // 货币代码
+  string phone_code = 5;            // 电话区号
+  int32 sort = 6;                   // 排序
+  string description = 7;            // 描述
+  string request_id = 8;             // 请求ID
+}
+
+message CreateCountryResp {
+  BaseResp base = 1;
+  CountryInfo data = 2;
+}
+
+message GetCountryReq {
+  int64 country_id = 1;             // 国家ID
+  string request_id = 2;             // 请求ID
+}
+
+message GetCountryResp {
+  BaseResp base = 1;
+  CountryInfo data = 2;
+}
+
+message UpdateCountryReq {
+  int64 country_id = 1;             // 国家ID
+  string code = 2;                  // 国家代码
+  string name = 3;                  // 国家名称
+  string name_en = 4;               // 英文名称
+  string currency = 5;              // 货币代码
+  string phone_code = 6;            // 电话区号
+  int32 sort = 7;                   // 排序
+  string description = 8;            // 描述
+  string request_id = 9;             // 请求ID
+}
+
+message UpdateCountryResp {
+  BaseResp base = 1;
+  CountryInfo data = 2;
+}
+
+message DeleteCountryReq {
+  int64 country_id = 1;             // 国家ID
+  string request_id = 2;             // 请求ID
+}
+
+message DeleteCountryResp {
+  BaseResp base = 1;
+}
+
+message ListCountriesReq {
+  PageReq page_req = 1;
+  string keyword = 2;                // 关键词搜索
+  int32 status = 3;                 // 状态筛选
+  string request_id = 4;             // 请求ID
+}
+
+message ListCountriesResp {
+  BaseResp base = 1;
+  PageResp page_resp = 2;
+  repeated CountryInfo countries = 3; // 国家列表
+}
+
+message UpdateCountryStatusReq {
+  int64 country_id = 1;             // 国家ID
+  int32 status = 2;                 // 状态：1启用 0禁用
+  string request_id = 3;             // 请求ID
+}
+
+message UpdateCountryStatusResp {
+  BaseResp base = 1;
 }

@@ -1,0 +1,258 @@
+syntax = "v1"
+
+info(
+    title: "客户经理认证接口"
+    desc: "客户经理注册与登录，登录需图片验证码"
+    version: "v1.0"
+)
+
+import "../../common/types.api"
+
+@server(
+    prefix: /api/auth
+    group: managerAuth
+    middleware: SignCheck
+    tags: "验证登录"
+)
+service manager {
+    @doc(
+        summary: "获取图片验证码"
+        description: "生成登录/注册图片验证码。公共请求头: X-Timestamp, X-Sign"
+        id: "manager.auth.getCaptcha"
+    )
+    @handler getCaptcha
+    get /captcha returns (CaptchaResp)
+
+    @doc(
+        summary: "发送邮箱验证码"
+        description: "发送邮箱验证码（注册/找回密码）。公共请求头: X-Timestamp, X-Sign"
+        id: "manager.auth.sendCode"
+    )
+    @handler sendCode
+    post /send-code (SendCodeReq) returns (BaseResp)
+
+    @doc(
+        summary: "邀请注册"
+        description: "通过邀请链接注册客户经理。公共请求头: X-Timestamp, X-Sign"
+        id: "manager.auth.register"
+    )
+    @handler register
+    post /register (ManagerRegisterReq) returns (BaseResp)
+
+    @doc(
+        summary: "登录"
+        description: "账号 + 密码 + 图片验证码 登录。公共请求头: X-Timestamp, X-Sign"
+        id: "manager.auth.login"
+    )
+    @handler login
+    post /login (ManagerLoginReq) returns (ManagerLoginResp)
+}
+
+@server(
+    prefix: /api/auth
+    group: managerAuth
+    jwt: Auth
+    middleware: SignCheck, JwtAuth
+    tags: "验证登录"
+)
+service manager {
+    @doc(
+        summary: "登出"
+        description: "退出登录。公共请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.auth.logout"
+    )
+    @handler logout
+    post /logout returns (BaseResp)
+
+    @doc(
+        summary: "当前用户信息"
+        description: "获取客户经理信息与费率设置。公共请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.auth.info"
+    )
+    @handler info
+    get /info returns (ManagerInfoResp)
+
+    @doc(
+        summary: "刷新令牌"
+        description: "刷新JWT令牌。公共请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.auth.refreshToken"
+    )
+    @handler refreshToken
+    post /refresh-token (RefreshTokenReq) returns (RefreshTokenResp)
+
+    @doc(
+        summary: "修改密码"
+        description: "修改登录密码。公共请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.auth.changePassword"
+    )
+    @handler changePassword
+    post /change-password (ChangePasswordReq) returns (BaseResp)
+
+    @doc(
+        summary: "更新资料"
+        description: "更新用户资料。公共请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.auth.updateProfile"
+    )
+    @handler updateProfile
+    post /update-profile (UpdateProfileReq) returns (UpdateProfileResp)
+
+    @doc(
+        summary: "绑定邮箱"
+        description: "绑定新邮箱。公共请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.auth.bindEmail"
+    )
+    @handler bindEmail
+    post /bind-email (BindEmailReq) returns (BindEmailResp)
+
+    @doc(
+        summary: "解绑邮箱"
+        description: "解绑邮箱。公共请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.auth.unbindEmail"
+    )
+    @handler unbindEmail
+    post /unbind-email (UnbindEmailReq) returns (BaseResp)
+}
+
+type (
+    SendCodeReq {
+        Email string `json:"email"` // 邮箱
+        Scene string `json:"scene"` // 场景 register/reset
+    }
+
+    ManagerRegisterReq {
+        Email string `json:"email"`          // 邮箱
+        Password string `json:"password"`    // 登录密码
+        InviteCode string `json:"inviteCode"`// 邀请码
+        EmailCode string `json:"emailCode"`  // 邮箱验证码
+        CaptchaId string `json:"captchaId"`  // 图片验证码ID
+        Captcha string `json:"captcha"`      // 图片验证码值
+        RequestId string `json:"requestId"`  // 请求ID（可选）
+    }
+
+    ManagerLoginReq {
+        Email string `json:"email"`          // 邮箱
+        Password string `json:"password"`    // 密码
+        CaptchaId string `json:"captchaId"`  // 图片验证码ID
+        Captcha string `json:"captcha"`      // 图片验证码值
+        RequestId string `json:"requestId"`  // 请求ID（可选）
+    }
+
+    ManagerLoginResp {
+        Code int32 `json:"code"`        // 响应码
+        Message string `json:"message"` // 响应消息
+        Data ManagerLoginData `json:"data"` // 数据
+    }
+
+    ManagerLoginData {
+        Token string `json:"token"`               // JWT令牌
+        RefreshToken string `json:"refreshToken"` // 刷新令牌
+        ExpiresIn string `json:"expiresIn"`       // 过期时间（秒）
+        Manager ManagerInfo `json:"manager"`      // 客户经理信息
+    }
+
+    ManagerInfoResp {
+        Code int32 `json:"code"`
+        Message string `json:"message"`
+        Data ManagerInfo `json:"data"`
+    }
+
+    ManagerInfo {
+        Id int64 `json:"id"`                      // 用户ID
+        UserType string `json:"userType"`        // 用户类型（manager-客户经理）
+        Email string `json:"email"`               // 邮箱
+        InviteCode string `json:"inviteCode"`     // 邀请码
+        ParentId int64 `json:"parentId"`          // 父级用户ID
+        ParentTree string `json:"parentTree"`     // 父级用户树（如：1,2,3）
+        Status int32 `json:"status"`              // 状态（1-启用、0-禁用）
+        StatusText string `json:"statusText"`     // 状态文本（启用、禁用）
+        ExchangeFeeRate string `json:"exchangeFeeRate"` // 换汇手续费率（decimal字符串）
+        WithdrawFee string `json:"withdrawFee"`         // 提现手续费（decimal字符串）
+        Profile UserProfile `json:"profile"`      // 用户资料
+        Emails []UserEmail `json:"emails"`        // 邮箱列表
+        CreatedAt string `json:"createdAt"`       // 创建时间
+        UpdatedAt string `json:"updatedAt"`      // 更新时间
+    }
+
+    CaptchaResp {
+        Code int32 `json:"code"`        // 响应码
+        Message string `json:"message"` // 响应消息
+        Data CaptchaData `json:"data"`  // 数据
+    }
+
+    CaptchaData {
+        CaptchaId string `json:"captchaId"`       // 验证码ID（有效期5分钟）
+        CaptchaImage string `json:"captchaImage"` // 验证码图片base64
+        ExpireAt string `json:"expireAt"`         // 过期时间戳（毫秒）
+    }
+
+    RefreshTokenReq {
+        Token string `json:"token"`               // 当前Token
+        RequestId string `json:"requestId"`       // 请求ID（可选）
+    }
+
+    RefreshTokenResp {
+        Code int32 `json:"code"`        // 响应码
+        Message string `json:"message"` // 响应消息
+        Data RefreshTokenData `json:"data"` // 数据
+    }
+
+    RefreshTokenData {
+        Token string `json:"token"`               // 新JWT令牌
+        ExpiresIn string `json:"expiresIn"`      // 过期时间（秒）
+    }
+
+    ChangePasswordReq {
+        OldPassword string `json:"oldPassword"`   // 旧密码
+        NewPassword string `json:"newPassword"`   // 新密码
+        ConfirmPassword string `json:"confirmPassword"` // 确认新密码
+        RequestId string `json:"requestId"`       // 请求ID（可选）
+    }
+
+    UpdateProfileReq {
+        Nickname string `json:"nickname"`         // 昵称
+        AvatarUrl string `json:"avatarUrl"`       // 头像URL
+        ExtraInfo string `json:"extraInfo"`       // 扩展信息（JSON格式）
+        RequestId string `json:"requestId"`       // 请求ID（可选）
+    }
+
+    UpdateProfileResp {
+        Code int32 `json:"code"`        // 响应码
+        Message string `json:"message"` // 响应消息
+        Data UserProfile `json:"data"`  // 用户资料
+    }
+
+    BindEmailReq {
+        Email string `json:"email"`               // 邮箱地址
+        EmailCode string `json:"emailCode"`       // 邮箱验证码
+        RequestId string `json:"requestId"`       // 请求ID（可选）
+    }
+
+    BindEmailResp {
+        Code int32 `json:"code"`        // 响应码
+        Message string `json:"message"` // 响应消息
+        Data UserEmail `json:"data"`     // 邮箱信息
+    }
+
+    UnbindEmailReq {
+        EmailId int64 `json:"emailId"`           // 邮箱ID
+        RequestId string `json:"requestId"`      // 请求ID（可选）
+    }
+
+    UserProfile {
+        Id int64 `json:"id"`                     // 资料ID
+        UserId int64 `json:"userId"`             // 用户ID
+        Nickname string `json:"nickname"`         // 昵称
+        AvatarUrl string `json:"avatarUrl"`      // 头像URL
+        ExtraInfo string `json:"extraInfo"`      // 扩展信息（JSON格式）
+        CreatedAt string `json:"createdAt"`      // 创建时间
+        UpdatedAt string `json:"updatedAt"`      // 更新时间
+    }
+
+    UserEmail {
+        Id int64 `json:"id"`                     // 邮箱ID
+        Email string `json:"email"`               // 邮箱地址
+        UserId int64 `json:"userId"`             // 用户ID
+        CreatedAt string `json:"createdAt"`      // 创建时间
+    }
+
+)

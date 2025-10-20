@@ -1,0 +1,174 @@
+syntax = "v1"
+
+info(
+    title: "银行存款管理"
+    desc: "客户经理查看银行存款记录，银行入账后后台审核通过汇率转换成USDT"
+    version: "v1.0"
+)
+
+import "../../common/types.api"
+
+@server(
+    prefix: /api/deposit
+    group: deposit
+    jwt: Auth
+    middleware: SignCheck, JwtAuth
+    tags: "银行存款管理"
+)
+service manager {
+
+    @doc(
+        summary: "存款列表"
+        description: "查看我名下客户的银行存款记录，银行入账后后台审核通过汇率转换成USDT。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.deposit.list"
+    )
+    @handler listDeposits
+    get /deposits (ListDepositsReq) returns (ListDepositsResp)
+
+    @doc(
+        summary: "存款详情"
+        description: "查看银行存款详情。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.deposit.detail"
+    )
+    @handler getDeposit
+    get /deposits/:id (IdReq) returns (GetDepositResp)
+
+
+    @doc(
+        summary: "存款统计"
+        description: "获取银行存款统计信息。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.deposit.stats"
+    )
+    @handler getDepositStats
+    get /deposits/stats returns (GetDepositStatsResp)
+
+    @doc(
+        summary: "导出存款记录"
+        description: "导出银行存款记录为Excel文件。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.deposit.export"
+    )
+    @handler exportDeposits
+    post /deposits/export (ExportDepositsReq) returns (ExportDepositsResp)
+}
+
+type (
+
+    DepositInfo {
+        Id int64 `json:"id"` // 存款ID
+        DepositNumber string `json:"depositNumber"` // 存款单号
+        UserId int64 `json:"userId"` // 用户ID
+        CustomerId int64 `json:"customerId"` // 客户ID
+        ManagerId int64 `json:"managerId"` // 客户经理ID
+        BankAccountId int64 `json:"bankAccountId"` // 银行账户ID
+        BankAccountNumber string `json:"bankAccountNumber"` // 银行账户号
+        Amount string `json:"amount"` // 存款金额（decimal字符串）
+        Currency string `json:"currency"` // 币种（如：USD、CNY、EUR等）
+        ExchangeAmount string `json:"exchangeAmount"` // 换汇后USDT金额（decimal字符串）
+        ExchangeFee string `json:"exchangeFee"` // 换汇手续费（decimal字符串）
+        ExchangeRate string `json:"exchangeRate"` // 汇率（decimal字符串）
+        ExchangeTime string `json:"exchangeTime,optional"` // 换汇时间
+        DepositMethod string `json:"depositMethod"` // 存款方式（bank_transfer-银行转账、wire_transfer-电汇、cash-现金等）
+        BankName string `json:"bankName"` // 存款银行名称
+        BankAccount string `json:"bankAccount"` // 存款银行账户
+        ReferenceNumber string `json:"referenceNumber"` // 参考号/流水号
+        Status string `json:"status"` // 存款状态（Received-银行已入账、UnderReview-后台审核中、Approved-审核通过已换汇、Rejected-审核拒绝、Settled-已结算）
+        StatusText string `json:"statusText"` // 状态文本
+        DepositTime string `json:"depositTime"` // 存款时间
+        AuditorId int64 `json:"auditorId,optional"` // 审核人ID
+        AuditorName string `json:"auditorName,optional"` // 审核人姓名
+        AuditTime string `json:"auditTime,optional"` // 审核时间
+        AuditNote string `json:"auditNote,optional"` // 审核意见
+        AuditResult string `json:"auditResult,optional"` // 审核结果
+        Note string `json:"note,optional"` // 备注
+        Attachments []string `json:"attachments,optional"` // 附件URL列表
+        CreatedAt string `json:"createdAt"` // 创建时间
+        UpdatedAt string `json:"updatedAt"` // 更新时间
+    }
+
+    ListDepositsReq {
+        Page int64 `form:"page,default=1,optional"` // 页码
+        PageSize int64 `form:"pageSize,default=10,optional"` // 每页数量
+        Keyword string `form:"keyword,optional"` // 关键词搜索（存款单号、客户姓名、银行账户号、参考号）
+        Status string `form:"status,optional"` // 状态筛选（Received-银行已入账、UnderReview-后台审核中、Approved-审核通过已换汇、Rejected-审核拒绝、Settled-已结算）
+        Currency string `form:"currency,optional"` // 币种筛选（如：USD、CNY、EUR等）
+        CustomerId int64 `form:"customerId,optional"` // 客户ID筛选
+        BankAccountId int64 `form:"bankAccountId,optional"` // 银行账户ID筛选
+        DepositMethod string `form:"depositMethod,optional"` // 存款方式筛选
+        StartTime string `form:"startTime,optional"` // 开始时间（格式：2024-01-01 00:00:00）
+        EndTime string `form:"endTime,optional"` // 结束时间（格式：2024-01-31 23:59:59）
+        MinAmount string `form:"minAmount,optional"` // 最小金额（decimal字符串）
+        MaxAmount string `form:"maxAmount,optional"` // 最大金额（decimal字符串）
+    }
+
+    ListDepositsResp {
+        Code int32 `json:"code"`
+        Message string `json:"message"`
+        Data DepositListData `json:"data"`
+    }
+
+    DepositListData {
+        Total int64 `json:"total"`
+        List []DepositInfo `json:"list"`
+    }
+
+    GetDepositResp {
+        Code int32 `json:"code"`
+        Message string `json:"message"`
+        Data DepositInfo `json:"data"`
+    }
+
+
+    GetDepositStatsResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data DepositStatsData `json:"data"` // 统计数据
+    }
+
+    DepositStatsData {
+        TotalDeposits int64 `json:"totalDeposits"` // 总存款数
+        TotalAmount string `json:"totalAmount"` // 总存款金额（decimal字符串）
+        TotalExchangeFee string `json:"totalExchangeFee"` // 总换汇手续费（decimal字符串）
+        TotalExchangeAmount string `json:"totalExchangeAmount"` // 总换汇后金额（decimal字符串）
+        UnderReviewCount int64 `json:"underReviewCount"` // 后台审核中数量
+        ApprovedCount int64 `json:"approvedCount"` // 审核通过已换汇数量
+        RejectedCount int64 `json:"rejectedCount"` // 已拒绝数量
+        SettledCount int64 `json:"settledCount"` // 已结算数量
+        CurrencyStats []CurrencyStat `json:"currencyStats"` // 币种统计
+        DepositMethodStats []DepositMethodStat `json:"depositMethodStats"` // 存款方式统计
+        DailyStats []DailyStat `json:"dailyStats"` // 每日统计
+    }
+
+    DepositMethodStat {
+        Method string `json:"method"` // 存款方式
+        Count int64 `json:"count"` // 数量
+        Amount string `json:"amount"` // 金额（decimal字符串）
+    }
+
+    ExportDepositsReq {
+        Keyword string `json:"keyword,optional"` // 关键词搜索（存款单号、客户姓名、银行账户号、参考号）
+        Status string `json:"status,optional"` // 状态筛选（Received-银行已入账、UnderReview-后台审核中、Approved-审核通过已换汇、Rejected-审核拒绝、Settled-已结算）
+        Currency string `json:"currency,optional"` // 币种筛选（如：USD、CNY、EUR等）
+        CustomerId int64 `json:"customerId,optional"` // 客户ID筛选
+        BankAccountId int64 `json:"bankAccountId,optional"` // 银行账户ID筛选
+        DepositMethod string `json:"depositMethod,optional"` // 存款方式筛选
+        StartTime string `json:"startTime,optional"` // 开始时间（格式：2024-01-01 00:00:00）
+        EndTime string `json:"endTime,optional"` // 结束时间（格式：2024-01-31 23:59:59）
+        MinAmount string `json:"minAmount,optional"` // 最小金额（decimal字符串）
+        MaxAmount string `json:"maxAmount,optional"` // 最大金额（decimal字符串）
+    }
+
+    ExportDepositsResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data ExportDepositsData `json:"data"` // 数据
+    }
+
+    ExportDepositsData {
+        TaskId string `json:"taskId"` // 任务ID
+        FileName string `json:"fileName"` // 文件名
+        FileSize int64 `json:"fileSize"` // 文件大小（字节）
+        DownloadUrl string `json:"downloadUrl"` // 下载链接
+        ExpireAt string `json:"expireAt"` // 过期时间
+    }
+
+)

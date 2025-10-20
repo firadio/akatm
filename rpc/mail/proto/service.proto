@@ -1,11 +1,16 @@
 syntax = "proto3";
 
-option go_package = ".";
+package mail;
+option go_package = "./emailRpc";
 
-service mail {
-  rpc SendEmail(SendEmailReq) returns (SendEmailResp);
+// ============ 通用响应 ============
+message BaseResp {
+  int32 code = 1;        // 响应码
+  string message = 2;    // 响应消息
+  string request_id = 3; // 请求ID
 }
 
+// ============ 邮件发送请求 ============
 message SendEmailReq {
   // 发件人名称 (可选)
   string from_name = 1;
@@ -19,19 +24,306 @@ message SendEmailReq {
   string title = 5;
   // 内容 (必填)
   string content = 6;
+  // 请求ID
+  string request_id = 7;
 }
 
+// ============ 邮件发送响应 ============
 message SendEmailResp {
-  // 错误代码
-  enum Errno {
-    // 成功
-    SUCCESS = 0;
-    // 邮箱格式错误
-    EMAIL_FORMAT_INVALID = 1;
-    // 邮箱发送失败
-    EMAIL_SEND_FAILED = 2;
-  }
-  Errno errno = 1;
-  // 错误描述
-  string errmsg = 2;
+  BaseResp base = 1;
+  SendEmailData data = 2;
+}
+
+// ============ 邮件发送数据 ============
+message SendEmailData {
+  // 邮件ID
+  string email_id = 1;
+  // 发送状态
+  string status = 2;
+  // 发送时间
+  int64 send_time = 3;
+}
+
+// ============ 验证码发送请求 ============
+message SendCodeReq {
+  // 收件人邮箱
+  string email = 1;
+  // 场景 (register, reset_password, bind_email, login)
+  string scene = 2;
+  // 验证码类型 (email, sms)
+  string code_type = 3;
+  // 请求ID
+  string request_id = 4;
+}
+
+// ============ 验证码发送响应 ============
+message SendCodeResp {
+  BaseResp base = 1;
+  SendCodeData data = 2;
+}
+
+// ============ 验证码发送数据 ============
+message SendCodeData {
+  // 验证码ID
+  string code_id = 1;
+  // 发送状态
+  string status = 2;
+  // 发送时间
+  int64 send_time = 3;
+  // 过期时间
+  int64 expires_at = 4;
+}
+
+// ============ 验证码验证请求 ============
+message VerifyCodeReq {
+  // 收件人邮箱
+  string email = 1;
+  // 场景
+  string scene = 2;
+  // 验证码
+  string code = 3;
+  // 验证码ID
+  string code_id = 4;
+  // 请求ID
+  string request_id = 5;
+}
+
+// ============ 验证码验证响应 ============
+message VerifyCodeResp {
+  BaseResp base = 1;
+  VerifyCodeData data = 2;
+}
+
+// ============ 验证码验证数据 ============
+message VerifyCodeData {
+  // 验证结果
+  bool valid = 1;
+  // 验证消息
+  string message = 2;
+  // 验证时间
+  int64 verify_time = 3;
+}
+
+// ============ 邮件模板信息 ============
+message EmailTemplateInfo {
+  int64 id = 1;                    // 模板ID
+  string name = 2;                  // 模板名称
+  string code = 3;                  // 模板代码
+  string subject = 4;                // 邮件主题
+  string content = 5;                // 邮件内容
+  string scene = 6;                 // 使用场景
+  int32 status = 7;                 // 状态 (1启用 0禁用)
+  int64 created_at = 8;             // 创建时间
+  int64 updated_at = 9;              // 更新时间
+}
+
+// ============ 邮件发送记录信息 ============
+message EmailSendRecordInfo {
+  int64 id = 1;                    // 记录ID
+  string email_id = 2;              // 邮件ID
+  string from_email = 3;             // 发件人邮箱
+  string to_email = 4;               // 收件人邮箱
+  string subject = 5;                // 邮件主题
+  string content = 6;                // 邮件内容
+  string scene = 7;                 // 发送场景
+  string status = 8;                // 发送状态
+  string error_message = 9;          // 错误信息
+  int64 send_time = 10;              // 发送时间
+  int64 created_at = 11;             // 创建时间
+}
+
+// ============ 邮件服务 ============
+service Mail {
+  // ============ 邮件发送相关 ============
+  // 发送邮件
+  rpc SendEmail(SendEmailReq) returns (SendEmailResp);
+  // 发送验证码邮件
+  rpc SendCode(SendCodeReq) returns (SendCodeResp);
+  // 验证验证码
+  rpc VerifyCode(VerifyCodeReq) returns (VerifyCodeResp);
+
+  // ============ 邮件模板管理相关 ============
+  // 创建邮件模板
+  rpc CreateEmailTemplate(CreateEmailTemplateReq) returns (CreateEmailTemplateResp);
+  // 获取邮件模板
+  rpc GetEmailTemplate(GetEmailTemplateReq) returns (GetEmailTemplateResp);
+  // 更新邮件模板
+  rpc UpdateEmailTemplate(UpdateEmailTemplateReq) returns (UpdateEmailTemplateResp);
+  // 删除邮件模板
+  rpc DeleteEmailTemplate(DeleteEmailTemplateReq) returns (DeleteEmailTemplateResp);
+  // 获取邮件模板列表
+  rpc ListEmailTemplates(ListEmailTemplatesReq) returns (ListEmailTemplatesResp);
+
+  // ============ 邮件发送记录相关 ============
+  // 获取邮件发送记录
+  rpc GetEmailSendRecord(GetEmailSendRecordReq) returns (GetEmailSendRecordResp);
+  // 获取邮件发送记录列表
+  rpc ListEmailSendRecords(ListEmailSendRecordsReq) returns (ListEmailSendRecordsResp);
+  // 重发邮件
+  rpc ResendEmail(ResendEmailReq) returns (ResendEmailResp);
+
+  // ============ 邮件统计相关 ============
+  // 获取邮件发送统计
+  rpc GetEmailSendStats(GetEmailSendStatsReq) returns (GetEmailSendStatsResp);
+  // 获取验证码发送统计
+  rpc GetCodeSendStats(GetCodeSendStatsReq) returns (GetCodeSendStatsResp);
+}
+
+// ============ 邮件模板管理请求/响应 ============
+message CreateEmailTemplateReq {
+  string name = 1;                  // 模板名称
+  string code = 2;                  // 模板代码
+  string subject = 3;                // 邮件主题
+  string content = 4;                // 邮件内容
+  string scene = 5;                 // 使用场景
+  string request_id = 6;             // 请求ID
+}
+
+message CreateEmailTemplateResp {
+  BaseResp base = 1;
+  EmailTemplateInfo data = 2;
+}
+
+message GetEmailTemplateReq {
+  int64 template_id = 1;            // 模板ID
+  string request_id = 2;             // 请求ID
+}
+
+message GetEmailTemplateResp {
+  BaseResp base = 1;
+  EmailTemplateInfo data = 2;
+}
+
+message UpdateEmailTemplateReq {
+  int64 template_id = 1;            // 模板ID
+  string name = 2;                  // 模板名称
+  string code = 3;                  // 模板代码
+  string subject = 4;                // 邮件主题
+  string content = 5;                // 邮件内容
+  string scene = 6;                 // 使用场景
+  int32 status = 7;                 // 状态
+  string request_id = 8;             // 请求ID
+}
+
+message UpdateEmailTemplateResp {
+  BaseResp base = 1;
+  EmailTemplateInfo data = 2;
+}
+
+message DeleteEmailTemplateReq {
+  int64 template_id = 1;            // 模板ID
+  string request_id = 2;             // 请求ID
+}
+
+message DeleteEmailTemplateResp {
+  BaseResp base = 1;
+}
+
+message ListEmailTemplatesReq {
+  int64 page = 1;                   // 页码
+  int64 page_size = 2;               // 每页数量
+  string keyword = 3;                // 关键词搜索
+  string scene = 4;                 // 场景筛选
+  int32 status = 5;                 // 状态筛选
+  string request_id = 6;             // 请求ID
+}
+
+message ListEmailTemplatesResp {
+  BaseResp base = 1;
+  int64 total = 2;                  // 总数量
+  int64 page = 3;                   // 当前页码
+  int64 page_size = 4;               // 每页数量
+  repeated EmailTemplateInfo templates = 5; // 模板列表
+}
+
+// ============ 邮件发送记录请求/响应 ============
+message GetEmailSendRecordReq {
+  int64 record_id = 1;              // 记录ID
+  string request_id = 2;             // 请求ID
+}
+
+message GetEmailSendRecordResp {
+  BaseResp base = 1;
+  EmailSendRecordInfo data = 2;
+}
+
+message ListEmailSendRecordsReq {
+  int64 page = 1;                   // 页码
+  int64 page_size = 2;               // 每页数量
+  string keyword = 3;                // 关键词搜索
+  string to_email = 4;               // 收件人邮箱
+  string scene = 5;                 // 场景筛选
+  string status = 6;                // 状态筛选
+  int64 start_time = 7;              // 开始时间
+  int64 end_time = 8;                // 结束时间
+  string request_id = 9;             // 请求ID
+}
+
+message ListEmailSendRecordsResp {
+  BaseResp base = 1;
+  int64 total = 2;                  // 总数量
+  int64 page = 3;                   // 当前页码
+  int64 page_size = 4;               // 每页数量
+  repeated EmailSendRecordInfo records = 5; // 记录列表
+}
+
+message ResendEmailReq {
+  int64 record_id = 1;              // 记录ID
+  string request_id = 2;             // 请求ID
+}
+
+message ResendEmailResp {
+  BaseResp base = 1;
+  EmailSendRecordInfo data = 2;
+}
+
+// ============ 邮件统计请求/响应 ============
+message GetEmailSendStatsReq {
+  int64 start_time = 1;              // 开始时间
+  int64 end_time = 2;                // 结束时间
+  string scene = 3;                 // 场景筛选
+  string request_id = 4;             // 请求ID
+}
+
+message GetEmailSendStatsResp {
+  BaseResp base = 1;
+  EmailSendStatsData data = 2;
+}
+
+message EmailSendStatsData {
+  int64 total_count = 1;             // 总发送数量
+  int64 success_count = 2;            // 成功发送数量
+  int64 failed_count = 3;             // 失败发送数量
+  double success_rate = 4;            // 成功率
+  repeated SceneStats scene_stats = 5; // 场景统计
+}
+
+message SceneStats {
+  string scene = 1;                 // 场景
+  int64 count = 2;                   // 数量
+  int64 success_count = 3;           // 成功数量
+  int64 failed_count = 4;            // 失败数量
+  double success_rate = 5;            // 成功率
+}
+
+message GetCodeSendStatsReq {
+  int64 start_time = 1;              // 开始时间
+  int64 end_time = 2;                // 结束时间
+  string scene = 3;                 // 场景筛选
+  string request_id = 4;             // 请求ID
+}
+
+message GetCodeSendStatsResp {
+  BaseResp base = 1;
+  CodeSendStatsData data = 2;
+}
+
+message CodeSendStatsData {
+  int64 total_count = 1;             // 总发送数量
+  int64 success_count = 2;            // 成功发送数量
+  int64 failed_count = 3;             // 失败发送数量
+  int64 verify_count = 4;             // 验证数量
+  double success_rate = 5;            // 成功率
+  double verify_rate = 6;             // 验证率
+  repeated SceneStats scene_stats = 7; // 场景统计
 }

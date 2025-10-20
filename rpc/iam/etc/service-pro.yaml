@@ -1,0 +1,12 @@
+Name: iam.rpc
+ListenOn: 0.0.0.0:8080
+Etcd:
+  Hosts:
+  - 127.0.0.1:2379
+  Key: iam.rpc.pro
+Log:
+  ServiceName: iam.rpc.pro
+  Mode: file
+  Level: warn
+  Encoding: json
+  Path: /var/log/akatm/iam.rpc.log

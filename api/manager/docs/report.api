@@ -1,0 +1,250 @@
+syntax = "v1"
+
+info(
+    title: "报表查询接口"
+    desc: "提供客户经理的报表查询功能"
+    version: "v1.0"
+)
+
+import "../../common/types.api"
+
+@server(
+    prefix: /api/report
+    group: report
+    jwt: Auth
+    middleware: SignCheck, JwtAuth
+    tags: "报表管理"
+)
+service manager {
+    @doc(
+        summary: "我的报表"
+        description: "查询我管理的用户存款、提现量报表。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.report.my"
+    )
+    @handler getMyReport
+    get /reports/my (GetMyReportReq) returns (GetMyReportResp)
+
+    @doc(
+        summary: "下级用户报表"
+        description: "查询指定下级用户的存款、提现量报表。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.report.subUser"
+    )
+    @handler getSubUserReport
+    get /reports/users/:userId (GetSubUserReportReq) returns (GetSubUserReportResp)
+
+    @doc(
+        summary: "客户报表"
+        description: "查询我管理的客户存款、提现量报表。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.report.customers"
+    )
+    @handler getCustomersReport
+    get /reports/customers (GetCustomersReportReq) returns (GetCustomersReportResp)
+
+    @doc(
+        summary: "导出报表"
+        description: "导出报表数据为Excel文件。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.report.export"
+    )
+    @handler exportReport
+    post /reports/export (ExportReportReq) returns (ExportReportResp)
+
+    @doc(
+        summary: "获取实时统计"
+        description: "获取实时统计数据。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.report.realtime"
+    )
+    @handler getRealtimeStats
+    get /reports/realtime returns (GetRealtimeStatsResp)
+}
+
+type (
+    // 我的报表请求
+    GetMyReportReq {
+        StartTime string `form:"startTime,optional"` // 开始时间（格式：2024-01-01 00:00:00）
+        EndTime string `form:"endTime,optional"` // 结束时间（格式：2024-01-31 23:59:59）
+        Currency string `form:"currency,optional"` // 币种筛选（如：USD、CNY、EUR等）
+        TransactionType string `form:"transactionType,optional"` // 交易类型筛选（deposit-存款、withdrawal-提现、exchange-换汇、fee-手续费）
+        Status string `form:"status,optional"` // 状态筛选（pending-待处理、completed-已完成、failed-失败、cancelled-已取消）
+    }
+
+    // 我的报表响应
+    GetMyReportResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data MyReportData `json:"data"` // 数据
+    }
+
+    // 我的报表数据
+    MyReportData {
+        UserId int64 `json:"userId"` // 用户ID
+        UserName string `json:"userName"` // 用户姓名
+        UserEmail string `json:"userEmail"` // 用户邮箱
+        UserType string `json:"userType"` // 用户类型（manager-客户经理）
+        UserStatus int32 `json:"userStatus"` // 用户状态（1-启用、0-禁用）
+        ParentId int64 `json:"parentId"` // 父级用户ID
+        ParentTree string `json:"parentTree"` // 父级用户树（如：1,2,3）
+        TotalDeposit string `json:"totalDeposit"` // 总存款（decimal字符串）
+        TotalWithdrawal string `json:"totalWithdrawal"` // 总提现（decimal字符串）
+        TotalFee string `json:"totalFee"` // 总手续费（decimal字符串）
+        NetAmount string `json:"netAmount"` // 净金额（decimal字符串）
+        SubUserCount int64 `json:"subUserCount"` // 下级用户数量
+        CustomerCount int64 `json:"customerCount"` // 客户数量
+        TransactionCount int64 `json:"transactionCount"` // 交易笔数
+        SuccessTransactionCount int64 `json:"successTransactionCount"` // 成功交易笔数
+        SuccessRate string `json:"successRate"` // 成功率（百分比）
+        AverageTransactionAmount string `json:"averageTransactionAmount"` // 平均交易金额（decimal字符串）
+        CurrencyStats []CurrencyStat `json:"currencyStats"` // 币种统计
+        MonthlyStats []MonthlyStat `json:"monthlyStats"` // 月度统计
+    }
+
+    // 下级用户报表请求
+    GetSubUserReportReq {
+        UserId int64 `path:"userId"` // 用户ID
+        StartTime string `form:"startTime,optional"` // 开始时间（格式：2024-01-01 00:00:00）
+        EndTime string `form:"endTime,optional"` // 结束时间（格式：2024-01-31 23:59:59）
+        Currency string `form:"currency,optional"` // 币种筛选（如：USD、CNY、EUR等）
+        TransactionType string `form:"transactionType,optional"` // 交易类型筛选（deposit-存款、withdrawal-提现、exchange-换汇、fee-手续费）
+        Status string `form:"status,optional"` // 状态筛选（pending-待处理、completed-已完成、failed-失败、cancelled-已取消）
+        IncludeSubLevels bool `form:"includeSubLevels,default=false,optional"` // 是否包含子级的下级
+    }
+
+    // 下级用户报表响应
+    GetSubUserReportResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data SubUserReportData `json:"data"` // 数据
+    }
+
+    // 下级用户报表数据
+    SubUserReportData {
+        UserId int64 `json:"userId"` // 用户ID
+        UserName string `json:"userName"` // 用户姓名
+        UserEmail string `json:"userEmail"` // 用户邮箱
+        UserType string `json:"userType"` // 用户类型（super_agent-总代、agent-代理、manager-客户经理、customer-客户）
+        UserStatus int32 `json:"userStatus"` // 用户状态（1-启用、0-禁用）
+        ParentId int64 `json:"parentId"` // 父级用户ID
+        ParentTree string `json:"parentTree"` // 父级用户树（如：1,2,3）
+        TotalDeposit string `json:"totalDeposit"` // 总存款（decimal字符串）
+        TotalWithdrawal string `json:"totalWithdrawal"` // 总提现（decimal字符串）
+        TotalFee string `json:"totalFee"` // 总手续费（decimal字符串）
+        NetAmount string `json:"netAmount"` // 净金额（decimal字符串）
+        SubUserCount int64 `json:"subUserCount"` // 下级用户数量
+        CustomerCount int64 `json:"customerCount"` // 客户数量
+        TransactionCount int64 `json:"transactionCount"` // 交易笔数
+        SuccessTransactionCount int64 `json:"successTransactionCount"` // 成功交易笔数
+        SuccessRate string `json:"successRate"` // 成功率（百分比）
+        AverageTransactionAmount string `json:"averageTransactionAmount"` // 平均交易金额（decimal字符串）
+        CurrencyStats []CurrencyStat `json:"currencyStats"` // 币种统计
+        MonthlyStats []MonthlyStat `json:"monthlyStats"` // 月度统计
+        SubUsers []SubUserReportData `json:"subUsers"` // 下级用户报表
+    }
+
+    // 客户报表请求
+    GetCustomersReportReq {
+        StartTime string `form:"startTime,optional"` // 开始时间（格式：2024-01-01 00:00:00）
+        EndTime string `form:"endTime,optional"` // 结束时间（格式：2024-01-31 23:59:59）
+        Currency string `form:"currency,optional"` // 币种筛选（如：USD、CNY、EUR等）
+        TransactionType string `form:"transactionType,optional"` // 交易类型筛选（deposit-存款、withdrawal-提现、exchange-换汇、fee-手续费）
+        Status string `form:"status,optional"` // 状态筛选（pending-待处理、completed-已完成、failed-失败、cancelled-已取消）
+    }
+
+    // 客户报表响应
+    GetCustomersReportResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data CustomersReportData `json:"data"` // 数据
+    }
+
+    // 客户报表数据
+    CustomersReportData {
+        TotalDeposit string `json:"totalDeposit"` // 总存款（decimal字符串）
+        TotalWithdrawal string `json:"totalWithdrawal"` // 总提现（decimal字符串）
+        TotalFee string `json:"totalFee"` // 总手续费（decimal字符串）
+        NetAmount string `json:"netAmount"` // 净金额（decimal字符串）
+        CustomerCount int64 `json:"customerCount"` // 客户数量
+        TransactionCount int64 `json:"transactionCount"` // 交易笔数
+        SuccessTransactionCount int64 `json:"successTransactionCount"` // 成功交易笔数
+        SuccessRate string `json:"successRate"` // 成功率（百分比）
+        AverageTransactionAmount string `json:"averageTransactionAmount"` // 平均交易金额（decimal字符串）
+        CurrencyStats []CurrencyStat `json:"currencyStats"` // 币种统计
+        MonthlyStats []MonthlyStat `json:"monthlyStats"` // 月度统计
+        TopCustomers []CustomerStat `json:"topCustomers"` // 活跃客户统计
+    }
+
+    // 客户统计
+    CustomerStat {
+        CustomerId int64 `json:"customerId"` // 客户ID
+        CustomerName string `json:"customerName"` // 客户姓名
+        CustomerEmail string `json:"customerEmail"` // 客户邮箱
+        CustomerType string `json:"customerType"` // 客户类型（individual-个人、enterprise-企业）
+        KycStatus string `json:"kycStatus"` // KYC状态（pending-待审核、approved-已通过、rejected-已拒绝）
+        TotalDeposit string `json:"totalDeposit"` // 总存款（decimal字符串）
+        TotalWithdrawal string `json:"totalWithdrawal"` // 总提现（decimal字符串）
+        NetAmount string `json:"netAmount"` // 净金额（decimal字符串）
+        TransactionCount int64 `json:"transactionCount"` // 交易笔数
+        SuccessTransactionCount int64 `json:"successTransactionCount"` // 成功交易笔数
+        SuccessRate string `json:"successRate"` // 成功率（百分比）
+        AverageTransactionAmount string `json:"averageTransactionAmount"` // 平均交易金额（decimal字符串）
+        LastTransactionAt string `json:"lastTransactionAt"` // 最后交易时间
+    }
+
+    // 月度统计
+    MonthlyStat {
+        Year int32 `json:"year"` // 年份
+        Month int32 `json:"month"` // 月份
+        DepositAmount string `json:"depositAmount"` // 存款金额（decimal字符串）
+        WithdrawalAmount string `json:"withdrawalAmount"` // 提现金额（decimal字符串）
+        FeeAmount string `json:"feeAmount"` // 手续费金额（decimal字符串）
+        NetAmount string `json:"netAmount"` // 净金额（decimal字符串）
+        TransactionCount int64 `json:"transactionCount"` // 交易笔数
+        SuccessTransactionCount int64 `json:"successTransactionCount"` // 成功交易笔数
+        SuccessRate string `json:"successRate"` // 成功率（百分比）
+    }
+
+    // 导出报表请求
+    ExportReportReq {
+        ReportType string `json:"reportType"` // 报表类型（my-我的报表、subUser-下级用户报表、customers-客户报表）
+        UserId int64 `json:"userId,optional"` // 用户ID（下级用户报表时必填）
+        StartTime string `json:"startTime,optional"` // 开始时间（格式：2024-01-01 00:00:00）
+        EndTime string `json:"endTime,optional"` // 结束时间（格式：2024-01-31 23:59:59）
+        Currency string `json:"currency,optional"` // 币种筛选（如：USD、CNY、EUR等）
+        TransactionType string `json:"transactionType,optional"` // 交易类型筛选（deposit-存款、withdrawal-提现、exchange-换汇、fee-手续费）
+        Status string `json:"status,optional"` // 状态筛选（pending-待处理、completed-已完成、failed-失败、cancelled-已取消）
+        IncludeSubLevels bool `json:"includeSubLevels,optional"` // 是否包含子级的下级
+    }
+
+    // 导出报表响应
+    ExportReportResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data ExportReportData `json:"data"` // 数据
+    }
+
+    // 导出报表数据
+    ExportReportData {
+        TaskId string `json:"taskId"` // 任务ID
+        FileName string `json:"fileName"` // 文件名
+        FileSize int64 `json:"fileSize"` // 文件大小（字节）
+        DownloadUrl string `json:"downloadUrl"` // 下载链接
+        ExpireAt string `json:"expireAt"` // 过期时间
+    }
+
+    // 获取实时统计响应
+    GetRealtimeStatsResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data RealtimeStatsData `json:"data"` // 数据
+    }
+
+    // 实时统计数据
+    RealtimeStatsData {
+        TodayDeposit string `json:"todayDeposit"` // 今日存款（decimal字符串）
+        TodayWithdrawal string `json:"todayWithdrawal"` // 今日提现（decimal字符串）
+        TodayFee string `json:"todayFee"` // 今日手续费（decimal字符串）
+        TodayTransactionCount int64 `json:"todayTransactionCount"` // 今日交易笔数
+        OnlineCustomerCount int64 `json:"onlineCustomerCount"` // 在线客户数
+        PendingTransactionCount int64 `json:"pendingTransactionCount"` // 待处理交易数
+        LastUpdateTime string `json:"lastUpdateTime"` // 最后更新时间
+    }
+
+)

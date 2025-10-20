@@ -1,0 +1,13 @@
+Name: admin.rpc
+ListenOn: 0.0.0.0:8081
+Etcd:
+  Hosts:
+  - 127.0.0.1:2379
+  Key: admin.rpc
+Log:
+  ServiceName: admin.rpc
+  Mode: console
+  Level: info
+  Encoding: json
+Database:
+  DSN: "root:password@tcp(127.0.0.1:3306)/akatm_admin?charset=utf8mb4&parseTime=True&loc=Local"

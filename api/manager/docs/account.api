@@ -1,0 +1,200 @@
+syntax = "v1"
+
+info(
+    title: "银行账户管理"
+    desc: "客户经理发起开户申请并查看账户"
+    version: "v1.0"
+)
+
+import "../../common/types.api"
+
+@server(
+    prefix: /api/account
+    group: account
+    jwt: Auth
+    middleware: SignCheck, JwtAuth
+    tags: "开户管理"
+)
+service manager {
+    @doc(
+        summary: "创建开户申请"
+        description: "提交开户申请。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.account.createApplication"
+    )
+    @handler createAccountApplication
+    post /account-applications (CreateAccountApplicationReq) returns (CreateAccountApplicationResp)
+
+    @doc(
+        summary: "开户申请列表"
+        description: "查看我的开户申请。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.account.listApplications"
+    )
+    @handler listAccountApplications
+    get /account-applications (ListAccountApplicationsReq) returns (ListAccountApplicationsResp)
+
+    @doc(
+        summary: "开户申请详情"
+        description: "查看开户申请详情。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.account.getApplication"
+    )
+    @handler getAccountApplication
+    get /account-applications/:id (IdReq) returns (GetAccountApplicationResp)
+
+    @doc(
+        summary: "账户列表"
+        description: "查看我名下所有账户。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.account.list"
+    )
+    @handler listAccounts
+    get /accounts (ListAccountsReq) returns (ListAccountsResp)
+
+    @doc(
+        summary: "账户详情"
+        description: "查看账户详情。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "manager.account.detail"
+    )
+    @handler getAccount
+    get /accounts/:id (IdReq) returns (GetAccountResp)
+}
+
+type (
+    CreateAccountApplicationReq {
+        CustomerId int64 `json:"customerId"` // 客户ID
+        Currency string `json:"currency"`    // 币种（如：USD、CNY、EUR等）
+        Materials string `json:"materials"`  // 申请材料（JSON格式）
+    }
+
+    CreateAccountApplicationResp {
+        Code int32 `json:"code"`        // 响应码
+        Message string `json:"message"` // 响应消息
+        Data AccountApplicationInfo `json:"data"` // 数据
+    }
+
+    AccountApplicationInfo {
+        Id int64 `json:"id"`               // 申请ID
+        ApplicationNumber string `json:"applicationNumber"` // 申请单号（系统生成）
+        CustomerId int64 `json:"customerId"` // 客户ID
+        CustomerName string `json:"customerName"` // 客户姓名
+        CustomerEmail string `json:"customerEmail"` // 客户邮箱
+        CustomerPhone string `json:"customerPhone"` // 客户电话
+        Currency string `json:"currency"`   // 币种（如：USD、CNY、EUR等）
+        Status string `json:"status"`        // 申请状态（Draft、Submitted、UnderReview、Approved、Rejected）
+        StatusText string `json:"statusText"` // 状态文本（草稿、已提交、审核中、已通过、已拒绝）
+        Materials string `json:"materials"`   // 申请材料（JSON格式）
+        ApplicationTime string `json:"applicationTime"` // 申请时间
+        AuditorId int64 `json:"auditorId"`   // 审核人ID
+        AuditorName string `json:"auditorName"` // 审核人姓名
+        AuditTime string `json:"auditTime"`   // 审核时间
+        AuditNote string `json:"auditNote"`   // 审核意见
+        AuditResult string `json:"auditResult"` // 审核结果（approved-通过、rejected-拒绝）
+        Note string `json:"note"`             // 备注
+        CreatedAt string `json:"createdAt"`   // 创建时间
+        UpdatedAt string `json:"updatedAt"`   // 更新时间
+    }
+
+    ListAccountApplicationsReq {
+        Page int64 `form:"page,default=1,optional"`       // 页码（从1开始）
+        PageSize int64 `form:"pageSize,default=10,optional"` // 每页数量（默认10条）
+        Status string `form:"status,optional"`             // 状态筛选（Draft、Submitted、UnderReview、Approved、Rejected）
+        CustomerId int64 `form:"customerId,optional"`     // 客户ID筛选
+        Currency string `form:"currency,optional"`         // 币种筛选（如：USD、CNY、EUR等）
+        StartTime string `form:"startTime,optional"`       // 申请开始时间（格式：2024-01-01 00:00:00）
+        EndTime string `form:"endTime,optional"`           // 申请结束时间（格式：2024-01-31 23:59:59）
+        Keyword string `form:"keyword,optional"`           // 关键词搜索（申请单号、客户姓名）
+    }
+
+    ListAccountApplicationsResp {
+        Code int32 `json:"code"`        // 响应码（200-成功）
+        Message string `json:"message"` // 响应消息
+        Data AccountApplicationListData `json:"data"` // 数据
+    }
+
+    AccountApplicationListData {
+        Total int64 `json:"total"` // 总记录数
+        List []AccountApplicationInfo `json:"list"` // 申请列表
+    }
+
+    GetAccountApplicationResp {
+        Code int32 `json:"code"`        // 响应码（200-成功）
+        Message string `json:"message"` // 响应消息
+        Data AccountApplicationInfo `json:"data"` // 申请详情
+    }
+
+    ListAccountsReq {
+        Page int64 `form:"page,default=1,optional"`       // 页码（从1开始）
+        PageSize int64 `form:"pageSize,default=10,optional"` // 每页数量（默认10条）
+        Currency string `form:"currency,optional"`        // 币种筛选（如：USD、CNY、EUR等）
+        Status int32 `form:"status,optional"`             // 状态筛选（1-正常、0-禁用）
+        CustomerId int64 `form:"customerId,optional"`    // 客户ID筛选
+        StartTime string `form:"startTime,optional"`     // 开户开始时间（格式：2024-01-01 00:00:00）
+        EndTime string `form:"endTime,optional"`         // 开户结束时间（格式：2024-01-31 23:59:59）
+        Keyword string `form:"keyword,optional"`         // 关键词搜索（账户号、客户姓名）
+    }
+
+    ListAccountsResp {
+        Code int32 `json:"code"`        // 响应码（200-成功）
+        Message string `json:"message"` // 响应消息
+        Data AccountListData `json:"data"` // 数据
+    }
+
+    AccountListData {
+        Total int64 `json:"total"` // 总记录数
+        List []AccountBrief `json:"list"` // 账户列表
+    }
+
+    GetAccountResp {
+        Code int32 `json:"code"`        // 响应码（200-成功）
+        Message string `json:"message"` // 响应消息
+        Data AccountDetail `json:"data"` // 账户详情
+    }
+
+    AccountBrief {
+        Id int64 `json:"id"`               // 账户ID
+        AccountNumber string `json:"accountNumber"` // 账户号（系统生成）
+        Currency string `json:"currency"`  // 币种（如：USD、CNY、EUR等）
+        Status int32 `json:"status"`       // 账户状态（1-正常、0-禁用）
+        StatusText string `json:"statusText"` // 状态文本（正常、禁用）
+        Balance string `json:"balance"`     // 账户余额（decimal字符串）
+        AvailableBalance string `json:"availableBalance"` // 可用余额（decimal字符串）
+        FrozenBalance string `json:"frozenBalance"` // 冻结余额（decimal字符串）
+        CustomerId int64 `json:"customerId"` // 客户ID
+        CustomerName string `json:"customerName"` // 客户姓名
+        CustomerEmail string `json:"customerEmail"` // 客户邮箱
+        CustomerPhone string `json:"customerPhone"` // 客户电话
+        TransactionCount int64 `json:"transactionCount"` // 交易笔数
+        TotalDepositAmount string `json:"totalDepositAmount"` // 累计存款金额（decimal字符串）
+        TotalWithdrawalAmount string `json:"totalWithdrawalAmount"` // 累计提现金额（decimal字符串）
+        LastTransactionAt string `json:"lastTransactionAt"` // 最后交易时间
+        AccountOpeningDate string `json:"accountOpeningDate"` // 开户日期
+        CreatedAt string `json:"createdAt"` // 创建时间
+        UpdatedAt string `json:"updatedAt"` // 更新时间
+    }
+
+    AccountDetail {
+        Id int64 `json:"id"`               // 账户ID
+        AccountNumber string `json:"accountNumber"` // 账户号（系统生成）
+        Currency string `json:"currency"`  // 币种（如：USD、CNY、EUR等）
+        Status int32 `json:"status"`       // 账户状态（1-正常、0-禁用）
+        StatusText string `json:"statusText"` // 状态文本（正常、禁用）
+        Balance string `json:"balance"`     // 账户余额（decimal字符串）
+        AvailableBalance string `json:"availableBalance"` // 可用余额（decimal字符串）
+        FrozenBalance string `json:"frozenBalance"` // 冻结余额（decimal字符串）
+        CustomerId int64 `json:"customerId"` // 客户ID
+        CustomerName string `json:"customerName"` // 客户姓名
+        CustomerEmail string `json:"customerEmail"` // 客户邮箱
+        CustomerPhone string `json:"customerPhone"` // 客户电话
+        CustomerAddress string `json:"customerAddress"` // 客户地址
+        CustomerType string `json:"customerType"` // 客户类型（individual-个人、enterprise-企业）
+        KycStatus string `json:"kycStatus"` // KYC状态（pending-待审核、verified-已认证、rejected-已拒绝）
+        TransactionCount int64 `json:"transactionCount"` // 交易笔数
+        TotalDepositAmount string `json:"totalDepositAmount"` // 累计存款金额（decimal字符串）
+        TotalWithdrawalAmount string `json:"totalWithdrawalAmount"` // 累计提现金额（decimal字符串）
+        TotalFeeAmount string `json:"totalFeeAmount"` // 累计手续费（decimal字符串）
+        DailyTransactionLimit string `json:"dailyTransactionLimit"` // 日交易限额（decimal字符串）
+        MonthlyTransactionLimit string `json:"monthlyTransactionLimit"` // 月交易限额（decimal字符串）
+        LastTransactionAt string `json:"lastTransactionAt"` // 最后交易时间
+        AccountOpeningDate string `json:"accountOpeningDate"` // 开户日期
+        CreatedAt string `json:"createdAt"` // 创建时间
+        UpdatedAt string `json:"updatedAt"` // 更新时间
+    }
+)

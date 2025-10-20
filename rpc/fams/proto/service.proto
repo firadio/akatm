@@ -1,29 +1,822 @@
 syntax = "proto3";
 
-option go_package = ".";
+package fams;
+option go_package = "./famsRpc";
 
-
-// ============ 客户 ============
-service Customer {
-
-  // 添加客户资料
-  rpc CreateCustomer(CreateCustomerReq) returns (CreateCustomerResp);
-  // 获取客户资料
-  rpc GetCustomer(GetCustomerReq) returns (GetCustomerResp);
-  // 更新客户资料
-  rpc UpdateCustomer(UpdateCustomerReq) returns (UpdateCustomerResp);
-  // 删除客户资料
-  rpc DeleteCustomer(DeleteCustomerReq) returns (DeleteCustomerResp);
-  // 列出客户资料
-  rpc ListCustomers(ListCustomersReq) returns (ListCustomersResp);
-
+// ============ 通用响应 ============
+message BaseResp {
+  int32 code = 1;        // 响应码
+  string message = 2;    // 响应消息
+  string request_id = 3; // 请求ID
 }
 
-// ============ 银行账号 ============
-service BankAccount {
-  // 添加银行账号请求
-  rpc CreateBankAccountRequest(CreateBankAccountRequestReq) returns (CreateBankAccountRequestResp);
-
-
+// ============ 分页请求 ============
+message PageReq {
+  int64 page = 1;        // 页码
+  int64 page_size = 2;   // 每页数量
+  string keyword = 3;    // 关键词搜索
 }
 
+// ============ 分页响应 ============
+message PageResp {
+  int64 total = 1;       // 总数量
+  int64 page = 2;        // 当前页码
+  int64 page_size = 3;   // 每页数量
+}
+
+// ============ 银行客户信息 ============
+message BankCustomerInfo {
+  int64 id = 1;                    // 客户ID
+  string first_name = 2;            // 名字
+  string last_name = 3;             // 姓氏
+  string phone = 4;                 // 手机号码
+  string email = 5;                 // 电子邮箱
+  string address = 6;               // 地址
+  string note = 7;                  // 备注
+  int64 user_id = 8;               // 关联用户ID
+  int64 manager_id = 9;             // 客户经理ID
+  string id_number = 10;            // 证件号
+  string business_license = 11;     // 营业执照
+  int64 created_at = 12;            // 创建时间
+  int64 updated_at = 13;             // 更新时间
+  repeated BankAccountInfo accounts = 14; // 银行账户列表
+}
+
+// ============ 银行账户信息 ============
+message BankAccountInfo {
+  int64 id = 1;                    // 账户ID
+  string account_number = 2;         // 银行账号
+  string currency = 3;               // 币种
+  int64 customer_id = 4;            // 客户ID
+  int64 user_id = 5;               // 用户ID
+  int64 manager_id = 6;             // 客户经理ID
+  int32 status = 7;                 // 账户状态 (1正常 0禁用)
+  int64 created_at = 8;             // 创建时间
+  int64 updated_at = 9;              // 更新时间
+  
+  // 客户信息
+  string customer_name = 10;         // 客户姓名
+  string customer_email = 11;        // 客户邮箱
+  string customer_phone = 12;         // 客户电话
+  
+  // 客户经理信息
+  string manager_name = 13;          // 客户经理姓名
+  string manager_email = 14;         // 客户经理邮箱
+  string manager_level = 15;         // 客户经理层级：super_agent-总代, agent-代理, manager-客户经理
+}
+
+// ============ 银行账户申请信息 ============
+message BankAccountApplicationInfo {
+  int64 id = 1;                    // 申请ID
+  string application_number = 2;    // 申请单号
+  int64 customer_id = 3;            // 客户ID
+  int64 user_id = 4;               // 用户ID
+  int64 manager_id = 5;             // 客户经理ID
+  string status = 6;                // 申请状态
+  string materials = 7;              // 申请材料
+  int64 application_time = 8;        // 申请时间
+  int64 auditor_id = 9;             // 审核人ID
+  string auditor_name = 10;          // 审核人姓名
+  int64 audit_time = 11;             // 审核时间
+  string audit_note = 12;            // 审核意见
+  string audit_result = 13;          // 审核结果
+  string note = 14;                  // 备注
+  int64 created_at = 15;             // 创建时间
+}
+
+// ============ 用户钱包信息 ============
+message UserWalletInfo {
+  int64 id = 1;                    // 钱包ID
+  int64 user_id = 2;               // 用户ID
+  int64 customer_id = 3;            // 客户ID
+  int64 manager_id = 4;             // 客户经理ID
+  string symbol = 5;                // 资产代号
+  double available_balance = 6;      // 可用余额
+  double frozen_amount = 7;          // 冻结余额
+  int64 created_at = 8;             // 创建时间
+  int64 updated_at = 9;              // 更新时间
+}
+
+// ============ 钱包地址信息 ============
+message UserWalletAddressInfo {
+  int64 id = 1;                    // 地址ID
+  int64 user_wallet_id = 2;         // 钱包ID
+  int64 user_id = 3;               // 用户ID
+  string address_type = 4;           // 地址类型
+  string network = 5;               // 网络类型
+  string address = 6;               // 地址
+  string tag = 7;                   // 标签
+  bool is_default = 8;              // 是否默认地址
+  int32 audit_status = 9;           // 审核状态
+  int64 audit_time = 10;            // 审核时间
+  string note = 11;                 // 备注
+  int64 created_at = 12;            // 创建时间
+}
+
+// ============ 提现记录信息 ============
+message UserWalletWithdrawalInfo {
+  int64 id = 1;                    // 提现ID
+  string withdraw_number = 2;        // 提现单号
+  int64 user_wallet_id = 3;         // 钱包ID
+  int64 user_id = 4;               // 用户ID
+  int64 manager_id = 5;             // 客户经理ID
+  int64 wallet_address_id = 6;      // 地址ID
+  double withdraw_amount = 7;        // 提现金额
+  double withdraw_fee = 8;          // 提现手续费
+  double actual_amount = 9;         // 实际到账金额
+  string status = 10;               // 提现状态
+  int64 withdraw_time = 11;         // 提现时间
+  int64 auditor_id = 12;            // 审核人ID
+  string auditor_name = 13;          // 审核人姓名
+  int64 audit_time = 14;             // 审核时间
+  string audit_note = 15;            // 审核意见
+  string audit_result = 16;          // 审核结果
+  string note = 17;                  // 备注
+  int64 created_at = 18;             // 创建时间
+}
+
+// ============ 金融账户服务 ============
+service Fams {
+  // ============ 银行客户管理相关 ============
+  // 创建银行客户
+  rpc CreateBankCustomer(CreateBankCustomerReq) returns (CreateBankCustomerResp);
+  // 获取银行客户
+  rpc GetBankCustomer(GetBankCustomerReq) returns (GetBankCustomerResp);
+  // 更新银行客户
+  rpc UpdateBankCustomer(UpdateBankCustomerReq) returns (UpdateBankCustomerResp);
+  // 删除银行客户
+  rpc DeleteBankCustomer(DeleteBankCustomerReq) returns (DeleteBankCustomerResp);
+  // 获取银行客户列表
+  rpc ListBankCustomers(ListBankCustomersReq) returns (ListBankCustomersResp);
+
+  // ============ 银行账户管理相关 ============
+  // 创建银行账户
+  rpc CreateBankAccount(CreateBankAccountReq) returns (CreateBankAccountResp);
+  // 获取银行账户
+  rpc GetBankAccount(GetBankAccountReq) returns (GetBankAccountResp);
+  // 更新银行账户
+  rpc UpdateBankAccount(UpdateBankAccountReq) returns (UpdateBankAccountResp);
+  // 删除银行账户
+  rpc DeleteBankAccount(DeleteBankAccountReq) returns (DeleteBankAccountResp);
+  // 获取银行账户列表
+  rpc ListBankAccounts(ListBankAccountsReq) returns (ListBankAccountsResp);
+
+  // ============ 银行账户申请相关 ============
+  // 创建银行账户申请
+  rpc CreateBankAccountApplication(CreateBankAccountApplicationReq) returns (CreateBankAccountApplicationResp);
+  // 获取银行账户申请
+  rpc GetBankAccountApplication(GetBankAccountApplicationReq) returns (GetBankAccountApplicationResp);
+  // 更新银行账户申请
+  rpc UpdateBankAccountApplication(UpdateBankAccountApplicationReq) returns (UpdateBankAccountApplicationResp);
+  // 审核银行账户申请
+  rpc AuditBankAccountApplication(AuditBankAccountApplicationReq) returns (AuditBankAccountApplicationResp);
+  // 获取银行账户申请列表
+  rpc ListBankAccountApplications(ListBankAccountApplicationsReq) returns (ListBankAccountApplicationsResp);
+
+  // ============ 用户钱包管理相关 ============
+  // 创建用户钱包
+  rpc CreateUserWallet(CreateUserWalletReq) returns (CreateUserWalletResp);
+  // 获取用户钱包
+  rpc GetUserWallet(GetUserWalletReq) returns (GetUserWalletResp);
+  // 更新用户钱包
+  rpc UpdateUserWallet(UpdateUserWalletReq) returns (UpdateUserWalletResp);
+  // 获取用户钱包列表
+  rpc ListUserWallets(ListUserWalletsReq) returns (ListUserWalletsResp);
+
+  // ============ 钱包地址管理相关 ============
+  // 创建钱包地址
+  rpc CreateUserWalletAddress(CreateUserWalletAddressReq) returns (CreateUserWalletAddressResp);
+  // 获取钱包地址
+  rpc GetUserWalletAddress(GetUserWalletAddressReq) returns (GetUserWalletAddressResp);
+  // 更新钱包地址
+  rpc UpdateUserWalletAddress(UpdateUserWalletAddressReq) returns (UpdateUserWalletAddressResp);
+  // 删除钱包地址
+  rpc DeleteUserWalletAddress(DeleteUserWalletAddressReq) returns (DeleteUserWalletAddressResp);
+  // 获取钱包地址列表
+  rpc ListUserWalletAddresses(ListUserWalletAddressesReq) returns (ListUserWalletAddressesResp);
+  // 审核钱包地址
+  rpc AuditUserWalletAddress(AuditUserWalletAddressReq) returns (AuditUserWalletAddressResp);
+
+  // ============ 提现管理相关 ============
+  // 创建提现申请
+  rpc CreateUserWalletWithdrawal(CreateUserWalletWithdrawalReq) returns (CreateUserWalletWithdrawalResp);
+  // 获取提现记录
+  rpc GetUserWalletWithdrawal(GetUserWalletWithdrawalReq) returns (GetUserWalletWithdrawalResp);
+  // 更新提现记录
+  rpc UpdateUserWalletWithdrawal(UpdateUserWalletWithdrawalReq) returns (UpdateUserWalletWithdrawalResp);
+  // 审核提现申请
+  rpc AuditUserWalletWithdrawal(AuditUserWalletWithdrawalReq) returns (AuditUserWalletWithdrawalResp);
+  // 获取提现记录列表
+  rpc ListUserWalletWithdrawals(ListUserWalletWithdrawalsReq) returns (ListUserWalletWithdrawalsResp);
+
+  // ============ 资金操作相关 ============
+  // 冻结资金
+  rpc FreezeUserWallet(FreezeUserWalletReq) returns (FreezeUserWalletResp);
+  // 解冻资金
+  rpc UnfreezeUserWallet(UnfreezeUserWalletReq) returns (UnfreezeUserWalletResp);
+  // 扣减资金
+  rpc DeductUserWallet(DeductUserWalletReq) returns (DeductUserWalletResp);
+  // 增加资金
+  rpc AddUserWallet(AddUserWalletReq) returns (AddUserWalletResp);
+
+  // ============ 资金明细相关 ============
+  // 获取资金明细列表
+  rpc ListFundDetails(ListFundDetailsReq) returns (ListFundDetailsResp);
+  // 获取资金明细详情
+  rpc GetFundDetail(GetFundDetailReq) returns (GetFundDetailResp);
+  // 获取资金统计总览
+  rpc GetFundSummary(GetFundSummaryReq) returns (GetFundSummaryResp);
+  // 获取用户资金明细
+  rpc GetUserFundDetails(GetUserFundDetailsReq) returns (ListFundDetailsResp);
+  // 获取代理资金明细
+  rpc GetAgentFundDetails(GetAgentFundDetailsReq) returns (ListFundDetailsResp);
+  // 获取账户流水
+  rpc ListAccountTransactions(ListAccountTransactionsReq) returns (ListAccountTransactionsResp);
+}
+
+// ============ 银行客户管理请求/响应 ============
+message CreateBankCustomerReq {
+  string first_name = 1;            // 名字
+  string last_name = 2;             // 姓氏
+  string phone = 3;                 // 手机号码
+  string email = 4;                 // 电子邮箱
+  string address = 5;               // 地址
+  string note = 6;                  // 备注
+  int64 user_id = 7;               // 关联用户ID
+  int64 manager_id = 8;             // 客户经理ID
+  string id_number = 9;             // 证件号
+  string business_license = 10;     // 营业执照
+  string request_id = 11;            // 请求ID
+}
+
+message CreateBankCustomerResp {
+  BaseResp base = 1;
+  BankCustomerInfo data = 2;
+}
+
+message GetBankCustomerReq {
+  int64 customer_id = 1;            // 客户ID
+  string request_id = 2;             // 请求ID
+}
+
+message GetBankCustomerResp {
+  BaseResp base = 1;
+  BankCustomerInfo data = 2;
+}
+
+message UpdateBankCustomerReq {
+  int64 customer_id = 1;            // 客户ID
+  string first_name = 2;            // 名字
+  string last_name = 3;             // 姓氏
+  string phone = 4;                 // 手机号码
+  string email = 5;                 // 电子邮箱
+  string address = 6;               // 地址
+  string note = 7;                  // 备注
+  string id_number = 8;             // 证件号
+  string business_license = 9;     // 营业执照
+  string request_id = 10;            // 请求ID
+}
+
+message UpdateBankCustomerResp {
+  BaseResp base = 1;
+  BankCustomerInfo data = 2;
+}
+
+message DeleteBankCustomerReq {
+  int64 customer_id = 1;            // 客户ID
+  string request_id = 2;             // 请求ID
+}
+
+message DeleteBankCustomerResp {
+  BaseResp base = 1;
+}
+
+message ListBankCustomersReq {
+  PageReq page_req = 1;
+  string keyword = 2;                // 关键词搜索
+  int64 manager_id = 3;             // 客户经理ID
+  string request_id = 4;             // 请求ID
+}
+
+message ListBankCustomersResp {
+  BaseResp base = 1;
+  PageResp page_resp = 2;
+  repeated BankCustomerInfo customers = 3; // 客户列表
+}
+
+// ============ 银行账户管理请求/响应 ============
+message CreateBankAccountReq {
+  string account_number = 1;         // 银行账号
+  string currency = 2;               // 币种
+  int64 customer_id = 3;            // 客户ID
+  int64 user_id = 4;               // 用户ID
+  int64 manager_id = 5;             // 客户经理ID
+  string request_id = 6;             // 请求ID
+}
+
+message CreateBankAccountResp {
+  BaseResp base = 1;
+  BankAccountInfo data = 2;
+}
+
+message GetBankAccountReq {
+  int64 account_id = 1;             // 账户ID
+  string request_id = 2;             // 请求ID
+}
+
+message GetBankAccountResp {
+  BaseResp base = 1;
+  BankAccountInfo data = 2;
+}
+
+message UpdateBankAccountReq {
+  int64 account_id = 1;             // 账户ID
+  string account_number = 2;         // 银行账号
+  string currency = 3;               // 币种
+  int32 status = 4;                 // 账户状态
+  string request_id = 5;             // 请求ID
+}
+
+message UpdateBankAccountResp {
+  BaseResp base = 1;
+  BankAccountInfo data = 2;
+}
+
+message DeleteBankAccountReq {
+  int64 account_id = 1;             // 账户ID
+  string request_id = 2;             // 请求ID
+}
+
+message DeleteBankAccountResp {
+  BaseResp base = 1;
+}
+
+message ListBankAccountsReq {
+  PageReq page_req = 1;
+  string keyword = 2;                // 关键词搜索
+  int64 customer_id = 3;            // 客户ID
+  int64 manager_id = 4;             // 客户经理ID
+  string request_id = 5;             // 请求ID
+}
+
+message ListBankAccountsResp {
+  BaseResp base = 1;
+  PageResp page_resp = 2;
+  repeated BankAccountInfo accounts = 3; // 账户列表
+}
+
+// ============ 银行账户申请请求/响应 ============
+message CreateBankAccountApplicationReq {
+  int64 customer_id = 1;            // 客户ID
+  int64 user_id = 2;               // 用户ID
+  int64 manager_id = 3;             // 客户经理ID
+  string materials = 4;              // 申请材料
+  string note = 5;                  // 备注
+  string request_id = 6;             // 请求ID
+}
+
+message CreateBankAccountApplicationResp {
+  BaseResp base = 1;
+  BankAccountApplicationInfo data = 2;
+}
+
+message GetBankAccountApplicationReq {
+  int64 application_id = 1;         // 申请ID
+  string request_id = 2;             // 请求ID
+}
+
+message GetBankAccountApplicationResp {
+  BaseResp base = 1;
+  BankAccountApplicationInfo data = 2;
+}
+
+message UpdateBankAccountApplicationReq {
+  int64 application_id = 1;         // 申请ID
+  string materials = 2;              // 申请材料
+  string note = 3;                  // 备注
+  string request_id = 4;             // 请求ID
+}
+
+message UpdateBankAccountApplicationResp {
+  BaseResp base = 1;
+  BankAccountApplicationInfo data = 2;
+}
+
+message AuditBankAccountApplicationReq {
+  int64 application_id = 1;         // 申请ID
+  int64 auditor_id = 2;             // 审核人ID
+  string auditor_name = 3;           // 审核人姓名
+  string audit_note = 4;             // 审核意见
+  string audit_result = 5;           // 审核结果
+  string request_id = 6;             // 请求ID
+}
+
+message AuditBankAccountApplicationResp {
+  BaseResp base = 1;
+  BankAccountApplicationInfo data = 2;
+}
+
+message ListBankAccountApplicationsReq {
+  PageReq page_req = 1;
+  string keyword = 2;                // 关键词搜索
+  int64 manager_id = 3;             // 客户经理ID
+  string status = 4;                // 申请状态
+  string request_id = 5;             // 请求ID
+}
+
+message ListBankAccountApplicationsResp {
+  BaseResp base = 1;
+  PageResp page_resp = 2;
+  repeated BankAccountApplicationInfo applications = 3; // 申请列表
+}
+
+// ============ 用户钱包管理请求/响应 ============
+message CreateUserWalletReq {
+  int64 user_id = 1;               // 用户ID
+  int64 customer_id = 2;            // 客户ID
+  int64 manager_id = 3;             // 客户经理ID
+  string symbol = 4;                // 资产代号
+  string request_id = 5;             // 请求ID
+}
+
+message CreateUserWalletResp {
+  BaseResp base = 1;
+  UserWalletInfo data = 2;
+}
+
+message GetUserWalletReq {
+  int64 wallet_id = 1;              // 钱包ID
+  string request_id = 2;             // 请求ID
+}
+
+message GetUserWalletResp {
+  BaseResp base = 1;
+  UserWalletInfo data = 2;
+}
+
+message UpdateUserWalletReq {
+  int64 wallet_id = 1;              // 钱包ID
+  double available_balance = 2;      // 可用余额
+  double frozen_amount = 3;          // 冻结余额
+  string request_id = 4;             // 请求ID
+}
+
+message UpdateUserWalletResp {
+  BaseResp base = 1;
+  UserWalletInfo data = 2;
+}
+
+message ListUserWalletsReq {
+  PageReq page_req = 1;
+  int64 user_id = 2;               // 用户ID
+  int64 manager_id = 3;             // 客户经理ID
+  string symbol = 4;                // 资产代号
+  string request_id = 5;             // 请求ID
+}
+
+message ListUserWalletsResp {
+  BaseResp base = 1;
+  PageResp page_resp = 2;
+  repeated UserWalletInfo wallets = 3; // 钱包列表
+}
+
+// ============ 钱包地址管理请求/响应 ============
+message CreateUserWalletAddressReq {
+  int64 user_wallet_id = 1;         // 钱包ID
+  int64 user_id = 2;               // 用户ID
+  string address_type = 3;           // 地址类型
+  string network = 4;               // 网络类型
+  string address = 5;               // 地址
+  string tag = 6;                   // 标签
+  bool is_default = 7;              // 是否默认地址
+  string request_id = 8;             // 请求ID
+}
+
+message CreateUserWalletAddressResp {
+  BaseResp base = 1;
+  UserWalletAddressInfo data = 2;
+}
+
+message GetUserWalletAddressReq {
+  int64 address_id = 1;             // 地址ID
+  string request_id = 2;             // 请求ID
+}
+
+message GetUserWalletAddressResp {
+  BaseResp base = 1;
+  UserWalletAddressInfo data = 2;
+}
+
+message UpdateUserWalletAddressReq {
+  int64 address_id = 1;             // 地址ID
+  string address_type = 2;           // 地址类型
+  string network = 3;               // 网络类型
+  string address = 4;               // 地址
+  string tag = 5;                   // 标签
+  bool is_default = 6;              // 是否默认地址
+  string note = 7;                  // 备注
+  string request_id = 8;             // 请求ID
+}
+
+message UpdateUserWalletAddressResp {
+  BaseResp base = 1;
+  UserWalletAddressInfo data = 2;
+}
+
+message DeleteUserWalletAddressReq {
+  int64 address_id = 1;             // 地址ID
+  string request_id = 2;             // 请求ID
+}
+
+message DeleteUserWalletAddressResp {
+  BaseResp base = 1;
+}
+
+message ListUserWalletAddressesReq {
+  PageReq page_req = 1;
+  int64 user_wallet_id = 2;         // 钱包ID
+  int64 user_id = 3;               // 用户ID
+  string address_type = 4;           // 地址类型
+  string request_id = 5;             // 请求ID
+}
+
+message ListUserWalletAddressesResp {
+  BaseResp base = 1;
+  PageResp page_resp = 2;
+  repeated UserWalletAddressInfo addresses = 3; // 地址列表
+}
+
+message AuditUserWalletAddressReq {
+  int64 address_id = 1;             // 地址ID
+  int64 auditor_id = 2;             // 审核人ID
+  string auditor_name = 3;           // 审核人姓名
+  string audit_note = 4;             // 审核意见
+  string audit_result = 5;           // 审核结果
+  string request_id = 6;             // 请求ID
+}
+
+message AuditUserWalletAddressResp {
+  BaseResp base = 1;
+  UserWalletAddressInfo data = 2;
+}
+
+// ============ 提现管理请求/响应 ============
+message CreateUserWalletWithdrawalReq {
+  int64 user_wallet_id = 1;         // 钱包ID
+  int64 user_id = 2;               // 用户ID
+  int64 manager_id = 3;             // 客户经理ID
+  int64 wallet_address_id = 4;      // 地址ID
+  double withdraw_amount = 5;        // 提现金额
+  double withdraw_fee = 6;          // 提现手续费
+  string note = 7;                  // 备注
+  string request_id = 8;             // 请求ID
+}
+
+message CreateUserWalletWithdrawalResp {
+  BaseResp base = 1;
+  UserWalletWithdrawalInfo data = 2;
+}
+
+message GetUserWalletWithdrawalReq {
+  int64 withdrawal_id = 1;          // 提现ID
+  string request_id = 2;             // 请求ID
+}
+
+message GetUserWalletWithdrawalResp {
+  BaseResp base = 1;
+  UserWalletWithdrawalInfo data = 2;
+}
+
+message UpdateUserWalletWithdrawalReq {
+  int64 withdrawal_id = 1;          // 提现ID
+  string status = 2;                // 提现状态
+  string note = 3;                  // 备注
+  string request_id = 4;             // 请求ID
+}
+
+message UpdateUserWalletWithdrawalResp {
+  BaseResp base = 1;
+  UserWalletWithdrawalInfo data = 2;
+}
+
+message AuditUserWalletWithdrawalReq {
+  int64 withdrawal_id = 1;          // 提现ID
+  int64 auditor_id = 2;             // 审核人ID
+  string auditor_name = 3;           // 审核人姓名
+  string audit_note = 4;             // 审核意见
+  string audit_result = 5;           // 审核结果
+  string request_id = 6;             // 请求ID
+}
+
+message AuditUserWalletWithdrawalResp {
+  BaseResp base = 1;
+  UserWalletWithdrawalInfo data = 2;
+}
+
+message ListUserWalletWithdrawalsReq {
+  PageReq page_req = 1;
+  int64 user_id = 2;               // 用户ID
+  int64 manager_id = 3;             // 客户经理ID
+  string status = 4;                // 提现状态
+  string request_id = 5;             // 请求ID
+}
+
+message ListUserWalletWithdrawalsResp {
+  BaseResp base = 1;
+  PageResp page_resp = 2;
+  repeated UserWalletWithdrawalInfo withdrawals = 3; // 提现列表
+}
+
+// ============ 资金操作请求/响应 ============
+message FreezeUserWalletReq {
+  int64 wallet_id = 1;              // 钱包ID
+  double amount = 2;                 // 冻结金额
+  string reason = 3;                 // 冻结原因
+  string request_id = 4;             // 请求ID
+}
+
+message FreezeUserWalletResp {
+  BaseResp base = 1;
+  UserWalletInfo data = 2;
+}
+
+message UnfreezeUserWalletReq {
+  int64 wallet_id = 1;              // 钱包ID
+  double amount = 2;                 // 解冻金额
+  string reason = 3;                 // 解冻原因
+  string request_id = 4;             // 请求ID
+}
+
+message UnfreezeUserWalletResp {
+  BaseResp base = 1;
+  UserWalletInfo data = 2;
+}
+
+message DeductUserWalletReq {
+  int64 wallet_id = 1;              // 钱包ID
+  double amount = 2;                 // 扣减金额
+  string reason = 3;                 // 扣减原因
+  string request_id = 4;             // 请求ID
+}
+
+message DeductUserWalletResp {
+  BaseResp base = 1;
+  UserWalletInfo data = 2;
+}
+
+message AddUserWalletReq {
+  int64 wallet_id = 1;              // 钱包ID
+  double amount = 2;                 // 增加金额
+  string reason = 3;                 // 增加原因
+  string request_id = 4;             // 请求ID
+}
+
+message AddUserWalletResp {
+  BaseResp base = 1;
+  UserWalletInfo data = 2;
+}
+
+// ============ 资金明细请求/响应 ============
+message FundDetailInfo {
+  int64 id = 1;                    // ID
+  string transaction_number = 2;    // 交易单号
+  int64 user_id = 3;               // 用户ID
+  string user_email = 4;           // 用户邮箱
+  string user_type = 5;             // 用户类型
+  int64 parent_user_id = 6;        // 父级用户ID
+  string parent_user_email = 7;     // 父级用户邮箱
+  string transaction_type = 8;      // 交易类型
+  string amount = 9;                // 交易金额
+  string currency = 10;             // 币种
+  string fee = 11;                  // 手续费
+  string actual_amount = 12;        // 实际到账金额
+  string status = 13;               // 状态
+  string description = 14;          // 描述
+  int64 created_at = 15;            // 创建时间
+  int64 updated_at = 16;            // 更新时间
+}
+
+message ListFundDetailsReq {
+  PageReq page_req = 1;
+  string keyword = 2;                // 关键词搜索
+  string user_type = 3;               // 用户类型筛选
+  string transaction_type = 4;        // 交易类型筛选
+  string status = 5;                  // 状态筛选
+  int64 start_time = 6;              // 开始时间
+  int64 end_time = 7;                // 结束时间
+  string currency = 8;                // 币种筛选
+  string min_amount = 9;              // 最小金额
+  string max_amount = 10;             // 最大金额
+  string request_id = 11;             // 请求ID
+}
+
+message ListFundDetailsResp {
+  BaseResp base = 1;
+  PageResp page_resp = 2;
+  repeated FundDetailInfo fund_details = 3; // 资金明细列表
+}
+
+message GetFundDetailReq {
+  int64 fund_detail_id = 1;         // 资金明细ID
+  string request_id = 2;             // 请求ID
+}
+
+message GetFundDetailResp {
+  BaseResp base = 1;
+  FundDetailInfo data = 2;
+}
+
+message GetFundSummaryReq {
+  int64 start_time = 1;              // 开始时间
+  int64 end_time = 2;                // 结束时间
+  string user_type = 3;               // 用户类型筛选
+  string currency = 4;                // 币种筛选
+  string request_id = 5;             // 请求ID
+}
+
+message FundSummaryData {
+  string total_deposit = 1;          // 总存款
+  string total_withdrawal = 2;       // 总提现
+  string total_fee = 3;              // 总手续费
+  int64 active_users = 4;            // 活跃用户数
+  int64 transaction_count = 5;       // 交易笔数
+  repeated CurrencyStat currency_stats = 6; // 币种统计
+}
+
+message CurrencyStat {
+  string currency = 1;               // 币种
+  string deposit_amount = 2;         // 存款金额
+  string withdrawal_amount = 3;       // 提现金额
+  string fee_amount = 4;             // 手续费金额
+  int64 transaction_count = 5;       // 交易笔数
+}
+
+message GetFundSummaryResp {
+  BaseResp base = 1;
+  FundSummaryData data = 2;
+}
+
+message GetUserFundDetailsReq {
+  int64 user_id = 1;                // 用户ID
+  PageReq page_req = 2;
+  string transaction_type = 3;        // 交易类型筛选
+  string status = 4;                  // 状态筛选
+  int64 start_time = 5;              // 开始时间
+  int64 end_time = 6;                // 结束时间
+  string request_id = 7;             // 请求ID
+}
+
+message GetAgentFundDetailsReq {
+  int64 agent_id = 1;               // 代理ID
+  PageReq page_req = 2;
+  bool include_sub_agents = 3;       // 是否包含下级代理
+  string transaction_type = 4;        // 交易类型筛选
+  string status = 5;                  // 状态筛选
+  int64 start_time = 6;              // 开始时间
+  int64 end_time = 7;                // 结束时间
+  string request_id = 8;             // 请求ID
+}
+
+// 获取账户流水请求
+message ListAccountTransactionsReq {
+  int64 account_id = 1;             // 账户ID
+  PageReq page_req = 2;            // 分页请求
+  string transaction_type = 3;      // 交易类型筛选：deposit-存款, withdrawal-提现, transfer-转账, fee-手续费
+  string status = 4;                 // 状态筛选：pending-待处理, success-成功, failed-失败, cancelled-已取消
+  int64 start_time = 5;            // 开始时间（时间戳）
+  int64 end_time = 6;               // 结束时间（时间戳）
+  string min_amount = 7;            // 最小金额
+  string max_amount = 8;            // 最大金额
+  string keyword = 9;                // 关键词搜索（交易单号、备注等）
+  string request_id = 10;           // 请求ID
+}
+
+// 获取账户流水响应
+message ListAccountTransactionsResp {
+  int32 code = 1;                   // 响应码
+  string message = 2;               // 响应消息
+  TransactionListData data = 3;     // 数据
+}
+
+// 账户流水列表数据
+message TransactionListData {
+  int64 total = 1;                  // 总记录数
+  repeated TransactionBrief list = 2; // 列表
+}
+
+// 账户流水摘要
+message TransactionBrief {
+  int64 id = 1;                     // ID
+  string transaction_number = 2;     // 交易单号
+  string type = 3;                  // 交易类型：deposit-存款, withdrawal-提现, transfer-转账, fee-手续费
+  string amount = 4;                // 交易金额
+  string symbol = 5;                // 币种
+  string status = 6;                // 状态：pending-待处理, success-成功, failed-失败, cancelled-已取消
+  string fee = 7;                   // 手续费
+  string actual_amount = 8;         // 实际到账金额
+  string description = 9;           // 交易描述/备注
+  int64 related_account_id = 10;    // 关联账户ID（转账时使用）
+  string related_account_number = 11; // 关联账户号
+  int64 created_at = 12;            // 创建时间
+  int64 updated_at = 13;            // 更新时间
+}

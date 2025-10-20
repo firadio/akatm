@@ -1,0 +1,249 @@
+syntax = "v1"
+
+info(
+    title: "系统配置管理接口"
+    desc: "提供系统参数配置、系统状态监控等功能"
+    version: "v1.0"
+)
+
+import "../../common/types.api"
+
+@server(
+    prefix: /api/system
+    group: system
+    jwt: Auth
+    middleware: SignCheck, JwtAuth
+    tags: "系统配置"
+)
+service admin {
+    @doc(
+        summary: "获取系统配置"
+        description: "获取系统配置参数列表。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.system.getConfig"
+    )
+    @handler getSystemConfig
+    get /system/config (GetSystemConfigReq) returns (GetSystemConfigResp)
+
+    @doc(
+        summary: "获取分类配置"
+        description: "获取指定分类的系统配置参数。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.system.getConfigByCategory"
+    )
+    @handler getSystemConfigByCategory
+    get /system/config/:category (GetSystemConfigByCategoryReq) returns (GetSystemConfigByCategoryResp)
+
+    @doc(
+        summary: "更新系统配置"
+        description: "更新系统配置参数。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.system.updateConfig"
+    )
+    @handler updateSystemConfig
+    put /system/config (UpdateSystemConfigReq) returns (BaseResp)
+
+    @doc(
+        summary: "按分类更新系统配置"
+        description: "按分类更新系统配置参数。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.system.updateConfigByCategory"
+    )
+    @handler updateSystemConfigByCategory
+    put /system/config/:category (UpdateSystemConfigByCategoryReq) returns (BaseResp)
+
+    @doc(
+        summary: "获取系统状态"
+        description: "获取系统运行状态信息。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.system.getStatus"
+    )
+    @handler getSystemStatus
+    get /system/status returns (GetSystemStatusResp)
+
+    @doc(
+        summary: "重置系统配置"
+        description: "重置系统配置为默认值。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.system.resetConfig"
+    )
+    @handler resetSystemConfig
+    post /system/config/reset returns (BaseResp)
+
+    @doc(
+        summary: "获取配置历史"
+        description: "获取系统配置变更历史记录。请求头: Authorization, X-Timestamp, X-Sign"
+        id: "admin.system.getConfigHistory"
+    )
+    @handler getConfigHistory
+    get /system/config/history (GetConfigHistoryReq) returns (GetConfigHistoryResp)
+}
+
+type (
+    // 获取系统配置请求
+    GetSystemConfigReq {
+        Category string `form:"category,optional"` // 配置分类筛选：basic-基础配置, security-安全配置, notification-通知配置, payment-支付配置, system-系统配置
+        Keyword string `form:"keyword,optional"` // 关键词搜索
+    }
+
+    // 获取系统配置响应
+    GetSystemConfigResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data SystemConfigData `json:"data"` // 数据
+    }
+
+    // 获取分类配置请求
+    GetSystemConfigByCategoryReq {
+        Category string `path:"category"` // 配置分类
+    }
+
+    // 获取分类配置响应
+    GetSystemConfigByCategoryResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data SystemConfigByCategoryData `json:"data"` // 数据
+    }
+
+    // 系统配置数据
+    SystemConfigData {
+        Configs []SystemConfigItem `json:"configs"` // 配置项列表
+        Categories []string `json:"categories"` // 配置分类列表
+    }
+
+    // 分类配置数据
+    SystemConfigByCategoryData {
+        Category string `json:"category"` // 配置分类
+        CategoryName string `json:"categoryName"` // 分类名称
+        Description string `json:"description"` // 分类描述
+        Configs []SystemConfigItem `json:"configs"` // 配置项列表
+    }
+
+    // 系统配置项
+    SystemConfigItem {
+        Id int64 `json:"id"` // 配置ID
+        Key string `json:"key"` // 配置键
+        Value string `json:"value"` // 配置值
+        Name string `json:"name"` // 配置名称
+        Description string `json:"description"` // 配置描述
+        Category string `json:"category"` // 配置分类
+        Type string `json:"type"` // 配置类型：string、number、boolean、json
+        DefaultValue string `json:"defaultValue"` // 默认值
+        IsEditable bool `json:"isEditable"` // 是否可编辑
+        IsRequired bool `json:"isRequired"` // 是否必填
+        Sort int `json:"sort"` // 排序
+        CreatedAt string `json:"createdAt"` // 创建时间
+        UpdatedAt string `json:"updatedAt"` // 更新时间
+    }
+
+    // 更新系统配置请求
+    UpdateSystemConfigReq {
+        Configs []UpdateConfigItem `json:"configs"` // 配置项列表
+        Reason string `json:"reason,optional"` // 更新原因
+    }
+
+    // 按分类更新系统配置请求
+    UpdateSystemConfigByCategoryReq {
+        Category string `path:"category"` // 配置分类
+        Configs []UpdateConfigItem `json:"configs"` // 配置项列表
+        Reason string `json:"reason,optional"` // 更新原因
+    }
+
+    // 更新配置项
+    UpdateConfigItem {
+        Id int64 `json:"id"` // 配置ID
+        Value string `json:"value"` // 新值
+    }
+
+    // 获取系统状态响应
+    GetSystemStatusResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data SystemStatusData `json:"data"` // 数据
+    }
+
+    // 系统状态数据
+    SystemStatusData {
+        ServerInfo ServerInfo `json:"serverInfo"` // 服务器信息
+        DatabaseInfo DatabaseInfo `json:"databaseInfo"` // 数据库信息
+        RedisInfo RedisInfo `json:"redisInfo"` // Redis信息
+        SystemMetrics SystemMetrics `json:"systemMetrics"` // 系统指标
+        ServiceStatus []ServiceStatus `json:"serviceStatus"` // 服务状态
+    }
+
+    // 服务器信息
+    ServerInfo {
+        Hostname string `json:"hostname"` // 主机名
+        Os string `json:"os"` // 操作系统
+        Arch string `json:"arch"` // 架构
+        GoVersion string `json:"goVersion"` // Go版本
+        Uptime int64 `json:"uptime"` // 运行时间（秒）
+        StartTime string `json:"startTime"` // 启动时间
+    }
+
+    // 数据库信息
+    DatabaseInfo {
+        Status string `json:"status"` // 状态：connected、disconnected
+        Version string `json:"version"` // 数据库版本
+        MaxConnections int `json:"maxConnections"` // 最大连接数
+        ActiveConnections int `json:"activeConnections"` // 活跃连接数
+        IdleConnections int `json:"idleConnections"` // 空闲连接数
+    }
+
+    // Redis信息
+    RedisInfo {
+        Status string `json:"status"` // 状态：connected、disconnected
+        Version string `json:"version"` // Redis版本
+        UsedMemory string `json:"usedMemory"` // 已使用内存
+        MaxMemory string `json:"maxMemory"` // 最大内存
+        ConnectedClients int `json:"connectedClients"` // 连接客户端数
+    }
+
+    // 系统指标
+    SystemMetrics {
+        CpuUsage float64 `json:"cpuUsage"` // CPU使用率
+        MemoryUsage float64 `json:"memoryUsage"` // 内存使用率
+        DiskUsage float64 `json:"diskUsage"` // 磁盘使用率
+        LoadAverage []float64 `json:"loadAverage"` // 负载平均值
+    }
+
+    // 服务状态
+    ServiceStatus {
+        Name string `json:"name"` // 服务名称
+        Status string `json:"status"` // 状态：running、stopped、error
+        Port int `json:"port"` // 端口
+        HealthCheck string `json:"healthCheck"` // 健康检查URL
+        LastCheck string `json:"lastCheck"` // 最后检查时间
+    }
+
+    // 获取配置历史请求
+    GetConfigHistoryReq {
+        Page int64 `form:"page,default=1,optional"` // 页码
+        PageSize int64 `form:"pageSize,default=10,optional"` // 每页数量
+        ConfigId int64 `form:"configId,optional"` // 配置ID筛选
+        OperatorId int64 `form:"operatorId,optional"` // 操作人ID筛选
+        StartTime string `form:"startTime,optional"` // 开始时间
+        EndTime string `form:"endTime,optional"` // 结束时间
+    }
+
+    // 获取配置历史响应
+    GetConfigHistoryResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data ConfigHistoryData `json:"data"` // 数据
+    }
+
+    // 配置历史数据
+    ConfigHistoryData {
+        Total int64 `json:"total"` // 总记录数
+        List []ConfigHistoryItem `json:"list"` // 历史记录列表
+    }
+
+    // 配置历史项
+    ConfigHistoryItem {
+        Id int64 `json:"id"` // 历史ID
+        ConfigId int64 `json:"configId"` // 配置ID
+        ConfigKey string `json:"configKey"` // 配置键
+        ConfigName string `json:"configName"` // 配置名称
+        OldValue string `json:"oldValue"` // 旧值
+        NewValue string `json:"newValue"` // 新值
+        OperatorId int64 `json:"operatorId"` // 操作人ID
+        OperatorName string `json:"operatorName"` // 操作人姓名
+        Reason string `json:"reason"` // 操作原因
+        CreatedAt string `json:"createdAt"` // 操作时间
+    }
+)

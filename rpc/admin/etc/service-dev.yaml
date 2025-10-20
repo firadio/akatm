@@ -1,0 +1,11 @@
+Name: admin.rpc
+ListenOn: 0.0.0.0:8081
+Etcd:
+  Hosts:
+  - 127.0.0.1:2379
+  Key: admin.rpc.dev
+Log:
+  ServiceName: admin.rpc.dev
+  Mode: console
+  Level: debug
+  Encoding: json
