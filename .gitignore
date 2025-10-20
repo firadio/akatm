@@ -1,3 +1,8 @@
 .idea
 .cursor
 rpc/admin/admin-rpc
+rpc/fams/fams-rpc
+rpc/iam/iam-rpc
+rpc/mail/mail-rpc
+api/adminGateway/adminGateway-api
+api/managerGateway/managerGateway-api
