@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(goctl api plugin:*)",
+      "Bash(go run:*)",
+      "Bash(goctl api swagger:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

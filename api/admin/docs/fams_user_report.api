@@ -9,9 +9,9 @@ info(
 import "../../common/types.api"
 
 @server(
-    prefix: /api/fams/user-report
+    prefix: /api/fams/user/report
     group: famsUserReport
-    tags: "用户报表"
+    tags: "FAMS/用户/报表"
 )
 service admin {
     @doc(
@@ -27,8 +27,8 @@ type (
     // 用户报表请求
     GetUserReportReq {
         UserId int64 `path:"userId"` // 用户ID
-        StartTime int64 `form:"startTime,optional"` // 开始时间（毫秒级时间戳）
-        EndTime int64 `form:"endTime,optional"` // 结束时间（毫秒级时间戳）
+        StartDate string `form:"startDate"` // 开始日期，格式：YYYY-MM-DD（必填）
+        EndDate string `form:"endDate"` // 结束日期，格式：YYYY-MM-DD（必填）
         Currency string `form:"currency,optional"` // 币种筛选
         TransactionType string `form:"transactionType,optional"` // 交易类型筛选：deposit-存款, withdrawal-提现, exchange-换汇, fee-手续费
         Status string `form:"status,optional"` // 交易状态筛选：pending-待处理, completed-已完成, failed-失败, cancelled-已取消
@@ -43,13 +43,15 @@ type (
 
     // 用户报表数据
     UserReportData {
-        UserId int64 `json:"userId"` // 用户ID
+        CustomerId int64 `json:"customerId"` // 客户ID
         UserEmail string `json:"userEmail"` // 用户邮箱
         UserName string `json:"userName"` // 用户姓名
         UserType string `json:"userType"` // 用户类型：super_agent-总代, agent-代理, manager-客户经理, customer-客户
         UserStatus int32 `json:"userStatus"` // 用户状态：1-启用, 0-禁用
         ParentId int64 `json:"parentId"` // 父级用户ID
         ParentTree string `json:"parentTree"` // 父级用户树
+        StartDate string `json:"startDate"` // 查询开始日期
+        EndDate string `json:"endDate"` // 查询结束日期
         TotalDeposit string `json:"totalDeposit"` // 总存款
         TotalWithdrawal string `json:"totalWithdrawal"` // 总提现
         TotalFee string `json:"totalFee"` // 总手续费
@@ -59,16 +61,6 @@ type (
         SuccessRate string `json:"successRate"` // 成功率
         AverageTransactionAmount string `json:"averageTransactionAmount"` // 平均交易金额
         CurrencyStats []CurrencyStat `json:"currencyStats"` // 币种统计
-        MonthlyStats []MonthlyStat `json:"monthlyStats"` // 月度统计
-    }
-
-    // 月度统计
-    MonthlyStat {
-        Year int32 `json:"year"` // 年份
-        Month int32 `json:"month"` // 月份
-        DepositAmount string `json:"depositAmount"` // 存款金额
-        WithdrawalAmount string `json:"withdrawalAmount"` // 提现金额
-        FeeAmount string `json:"feeAmount"` // 手续费金额
-        TransactionCount int64 `json:"transactionCount"` // 交易笔数
+        DailyStats []DailyStat `json:"dailyStats"` // 每日统计
     }
 )

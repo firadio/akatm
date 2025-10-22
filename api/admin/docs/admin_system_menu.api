@@ -11,7 +11,7 @@ import "../../common/types.api"
 @server(
     prefix: /api/admin/system/menu
     group: adminSystemMenu
-    tags: "菜单管理"
+    tags: "Admin/系统管理/菜单"
 )
 service admin {
     @doc(

@@ -13,7 +13,7 @@ import "../../common/types.api"
     group: famsBankAccount
     jwt: Auth
     middleware: SignCheck, JwtAuth
-    tags: "银行账户"
+    tags: "FAMS/银行/账户"
 )
 service admin {
     @doc(
@@ -98,7 +98,7 @@ type (
         Status int32 `form:"status,optional"` // 状态
         Keyword string `form:"keyword,optional"` // 账户号/客户名/客户邮箱
         CustomerId int64 `form:"customerId,optional"` // 客户ID筛选
-        ManagerId int64 `form:"managerId,optional"` // 客户经理ID筛选
+        CustomerId int64 `form:"customerId,optional"` // 客户ID筛选
         CustomerType string `form:"customerType,optional"` // 客户类型筛选：individual-个人, enterprise-企业
         KycStatus string `form:"kycStatus,optional"` // KYC状态筛选：pending-待审核, verified-已认证, rejected-已拒绝
         StartTime int64 `form:"startTime,optional"` // 创建开始时间（毫秒级时间戳）
@@ -123,7 +123,7 @@ type (
         KycStatusText string `json:"kycStatusText"` // KYC状态文本
         
         // 客户经理信息
-        ManagerId int64 `json:"managerId"` // 客户经理ID
+        CustomerId int64 `json:"customerId"` // 客户ID
         ManagerName string `json:"managerName"` // 客户经理姓名
         ManagerLevel string `json:"managerLevel"` // 客户经理层级：super_agent-总代, agent-代理, manager-客户经理
         
@@ -165,7 +165,7 @@ type (
         CustomerEmail string `json:"customerEmail"` // 客户邮箱
         CustomerPhone string `json:"customerPhone"` // 客户电话
         CustomerAddress string `json:"customerAddress"` // 客户地址
-        CustomerIdNumber string `json:"customerIdNumber"` // 客户证件号
+        CustomerIdNumber string `json:"userIdNumber"` // 客户证件号
         CustomerBusinessLicense string `json:"customerBusinessLicense"` // 客户营业执照
         CustomerType string `json:"customerType"` // 客户类型：individual-个人, enterprise-企业
         CustomerTypeText string `json:"customerTypeText"` // 客户类型文本
@@ -176,7 +176,7 @@ type (
         CustomerNote string `json:"customerNote"` // 客户备注
         
         // 客户经理信息
-        ManagerId int64 `json:"managerId"` // 客户经理ID
+        CustomerId int64 `json:"customerId"` // 客户ID
         ManagerName string `json:"managerName"` // 客户经理姓名
         ManagerEmail string `json:"managerEmail"` // 客户经理邮箱
         ManagerLevel string `json:"managerLevel"` // 客户经理层级：super_agent-总代, agent-代理, manager-客户经理
@@ -197,7 +197,7 @@ type (
         SuperAgentName string `json:"superAgentName"` // 总代姓名
         AgentId int64 `json:"agentId"` // 代理ID
         AgentName string `json:"agentName"` // 代理姓名
-        ManagerId int64 `json:"managerId"` // 客户经理ID
+        CustomerId int64 `json:"customerId"` // 客户ID
         ManagerName string `json:"managerName"` // 客户经理姓名
         CustomerId int64 `json:"customerId"` // 客户ID
         CustomerName string `json:"customerName"` // 客户姓名
@@ -300,11 +300,11 @@ type (
     GetAccountStatsResp {
         Code int32 `json:"code"` // 响应码
         Message string `json:"message"` // 响应消息
-        Data AccountStatsData `json:"data"` // 数据
+        Data BankAccountStatsData `json:"data"` // 数据
     }
 
-    // 账户统计数据
-    AccountStatsData {
+    // 银行账户统计数据
+    BankAccountStatsData {
         TotalCount int64 `json:"totalCount"` // 总账户数
         ActiveCount int64 `json:"activeCount"` // 活跃账户数
         FrozenCount int64 `json:"frozenCount"` // 冻结账户数

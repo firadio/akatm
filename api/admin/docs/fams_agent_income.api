@@ -9,31 +9,31 @@ info(
 import "../../common/types.api"
 
 @server(
-    prefix: /api/fams/agent
-    group: famsAgentEarnings
-    tags: "代理收益"
+    prefix: /api/fams/agent/income
+    group: famsAgentIncome
+    tags: "FAMS/代理/收益"
 )
 service admin {
     @doc(
         summary: "代理收益总览"
         description: "获取代理收益总览数据，包括总佣金、本月佣金、下级业绩等"
-        id: "fams.agent.earnings.overview"
+        id: "fams.agent.income.overview"
     )
     @handler getEarningsOverview
-    get /:agentId/overview (GetEarningsOverviewReq) returns (GetEarningsOverviewResp)
+    get /:userId/overview (GetEarningsOverviewReq) returns (GetEarningsOverviewResp)
 
     @doc(
         summary: "收益明细列表"
         description: "获取代理收益明细列表，支持多维度筛选"
-        id: "fams.agent.earnings.list"
+        id: "fams.agent.income.list"
     )
     @handler listEarnings
-    get /:agentId/earnings (ListEarningsReq) returns (ListEarningsResp)
+    get /:userId/earnings (ListEarningsReq) returns (ListEarningsResp)
 
     @doc(
         summary: "收益明细详情"
         description: "根据ID获取收益明细详情"
-        id: "fams.agent.earnings.detail"
+        id: "fams.agent.income.detail"
     )
     @handler getEarningDetail
     get /earnings/:id (IdReq) returns (GetEarningDetailResp)
@@ -41,40 +41,40 @@ service admin {
     @doc(
         summary: "下级业绩统计"
         description: "获取代理下级用户的业绩统计数据"
-        id: "fams.agent.earnings.subUsers"
+        id: "fams.agent.income.subUsers"
     )
     @handler getSubUserPerformance
-    get /:agentId/sub-performance (GetSubUserPerformanceReq) returns (GetSubUserPerformanceResp)
+    get /:userId/sub-performance (GetSubUserPerformanceReq) returns (GetSubUserPerformanceResp)
 
     @doc(
         summary: "佣金比例配置"
         description: "获取代理的佣金比例配置"
-        id: "fams.agent.earnings.commission"
+        id: "fams.agent.income.commission"
     )
     @handler getCommissionConfig
-    get /:agentId/commission (GetCommissionConfigReq) returns (GetCommissionConfigResp)
+    get /:userId/commission (GetCommissionConfigReq) returns (GetCommissionConfigResp)
 
     @doc(
         summary: "收益趋势分析"
         description: "获取代理收益的趋势分析数据（按日/月统计）"
-        id: "fams.agent.earnings.trend"
+        id: "fams.agent.income.trend"
     )
     @handler getEarningsTrend
-    get /:agentId/trend (GetEarningsTrendReq) returns (GetEarningsTrendResp)
+    get /:userId/trend (GetEarningsTrendReq) returns (GetEarningsTrendResp)
 
     @doc(
         summary: "导出收益报表"
         description: "导出代理收益报表为Excel文件"
-        id: "fams.agent.earnings.export"
+        id: "fams.agent.income.export"
     )
     @handler exportEarnings
-    post /:agentId/export (ExportEarningsReq) returns (ExportEarningsResp)
+    post /:userId/export (ExportEarningsReq) returns (ExportEarningsResp)
 }
 
 type (
     // 代理收益总览请求
     GetEarningsOverviewReq {
-        AgentId int64 `path:"agentId"` // 代理ID
+        UserId int64 `path:"userId"` // 用户ID
         StartTime int64 `form:"startTime,optional"` // 开始时间（毫秒级时间戳）（格式：2024-01-01 00:00:00）
         EndTime int64 `form:"endTime,optional"` // 结束时间（毫秒级时间戳）（格式：2024-01-31 23:59:59）
         Currency string `form:"currency,optional"` // 币种筛选
@@ -89,7 +89,7 @@ type (
 
     // 代理收益总览数据
     EarningsOverviewData {
-        AgentId int64 `json:"agentId"` // 代理ID
+        CustomerId int64 `json:"customerId"` // 客户ID
         AgentEmail string `json:"agentEmail"` // 代理邮箱
         AgentName string `json:"agentName"` // 代理姓名
         AgentType string `json:"agentType"` // 代理类型：super_agent-总代, agent-代理
@@ -135,7 +135,7 @@ type (
 
     // 收益明细列表请求
     ListEarningsReq {
-        AgentId int64 `path:"agentId"` // 代理ID
+        UserId int64 `path:"userId"` // 用户ID
         Page int64 `form:"page,default=1,optional"` // 页码
         PageSize int64 `form:"pageSize,default=10,optional"` // 每页数量
 
@@ -179,7 +179,7 @@ type (
     EarningInfo {
         Id int64 `json:"id"` // ID
         EarningNumber string `json:"earningNumber"` // 收益单号
-        AgentId int64 `json:"agentId"` // 代理ID
+        CustomerId int64 `json:"customerId"` // 客户ID
         AgentEmail string `json:"agentEmail"` // 代理邮箱
 
         // 收益信息
@@ -223,7 +223,7 @@ type (
 
     // 下级业绩统计请求
     GetSubUserPerformanceReq {
-        AgentId int64 `path:"agentId"` // 代理ID
+        UserId int64 `path:"userId"` // 用户ID
         StartTime int64 `form:"startTime,optional"` // 开始时间（毫秒级时间戳）（格式：2024-01-01 00:00:00）
         EndTime int64 `form:"endTime,optional"` // 结束时间（毫秒级时间戳）（格式：2024-01-31 23:59:59）
         Level int32 `form:"level,optional"` // 层级筛选（1-直推, 2-二级等，0或不传表示全部）
@@ -257,7 +257,7 @@ type (
 
     // 下级用户业绩信息
     SubUserPerformanceInfo {
-        UserId int64 `json:"userId"` // 用户ID
+        CustomerId int64 `json:"customerId"` // 客户ID
         UserEmail string `json:"userEmail"` // 用户邮箱
         UserName string `json:"userName"` // 用户姓名
         UserType string `json:"userType"` // 用户类型
@@ -279,7 +279,7 @@ type (
 
     // 佣金比例配置请求
     GetCommissionConfigReq {
-        AgentId int64 `path:"agentId"` // 代理ID
+        UserId int64 `path:"userId"` // 用户ID
     }
 
     // 佣金比例配置响应
@@ -291,7 +291,7 @@ type (
 
     // 佣金比例配置数据
     CommissionConfigData {
-        AgentId int64 `json:"agentId"` // 代理ID
+        CustomerId int64 `json:"customerId"` // 客户ID
         AgentType string `json:"agentType"` // 代理类型
 
         // 直推佣金比例（百分比）
@@ -327,7 +327,7 @@ type (
 
     // 收益趋势分析请求
     GetEarningsTrendReq {
-        AgentId int64 `path:"agentId"` // 代理ID
+        UserId int64 `path:"userId"` // 用户ID
         StartTime int64 `form:"startTime,optional"` // 开始时间（毫秒级时间戳）（格式：2024-01-01 00:00:00）
         EndTime int64 `form:"endTime,optional"` // 结束时间（毫秒级时间戳）（格式：2024-01-31 23:59:59）
         Granularity string `form:"granularity,default=day,optional"` // 粒度：day-按日, week-按周, month-按月
@@ -369,7 +369,7 @@ type (
 
     // 导出收益报表请求
     ExportEarningsReq {
-        AgentId int64 `path:"agentId"` // 代理ID
+        UserId int64 `path:"userId"` // 用户ID
         StartTime int64 `json:"startTime,optional"` // 开始时间（毫秒级时间戳）
         EndTime int64 `json:"endTime,optional"` // 结束时间（毫秒级时间戳）（格式：2024-01-31 23:59:59）
         EarningType string `json:"earningType,optional"` // 收益类型筛选

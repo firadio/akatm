@@ -9,9 +9,9 @@ info(
 import "../../common/types.api"
 
 @server(
-    prefix: /api/admin/system
+    prefix: /api/admin/system/config
     group: adminSystemConfig
-    tags: "系统配置"
+    tags: "Admin/系统管理/配置"
 )
 service admin {
     @doc(

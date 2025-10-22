@@ -10,10 +10,10 @@ import "../../common/types.api"
 
 @server(
     prefix: /api/admin/system/audit
-    group: adminsystemAudit
+    group: adminSystemAudit
     jwt: Auth
     middleware: SignCheck, JwtAuth
-    tags: "日志审核"
+    tags: "Admin/系统管理/审计日志"
 )
 service admin {
     @doc(
@@ -233,7 +233,7 @@ type (
     // 登录日志信息
     LoginLogInfo {
         Id int64 `json:"id"` // 日志ID
-        UserId int64 `json:"userId"` // 用户ID
+        CustomerId int64 `json:"customerId"` // 客户ID
         Username string `json:"username"` // 用户名
         UserType string `json:"userType"` // 用户类型：admin、manager、user
         LoginType string `json:"loginType"` // 登录类型：password、sms、email

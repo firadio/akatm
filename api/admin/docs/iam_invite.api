@@ -9,15 +9,15 @@ info(
 import "../../common/types.api"
 
 @server(
-    prefix: /api/iam/user/invite
-    group: iamUserInvite
-    tags: "邀请管理"
+    prefix: /api/iam/invite
+    group: iamInvite
+    tags: "IAM/邀请"
 )
 service admin {
     @doc(
         summary: "生成邀请链接"
         description: "为总代、代理、客户经理生成注册链接，支持总代邀请代理、代理邀请客户经理、客户经理邀请其他客户经理。客户由客户经理直接添加，不需要邀请链接"
-        id: "admin.invite.create"
+        id: "iam.invite.create"
     )
     @handler createInvite
     post / (CreateInviteReq) returns (CreateInviteResp)
@@ -25,7 +25,7 @@ service admin {
     @doc(
         summary: "邀请链接列表"
         description: "分页查询邀请链接列表，支持按邀请人、目标用户类型筛选"
-        id: "admin.invite.list"
+        id: "iam.invite.list"
     )
     @handler listInvites
     get / (ListInvitesReq) returns (ListInvitesResp)
@@ -33,7 +33,7 @@ service admin {
     @doc(
         summary: "邀请详情"
         description: "根据ID查询邀请详情"
-        id: "admin.invite.detail"
+        id: "iam.invite.detail"
     )
     @handler getInvite
     get /:id (IdReq) returns (GetInviteResp)
@@ -41,7 +41,7 @@ service admin {
     @doc(
         summary: "撤销邀请"
         description: "撤销未使用的邀请链接"
-        id: "admin.invite.revoke"
+        id: "iam.invite.revoke"
     )
     @handler revokeInvite
     patch /:id/revoke (IdReq) returns (BaseResp)
@@ -49,7 +49,7 @@ service admin {
     @doc(
         summary: "修改邀请链接"
         description: "修改邀请链接的换汇手续费、提现手续费和授权国家"
-        id: "admin.invite.update"
+        id: "iam.invite.update"
     )
     @handler updateInvite
     put /:id (UpdateInviteReq) returns (BaseResp)

@@ -10,8 +10,8 @@ import "../../common/types.api"
 
 @server(
     prefix: /api/admin/data/country
-    group: dataCountry
-    tags: "国家管理"
+    group: adminDataCountry
+    tags: "Admin/数据管理/国家"
 )
 service admin {
     @doc(

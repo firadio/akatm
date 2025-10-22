@@ -11,7 +11,7 @@ import "../../common/types.api"
 @server(
     prefix: /api/fams/user/wallet
     group: famsUserWallet
-    tags: "用户钱包"
+    tags: "FAMS/用户/钱包"
 )
 service admin {
     @doc(
@@ -74,9 +74,9 @@ service admin {
 type (
     // 创建用户钱包请求
     CreateUserWalletReq {
-        UserId int64 `json:"userId"` // 用户ID
-        CustomerId int64 `json:"customerId"` // 银行客户ID
-        ManagerId int64 `json:"managerId"` // 客户经理ID
+        CustomerId int64 `json:"customerId"` // 客户ID
+        UserId int64 `json:"userId"` // 银行用户ID
+        CustomerId int64 `json:"customerId"` // 客户ID
         Symbol string `json:"symbol"` // 币种（默认USDT）
     }
 
@@ -91,20 +91,20 @@ type (
     ListUserWalletsReq {
         Page int64 `form:"page,default=1,optional"` // 页码
         PageSize int64 `form:"pageSize,default=10,optional"` // 每页数量
-        UserId int64 `form:"userId,optional"` // 用户ID筛选
         CustomerId int64 `form:"customerId,optional"` // 客户ID筛选
-        ManagerId int64 `form:"managerId,optional"` // 经理ID筛选
+        CustomerId int64 `form:"customerId,optional"` // 客户ID筛选
+        CustomerId int64 `form:"customerId,optional"` // 客户ID筛选
         Symbol string `form:"symbol,optional"` // 币种筛选
     }
 
     // 钱包信息
     UserWalletInfo {
         Id int64 `json:"id"` // 钱包ID
-        UserId int64 `json:"userId"` // 用户ID
+        CustomerId int64 `json:"customerId"` // 客户ID
         UserEmail string `json:"userEmail"` // 用户邮箱
-        CustomerId int64 `json:"customerId"` // 银行客户ID
+        UserId int64 `json:"userId"` // 银行用户ID
         CustomerName string `json:"customerName"` // 客户姓名
-        ManagerId int64 `json:"managerId"` // 客户经理ID
+        CustomerId int64 `json:"customerId"` // 客户ID
         ManagerName string `json:"managerName"` // 经理姓名
         Symbol string `json:"symbol"` // 币种
         AvailableBalance string `json:"availableBalance"` // 可用余额
@@ -161,7 +161,7 @@ type (
     WalletLedgerInfo {
         Id int64 `json:"id"` // 记录ID
         UserWalletId int64 `json:"userWalletId"` // 钱包ID
-        UserId int64 `json:"userId"` // 用户ID
+        CustomerId int64 `json:"customerId"` // 客户ID
         TransactionType string `json:"transactionType"` // 交易类型：deposit-存款, withdrawal-提现, fee-手续费
         Amount string `json:"amount"` // 变动金额
         BeforeBalance string `json:"beforeBalance"` // 变动前余额

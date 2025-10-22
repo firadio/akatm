@@ -1,121 +1,167 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
-	"io/ioutil"
 	"os"
+	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 
 	"gopkg.in/yaml.v3"
 )
 
-// PathTagMapping 定义路径前缀和对应的 3 级 tags 映射
-// 格式：RPC名称/分类/对象
-var PathTagMapping = []struct {
-	Prefix string
+// APIInfo 存储API文件的信息
+type APIInfo struct {
+	File   string
+	Group  string
 	Tag    string
-}{
-	// Admin RPC
-	{"/api/admin/auth", "Admin/会话管理/认证"},
-	{"/api/admin/system/user", "Admin/系统管理/用户"},
-	{"/api/admin/system/role", "Admin/系统管理/角色"},
-	{"/api/admin/system/menu", "Admin/系统管理/菜单"},
-	{"/api/admin/system/config", "Admin/系统管理/配置"},
-	{"/api/admin/system/audit", "Admin/系统管理/审计"},
-	{"/api/admin/data/country", "Admin/数据管理/国家"},
-	{"/api/admin/dashboard", "Admin/仪表盘/统计"},
-
-	// IAM RPC - 用户管理
-	{"/api/iam/user/user-invite", "IAM/用户管理/邀请"},
-	{"/api/iam/user/{userId}/profile", "IAM/用户管理/资料"},
-	{"/api/iam/user/{userId}/email", "IAM/用户管理/邮箱"},
-	{"/api/iam/user/{userId}/credential", "IAM/用户管理/凭证"},
-	{"/api/iam/user/{userId}/session", "IAM/用户管理/会话"},
-	{"/api/iam/user/{userId}/country", "IAM/用户管理/国家授权"},
-	{"/api/iam/user/user", "IAM/用户管理/代理"},
-
-	// FAMS RPC - 用户钱包
-	{"/api/fams/user/wallet", "FAMS/用户钱包/钱包"},
-
-	// FAMS RPC - 银行管理
-	{"/api/fams/bank/customer", "FAMS/银行管理/客户"},
-	{"/api/fams/bank/account-application", "FAMS/银行管理/开户申请"},
-	{"/api/fams/bank/account", "FAMS/银行管理/账户"},
-	{"/api/fams/bank/deposit", "FAMS/银行管理/存款"},
-	{"/api/fams/bank/withdrawal", "FAMS/银行管理/提现"},
-
-	// FAMS RPC - 代理收益
-	{"/api/fams/agent/earnings", "FAMS/代理管理/收益"},
-
-	// FAMS RPC - 报表
-	{"/api/fams/report", "FAMS/报表管理/报表"},
-
-	// Public API
-	{"/api/public/admin/captcha", "Public/公开接口/管理员验证码"},
-	{"/api/public/admin/login", "Public/公开接口/管理员登录"},
-	{"/api/public/iam/captcha", "Public/公开接口/用户验证码"},
-	{"/api/public/iam/login", "Public/公开接口/用户登录"},
-	{"/api/public/iam/register", "Public/公开接口/用户注册"},
-	{"/api/public/iam/email", "Public/公开接口/邮箱验证"},
+	Prefix string
 }
 
-func getTagForPath(path string) string {
-	// 按最长匹配优先
-	maxLen := 0
-	result := "其他/未分类/未知"
+// 从API文件中提取group和tags信息
+func extractAPIInfo(filePath string) (*APIInfo, error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
 
-	for _, mapping := range PathTagMapping {
-		if strings.HasPrefix(path, mapping.Prefix) && len(mapping.Prefix) > maxLen {
-			maxLen = len(mapping.Prefix)
-			result = mapping.Tag
+	info := &APIInfo{File: filepath.Base(filePath)}
+	scanner := bufio.NewScanner(file)
+
+	// 正则表达式
+	groupRe := regexp.MustCompile(`group:\s*(\w+)`)
+	tagsRe := regexp.MustCompile(`tags:\s*"([^"]+)"`)
+	prefixRe := regexp.MustCompile(`prefix:\s*([^\s]+)`)
+
+	inServerBlock := false
+
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+
+		// 检测@server块
+		if strings.Contains(line, "@server(") {
+			inServerBlock = true
+			continue
+		}
+
+		if inServerBlock {
+			// 提取group
+			if matches := groupRe.FindStringSubmatch(line); matches != nil {
+				info.Group = matches[1]
+			}
+
+			// 提取tags
+			if matches := tagsRe.FindStringSubmatch(line); matches != nil {
+				info.Tag = matches[1]
+			}
+
+			// 提取prefix
+			if matches := prefixRe.FindStringSubmatch(line); matches != nil {
+				info.Prefix = matches[1]
+			}
+
+			// 检测块结束
+			if strings.Contains(line, ")") {
+				inServerBlock = false
+			}
 		}
 	}
 
-	return result
+	if info.Group == "" || info.Tag == "" {
+		return nil, fmt.Errorf("未找到group或tags: %s", filePath)
+	}
+
+	return info, scanner.Err()
 }
 
-func main() {
-	swaggerFile := "swagger.yaml"
+// 扫描所有API文件
+func scanAPIFiles(dir string) (map[string]string, map[string]string, error) {
+	groupToTag := make(map[string]string)
+	prefixToTag := make(map[string]string)
 
-	fmt.Printf("读取文件: %s\n", swaggerFile)
+	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
 
-	// 读取 YAML 文件
-	data, err := ioutil.ReadFile(swaggerFile)
+		// 只处理.api文件
+		if !info.IsDir() && strings.HasSuffix(info.Name(), ".api") {
+			apiInfo, err := extractAPIInfo(path)
+			if err != nil {
+				fmt.Printf("⚠️  跳过 %s: %v\n", info.Name(), err)
+				return nil
+			}
+
+			groupToTag[apiInfo.Group] = apiInfo.Tag
+			prefixToTag[apiInfo.Prefix] = apiInfo.Tag
+			fmt.Printf("✓ %s: %s (%s) -> %s\n", info.Name(), apiInfo.Group, apiInfo.Prefix, apiInfo.Tag)
+		}
+
+		return nil
+	})
+
+	return groupToTag, prefixToTag, err
+}
+
+// 处理swagger.yaml文件
+func fixSwaggerTags(swaggerFile string, prefixToTag map[string]string) error {
+	fmt.Printf("\n读取 Swagger 文件: %s\n", swaggerFile)
+
+	// 读取文件
+	data, err := os.ReadFile(swaggerFile)
 	if err != nil {
-		fmt.Printf("读取文件失败: %v\n", err)
-		os.Exit(1)
+		return fmt.Errorf("读取文件失败: %v", err)
 	}
 
-	// 解析 YAML
+	// 解析YAML
 	var swagger map[string]interface{}
-	err = yaml.Unmarshal(data, &swagger)
-	if err != nil {
-		fmt.Printf("解析 YAML 失败: %v\n", err)
-		os.Exit(1)
+	if err := yaml.Unmarshal(data, &swagger); err != nil {
+		return fmt.Errorf("解析YAML失败: %v", err)
 	}
 
-	// 收集所有使用的 tags
+	// 收集实际使用的tags
 	usedTags := make(map[string]bool)
+	addedCount := 0
 
-	// 给每个 path 添加 tags
+	// 处理paths中的tags - 根据path前缀匹配tag
 	if paths, ok := swagger["paths"].(map[string]interface{}); ok {
-		for path, methods := range paths {
-			tag := getTagForPath(path)
-			usedTags[tag] = true
+		for pathStr, methods := range paths {
+			// 查找最长匹配的prefix
+			var matchedTag string
+			var maxPrefixLen int
 
-			if methodMap, ok := methods.(map[string]interface{}); ok {
-				for _, details := range methodMap {
-					if detailMap, ok := details.(map[string]interface{}); ok {
-						// 添加 tags 字段
-						detailMap["tags"] = []string{tag}
+			for prefix, tag := range prefixToTag {
+				if strings.HasPrefix(pathStr, prefix) && len(prefix) > maxPrefixLen {
+					matchedTag = tag
+					maxPrefixLen = len(prefix)
+				}
+			}
+
+			// 如果找到匹配的tag，添加到所有操作中
+			if matchedTag != "" {
+				if methodMap, ok := methods.(map[string]interface{}); ok {
+					for method, operation := range methodMap {
+						// 跳过非HTTP方法的键
+						if method == "parameters" {
+							continue
+						}
+
+						if opMap, ok := operation.(map[string]interface{}); ok {
+							// 添加tags（goctl不生成tags，所以我们直接添加）
+							opMap["tags"] = []interface{}{matchedTag}
+							usedTags[matchedTag] = true
+							addedCount++
+						}
 					}
 				}
 			}
 		}
 	}
 
-	// 在文件头部添加全局 tags 定义
+	// 创建tags定义列表
 	tagsList := make([]map[string]string, 0)
 	sortedTags := make([]string, 0, len(usedTags))
 	for tag := range usedTags {
@@ -126,75 +172,88 @@ func main() {
 	for _, tag := range sortedTags {
 		tagsList = append(tagsList, map[string]string{
 			"name":        tag,
-			"description": strings.ReplaceAll(tag, "/", " > "),
+			"description": tag,
 		})
 	}
 
+	// 添加或更新tags定义
 	swagger["tags"] = tagsList
 
-	// 添加更多元信息
-	if _, ok := swagger["info"]; !ok {
-		swagger["info"] = make(map[string]interface{})
+	// 更新info信息
+	if info, ok := swagger["info"].(map[string]interface{}); ok {
+		info["title"] = "AKATM Admin API"
+		info["description"] = "AKATM 后台管理系统 API 文档"
+		if _, ok := info["version"]; !ok {
+			info["version"] = "v1.0"
+		}
 	}
-
-	info := swagger["info"].(map[string]interface{})
-	info["title"] = "AKATM Admin API"
-	info["description"] = "AKATM 后台管理系统 API 文档\n\n目录结构：RPC名称/分类/对象"
-	info["version"] = "v1.0"
 
 	// 备份原文件
 	backupFile := swaggerFile + ".backup"
-	fmt.Printf("备份原文件到: %s\n", backupFile)
-
-	// 如果已存在备份，先删除
-	os.Remove(backupFile)
-
-	err = os.Rename(swaggerFile, backupFile)
-	if err != nil {
-		fmt.Printf("备份文件失败: %v\n", err)
-		os.Exit(1)
+	if err := os.Rename(swaggerFile, backupFile); err == nil {
+		fmt.Printf("✓ 已备份原文件到: %s\n", backupFile)
 	}
 
 	// 保存修改后的文件
-	fmt.Printf("保存修改后的文件: %s\n", swaggerFile)
-
 	output, err := yaml.Marshal(&swagger)
 	if err != nil {
-		fmt.Printf("生成 YAML 失败: %v\n", err)
-		os.Exit(1)
+		return fmt.Errorf("生成YAML失败: %v", err)
 	}
 
-	err = ioutil.WriteFile(swaggerFile, output, 0644)
-	if err != nil {
-		fmt.Printf("写入文件失败: %v\n", err)
-		os.Exit(1)
+	if err := os.WriteFile(swaggerFile, output, 0644); err != nil {
+		return fmt.Errorf("写入文件失败: %v", err)
 	}
 
-	fmt.Printf("\n完成! 共添加 %d 个标签:\n", len(usedTags))
+	fmt.Printf("\n✅ 完成！\n")
+	fmt.Printf("   - 添加了 %d 个接口的tags\n", addedCount)
+	fmt.Printf("   - 共 %d 个分类标签\n", len(usedTags))
+	fmt.Printf("\n标签列表:\n")
 
-	// 按层级分组显示
-	tagsByRPC := make(map[string][]string)
+	// 按RPC分组显示
+	tagsByPrefix := make(map[string][]string)
 	for tag := range usedTags {
-		parts := strings.Split(tag, "/")
-		rpc := "未知"
-		if len(parts) > 0 {
-			rpc = parts[0]
-		}
-		tagsByRPC[rpc] = append(tagsByRPC[rpc], tag)
+		prefix := strings.Split(tag, "-")[0]
+		tagsByPrefix[prefix] = append(tagsByPrefix[prefix], tag)
 	}
 
-	rpcs := make([]string, 0, len(tagsByRPC))
-	for rpc := range tagsByRPC {
-		rpcs = append(rpcs, rpc)
+	prefixes := make([]string, 0, len(tagsByPrefix))
+	for prefix := range tagsByPrefix {
+		prefixes = append(prefixes, prefix)
 	}
-	sort.Strings(rpcs)
+	sort.Strings(prefixes)
 
-	for _, rpc := range rpcs {
-		fmt.Printf("\n%s:\n", rpc)
-		tags := tagsByRPC[rpc]
+	for _, prefix := range prefixes {
+		fmt.Printf("\n【%s】\n", prefix)
+		tags := tagsByPrefix[prefix]
 		sort.Strings(tags)
 		for _, tag := range tags {
-			fmt.Printf("  %s\n", tag)
+			fmt.Printf("  • %s\n", tag)
 		}
 	}
+
+	return nil
+}
+
+func main() {
+	fmt.Println("🔧 Swagger Tags 修复工具")
+	fmt.Println("========================================")
+
+	// 扫描docs目录下的所有API文件
+	fmt.Println("\n📂 扫描 API 文件...")
+	groupToTag, prefixToTag, err := scanAPIFiles("docs")
+	if err != nil {
+		fmt.Printf("❌ 扫描API文件失败: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Printf("\n📊 找到 %d 个API定义\n", len(groupToTag))
+
+	// 处理swagger.yaml
+	fmt.Println("\n🔄 处理 Swagger 文件...")
+	if err := fixSwaggerTags("swagger.yaml", prefixToTag); err != nil {
+		fmt.Printf("❌ 处理失败: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Println("\n🎉 现在可以将 swagger.yaml 导入到 Apifox 了！")
 }

@@ -13,7 +13,7 @@ import "../../common/types.api"
     group: adminDashboard
     jwt: Auth
     middleware: SignCheck, JwtAuth
-    tags: "Admin-仪表盘"
+    tags: "Admin/系统/仪表盘"
 )
 service admin {
     @doc(
@@ -139,7 +139,7 @@ type (
 
     // 活跃用户数据
     TopUserData {
-        UserId int64 `json:"userId"` // 用户ID
+        CustomerId int64 `json:"customerId"` // 客户ID
         UserName string `json:"userName"` // 用户名
         UserType string `json:"userType"` // 用户类型
         ActivityCount int64 `json:"activityCount"` // 活动次数
@@ -205,18 +205,6 @@ type (
         Count int64 `json:"count"` // 交易数
     }
 
-    // 审核统计请求
-    GetAuditStatsReq {
-        TimeRange string `form:"timeRange,default=30d,optional"` // 时间范围
-        AuditType string `form:"auditType,optional"` // 审核类型筛选
-    }
-
-    // 审核统计响应
-    GetAuditStatsResp {
-        Code int32 `json:"code"` // 响应码
-        Message string `json:"message"` // 响应消息
-        Data AuditStatsData `json:"data"` // 数据
-    }
 
     // 审核统计数据
     AuditStatsData {
@@ -258,44 +246,6 @@ type (
         AverageProcessTime int64 `json:"averageProcessTime"` // 平均处理时间
     }
 
-    // 趋势图表请求
-    GetTrendChartsReq {
-        ChartType string `form:"chartType"` // 图表类型：user、fund、transaction、audit
-        TimeRange string `form:"timeRange,default=30d,optional"` // 时间范围
-        Granularity string `form:"granularity,default=day,optional"` // 粒度：hour、day、week、month
-    }
-
-    // 趋势图表响应
-    GetTrendChartsResp {
-        Code int32 `json:"code"` // 响应码
-        Message string `json:"message"` // 响应消息
-        Data TrendChartData `json:"data"` // 数据
-    }
-
-    // 趋势图表数据
-    TrendChartData {
-        ChartType string `json:"chartType"` // 图表类型
-        Title string `json:"title"` // 图表标题
-        XAxis []string `json:"xAxis"` // X轴数据
-        Series []ChartSeries `json:"series"` // 系列数据
-        Legend []string `json:"legend"` // 图例
-    }
-
-    // 图表系列
-    ChartSeries {
-        Name string `json:"name"` // 系列名称
-        Type string `json:"type"` // 图表类型：line、bar、pie
-        Data []interface{} `json:"data"` // 数据
-        Color string `json:"color"` // 颜色
-    }
-
-    // 实时监控响应
-    GetRealtimeMonitorResp {
-        Code int32 `json:"code"` // 响应码
-        Message string `json:"message"` // 响应消息
-        Data RealtimeMonitorData `json:"data"` // 数据
-    }
-
     // 实时监控数据
     RealtimeMonitorData {
         OnlineUsers int64 `json:"onlineUsers"` // 在线用户数
@@ -323,21 +273,6 @@ type (
         StatusCode int `json:"statusCode"` // 状态码
         ResponseTime int64 `json:"responseTime"` // 响应时间
         Timestamp int64 `json:"timestamp"` // 时间戳
-    }
-
-    // 告警信息请求
-    GetAlertsReq {
-        Level string `form:"level,optional"` // 告警级别筛选
-        Status string `form:"status,optional"` // 状态筛选：active、resolved
-        Page int64 `form:"page,default=1,optional"` // 页码
-        PageSize int64 `form:"pageSize,default=10,optional"` // 每页数量
-    }
-
-    // 告警信息响应
-    GetAlertsResp {
-        Code int32 `json:"code"` // 响应码
-        Message string `json:"message"` // 响应消息
-        Data AlertListData `json:"data"` // 数据
     }
 
     // 告警列表数据
@@ -372,20 +307,6 @@ type (
         ResolvedToday int64 `json:"resolvedToday"` // 今日解决数
     }
 
-    // 客户统计请求
-    GetCustomerStatsReq {
-        TimeRange string `form:"timeRange,default=30d,optional"` // 时间范围
-        CustomerType string `form:"customerType,optional"` // 客户类型筛选
-        KycStatus string `form:"kycStatus,optional"` // KYC状态筛选
-    }
-
-    // 客户统计响应
-    GetCustomerStatsResp {
-        Code int32 `json:"code"` // 响应码
-        Message string `json:"message"` // 响应消息
-        Data CustomerStatsData `json:"data"` // 数据
-    }
-
     // 客户统计数据
     CustomerStatsData {
         TotalCustomers int64 `json:"totalCustomers"` // 总客户数
@@ -415,19 +336,6 @@ type (
         AccountCount int64 `json:"accountCount"` // 账户数量
         TotalBalance string `json:"totalBalance"` // 总余额
         LastTransactionAt string `json:"lastTransactionAt"` // 最后交易时间
-    }
-
-    // KYC统计请求
-    GetKycStatsReq {
-        TimeRange string `form:"timeRange,default=30d,optional"` // 时间范围
-        CustomerType string `form:"customerType,optional"` // 客户类型筛选
-    }
-
-    // KYC统计响应
-    GetKycStatsResp {
-        Code int32 `json:"code"` // 响应码
-        Message string `json:"message"` // 响应消息
-        Data KycStatsData `json:"data"` // 数据
     }
 
     // KYC统计数据

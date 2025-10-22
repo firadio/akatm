@@ -11,7 +11,7 @@ import "../../common/types.api"
 @server(
     prefix: /api/admin/session
     group: adminSession
-    tags: "会话管理"
+    tags: "Admin/系统/会话管理"
 )
 service admin {
     @doc(
@@ -47,7 +47,7 @@ type (
     }
 
     StaffInfo {
-        StaffId int64 `json:"staffId"`            // 员工ID（雪花算法生成）
+        UserId int64 `json:"userId"`            // 用户ID（雪花算法生成）
         Name string `json:"name"`                 // 姓名
         Email string `json:"email"`               // 邮箱
         Status int32 `json:"status"`              // 状态 1-启用 0-禁用

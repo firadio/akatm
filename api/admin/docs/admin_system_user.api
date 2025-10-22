@@ -11,7 +11,7 @@ import "../../common/types.api"
 @server(
     prefix: /api/admin/system/user
     group: adminSystemUser
-    tags: "用户管理"
+    tags: "Admin/系统管理/用户"
 )
 service admin {
     @doc(

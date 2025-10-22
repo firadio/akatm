@@ -11,7 +11,7 @@ import "../../common/types.api"
 @server(
     prefix: /api/fams/bank/deposit
     group: famsBankDeposit
-    tags: "银行存款"
+    tags: "FAMS/银行/存款"
 )
 service admin {
     @doc(
@@ -59,7 +59,7 @@ type (
         Status string `form:"status,optional"` // 审核状态：pending-待审核, approved-已通过, rejected-已拒绝
         Currency string `form:"currency,optional"` // 币种筛选
         CustomerId int64 `form:"customerId,optional"` // 客户ID筛选
-        ManagerId int64 `form:"managerId,optional"` // 客户经理ID筛选
+        CustomerId int64 `form:"customerId,optional"` // 客户ID筛选
         AuditorId int64 `form:"auditorId,optional"` // 审核人ID筛选
         
         // 金额范围筛选
@@ -80,7 +80,7 @@ type (
         CustomerName string `json:"customerName"` // 客户姓名
         CustomerEmail string `json:"customerEmail"` // 客户邮箱
         CustomerPhone string `json:"customerPhone"` // 客户电话
-        ManagerId int64 `json:"managerId"` // 客户经理ID
+        CustomerId int64 `json:"customerId"` // 客户ID
         ManagerName string `json:"managerName"` // 客户经理姓名
         ManagerLevel string `json:"managerLevel"` // 客户经理层级
         BankAccountId int64 `json:"bankAccountId"` // 银行账户ID
@@ -128,7 +128,7 @@ type (
         CustomerPhone string `json:"customerPhone"` // 客户电话
         CustomerType string `json:"customerType"` // 客户类型：individual-个人, enterprise-企业
         CustomerKycStatus string `json:"customerKycStatus"` // 客户KYC状态
-        ManagerId int64 `json:"managerId"` // 客户经理ID
+        CustomerId int64 `json:"customerId"` // 客户ID
         ManagerName string `json:"managerName"` // 客户经理姓名
         ManagerLevel string `json:"managerLevel"` // 客户经理层级
         ManagerEmail string `json:"managerEmail"` // 客户经理邮箱

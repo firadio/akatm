@@ -11,7 +11,7 @@ import "../../common/types.api"
 @server(
     prefix: /api/iam/user
     group: iamUser
-    tags: "代理管理"
+    tags: "IAM/用户"
 )
 service admin {
     @doc(
@@ -145,7 +145,7 @@ type (
         Status int32 `form:"status,optional"` // 状态筛选：1-启用, 0-禁用
         ParentId int64 `form:"parentId,optional"` // 父级用户ID筛选
         ParentTree string `form:"parentTree,optional"` // 父级用户树筛选
-        StaffId int64 `form:"staffId,optional"` // 员工ID筛选（客户经理）
+        UserId int64 `form:"customerId,optional"` // 客户ID筛选（客户经理）
         InviteCode string `form:"inviteCode,optional"` // 邀请码筛选
         StartTime int64 `form:"startTime,optional"` // 创建开始时间（毫秒级时间戳）
         EndTime int64 `form:"endTime,optional"` // 创建结束时间（毫秒级时间戳）
@@ -168,7 +168,7 @@ type (
         ParentTree string `json:"parentTree"` // 父级用户树
         Email string `json:"email"` // 主邮箱
         InviteCode string `json:"inviteCode"` // 邀请码
-        StaffId int64 `json:"staffId"` // 员工ID（客户经理）
+        UserId int64 `json:"userId"` // 用户ID（客户经理）
         StaffName string `json:"staffName"` // 员工姓名（客户经理）
         ExchangeFeeRate string `json:"exchangeFeeRate"` // 换汇手续费率
         WithdrawFee string `json:"withdrawFee"` // 提现手续费
@@ -247,7 +247,7 @@ type (
     // 用户资料
     IamUserProfile {
         Id int64 `json:"id"` // 资料ID
-        UserId int64 `json:"userId"` // 用户ID
+        CustomerId int64 `json:"customerId"` // 客户ID
         Nickname string `json:"nickname"` // 昵称
         AvatarURL string `json:"avatarUrl"` // 头像URL
         ExtraInfo string `json:"extraInfo,optional"` // 扩展信息（JSON）
@@ -258,7 +258,7 @@ type (
     // 用户邮箱
     IamUserEmail {
         Id int64 `json:"id"` // 邮箱ID
-        UserId int64 `json:"userId"` // 用户ID
+        CustomerId int64 `json:"customerId"` // 客户ID
         Email string `json:"email"` // 邮箱地址
         IsPrimary bool `json:"isPrimary"` // 是否主邮箱
         CreatedAt string `json:"createdAt"` // 创建时间

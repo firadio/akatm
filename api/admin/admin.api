@@ -28,7 +28,7 @@ import "docs/admin_system_audit.api"
 // ==================== IAM RPC ====================
 // 用户管理
 import "docs/iam_user.api"
-import "docs/iam_user_invite.api"
+import "docs/iam_invite.api"
 
 // ==================== FAMS RPC ====================
 // 用户钱包
@@ -39,7 +39,13 @@ import "docs/fams_bank_customer.api"
 import "docs/fams_bank_account.api"
 import "docs/fams_bank_account_application.api"
 import "docs/fams_bank_deposit.api"
-import "docs/fams_bank_withdrawal.api"
+
+// 用户提现
+import "docs/fams_user_withdrawal.api"
 
 // 代理收益
-import "docs/fams_agent_earnings.api"
+import "docs/fams_agent_income.api"
+
+// 报表
+import "docs/fams_user_report.api"
+import "docs/fams_agent_report.api"

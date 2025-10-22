@@ -11,7 +11,7 @@ import "../../common/types.api"
 @server(
     prefix: /api/fams/bank/customer
     group: famsBankCustomer
-    tags: "客户管理"
+    tags: "FAMS/银行/客户"
 )
 service admin {
     @doc(
@@ -52,7 +52,7 @@ service admin {
         id: "admin.customer.accountDetail"
     )
     @handler getCustomerAccount
-    get /:customerId/accounts/:accountId (GetCustomerAccountReq) returns (GetCustomerAccountResp)
+    get /:userId/accounts/:accountId (GetCustomerAccountReq) returns (GetCustomerAccountResp)
 
     @doc(
         summary: "更新KYC状态"
@@ -155,7 +155,7 @@ type (
         // 筛选条件
         CustomerType string `form:"customerType,optional"` // 客户类型：individual-个人, enterprise-企业
         KycStatus string `form:"kycStatus,optional"` // KYC状态：pending-待审核, verified-已认证, rejected-已拒绝
-        ManagerId int64 `form:"managerId,optional"` // 客户经理ID筛选
+        CustomerId int64 `form:"customerId,optional"` // 客户ID筛选
         
         // 时间范围筛选
         StartTime int64 `form:"startTime,optional"` // 创建开始时间（毫秒级时间戳）（时间戳）
@@ -173,7 +173,7 @@ type (
         BusinessLicense string `json:"businessLicense"` // 营业执照（企业）
         CustomerType string `json:"customerType"` // 客户类型：individual-个人, enterprise-企业
         KycStatus string `json:"kycStatus"` // KYC状态：pending-待审核, verified-已认证, rejected-已拒绝
-        ManagerId int64 `json:"managerId"` // 客户经理ID
+        CustomerId int64 `json:"customerId"` // 客户ID
         ManagerName string `json:"managerName"` // 客户经理姓名
         UserId int64 `json:"userId"` // 关联用户ID
         Note string `json:"note"` // 备注
@@ -212,7 +212,7 @@ type (
         KycStatus string `json:"kycStatus"` // KYC状态：pending-待审核, verified-已认证, rejected-已拒绝
         KycVerifiedAt string `json:"kycVerifiedAt"` // KYC认证时间
         KycDocuments string `json:"kycDocuments"` // KYC文档（JSON格式）
-        ManagerId int64 `json:"managerId"` // 客户经理ID
+        CustomerId int64 `json:"customerId"` // 客户ID
         ManagerName string `json:"managerName"` // 客户经理姓名
         ManagerLevel string `json:"managerLevel"` // 客户经理层级
         UserId int64 `json:"userId"` // 关联用户ID
@@ -237,7 +237,7 @@ type (
         CustomerType string `json:"customerType,optional"` // 客户类型：individual-个人, enterprise-企业
         KycStatus string `json:"kycStatus,optional"` // KYC状态：pending-待审核, verified-已认证, rejected-已拒绝
         KycDocuments string `json:"kycDocuments,optional"` // KYC文档（JSON格式）
-        ManagerId int64 `json:"managerId,optional"` // 客户经理ID
+        UserId int64 `json:"userId,optional"` // 用户ID
         Note string `json:"note,optional"` // 备注
     }
 
@@ -257,7 +257,7 @@ type (
         Balance string `json:"balance"` // 账户余额
         AvailableBalance string `json:"availableBalance"` // 可用余额
         FrozenBalance string `json:"frozenBalance"` // 冻结余额
-        ManagerId int64 `json:"managerId"` // 客户经理ID
+        CustomerId int64 `json:"customerId"` // 客户ID
         ManagerName string `json:"managerName"` // 客户经理姓名
         ManagerLevel string `json:"managerLevel"` // 客户经理层级
         UserId int64 `json:"userId"` // 关联用户ID
@@ -272,7 +272,7 @@ type (
 
     // 获取客户账户详情请求
     GetCustomerAccountReq {
-        CustomerId int64 `path:"customerId"` // 客户ID
+        UserId int64 `path:"userId"` // 用户ID
         AccountId int64 `path:"accountId"` // 账户ID
     }
 
@@ -293,7 +293,7 @@ type (
         Balance string `json:"balance"` // 账户余额
         AvailableBalance string `json:"availableBalance"` // 可用余额
         FrozenBalance string `json:"frozenBalance"` // 冻结余额
-        ManagerId int64 `json:"managerId"` // 客户经理ID
+        CustomerId int64 `json:"customerId"` // 客户ID
         ManagerName string `json:"managerName"` // 客户经理姓名
         ManagerLevel string `json:"managerLevel"` // 客户经理层级
         UserId int64 `json:"userId"` // 关联用户ID
@@ -318,7 +318,7 @@ type (
 
     // 更新KYC状态请求
     UpdateCustomerKycStatusReq {
-        Id int64 `path:"id"` // 客户ID
+        Id int64 `path:"id"` // 用户ID
         KycStatus string `json:"kycStatus"` // KYC状态：pending-待审核, verified-已认证, rejected-已拒绝
         KycDocuments string `json:"kycDocuments,optional"` // KYC文档（JSON格式）
         Reason string `json:"reason,optional"` // 状态变更原因
@@ -326,7 +326,7 @@ type (
 
     // KYC审核请求
     AuditCustomerKycReq {
-        Id int64 `path:"id"` // 客户ID
+        Id int64 `path:"id"` // 用户ID
         AuditResult string `json:"auditResult"` // 审核结果：approved-通过, rejected-拒绝
         AuditNote string `json:"auditNote"` // 审核意见
         KycDocuments string `json:"kycDocuments,optional"` // 更新的KYC文档
@@ -339,7 +339,7 @@ type (
         PageSize int64 `form:"pageSize,default=10,optional"` // 每页数量
         Keyword string `form:"keyword,optional"` // 标签名称搜索
         Status int32 `form:"status,optional"` // 状态筛选：1-启用, 0-禁用
-        ManagerId int64 `form:"managerId,optional"` // 客户经理ID筛选（可选）
+        CustomerId int64 `form:"customerId,optional"` // 客户ID筛选（可选）
     }
 
     // 客户标签列表响应
@@ -398,14 +398,14 @@ type (
 
     // 为客户添加标签请求
     AddCustomerTagsReq {
-        Id int64 `path:"id"` // 客户ID
+        Id int64 `path:"id"` // 用户ID
         TagIds []int64 `json:"tagIds"` // 标签ID列表
         Reason string `json:"reason,optional"` // 添加原因
     }
 
     // 移除客户标签请求
     RemoveCustomerTagsReq {
-        Id int64 `path:"id"` // 客户ID
+        Id int64 `path:"id"` // 用户ID
         TagIds []int64 `json:"tagIds"` // 标签ID列表
         Reason string `json:"reason,optional"` // 移除原因
     }
@@ -435,7 +435,7 @@ type (
     SearchCustomerTagsReq {
         Keyword string `form:"keyword,optional"` // 搜索关键词
         Limit int64 `form:"limit,default=20,optional"` // 返回数量限制
-        ManagerId int64 `form:"managerId,optional"` // 客户经理ID筛选
+        CustomerId int64 `form:"customerId,optional"` // 客户ID筛选
         ExcludeTagIds []int64 `form:"excludeTagIds,optional"` // 排除的标签ID列表
     }
 
@@ -460,7 +460,7 @@ type (
 
     // 获取标签使用统计请求
     GetCustomerTagStatsReq {
-        ManagerId int64 `form:"managerId,optional"` // 客户经理ID筛选
+        CustomerId int64 `form:"customerId,optional"` // 客户ID筛选
         StartTime int64 `form:"startTime,optional"` // 开始时间（毫秒级时间戳）
         EndTime int64 `form:"endTime,optional"` // 结束时间（毫秒级时间戳）
     }
@@ -495,7 +495,7 @@ type (
 
     // 客户经理标签统计
     ManagerTagStat {
-        ManagerId int64 `json:"managerId"` // 客户经理ID
+        CustomerId int64 `json:"customerId"` // 客户ID
         ManagerName string `json:"managerName"` // 客户经理姓名
         CreatedTags int64 `json:"createdTags"` // 创建的标签数
         UsedTags int64 `json:"usedTags"` // 使用的标签数

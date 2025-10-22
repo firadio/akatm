@@ -9,15 +9,15 @@ info(
 import "../../common/types.api"
 
 @server(
-    prefix: /api/fams/bank/withdrawal
-    group: famsBankWithdrawal
-    tags: "银行提现"
+    prefix: /api/fams/user/withdrawal
+    group: famsUserWithdrawal
+    tags: "FAMS/用户/提现"
 )
 service admin {
     @doc(
         summary: "提现审核列表"
         description: "分页查看提现审核列表"
-        id: "admin.audit.withdrawal.list"
+        id: "fams.withdrawal.list"
     )
     @handler listWithdrawals
     get / (ListWithdrawalsReq) returns (ListWithdrawalsResp)
@@ -25,7 +25,7 @@ service admin {
     @doc(
         summary: "提现审核详情"
         description: "查看提现审核详情"
-        id: "admin.audit.withdrawal.detail"
+        id: "fams.withdrawal.detail"
     )
     @handler getWithdrawal
     get /:id (IdReq) returns (GetWithdrawalResp)
@@ -33,7 +33,7 @@ service admin {
     @doc(
         summary: "审核通过"
         description: "提现审核通过，扣减冻结余额并下发出金指令"
-        id: "admin.audit.withdrawal.approve"
+        id: "fams.withdrawal.approve"
     )
     @handler approveWithdrawal
     post /:id/approve (ApproveWithdrawalReq) returns (BaseResp)
@@ -41,7 +41,7 @@ service admin {
     @doc(
         summary: "审核拒绝"
         description: "提现审核拒绝，解冻返还余额"
-        id: "admin.audit.withdrawal.reject"
+        id: "fams.withdrawal.reject"
     )
     @handler rejectWithdrawal
     post /:id/reject (RejectWithdrawalReq) returns (BaseResp)
@@ -49,7 +49,7 @@ service admin {
     @doc(
         summary: "批量审核通过"
         description: "批量审量通过多个提现申请"
-        id: "admin.audit.withdrawal.batchApprove"
+        id: "fams.withdrawal.batchApprove"
     )
     @handler batchApproveWithdrawals
     post /batch-approve (BatchApproveWithdrawalsReq) returns (BaseResp)
@@ -57,7 +57,7 @@ service admin {
     @doc(
         summary: "批量审核拒绝"
         description: "批量审核拒绝多个提现申请"
-        id: "admin.audit.withdrawal.batchReject"
+        id: "fams.withdrawal.batchReject"
     )
     @handler batchRejectWithdrawals
     post /batch-reject (BatchRejectWithdrawalsReq) returns (BaseResp)
@@ -65,7 +65,7 @@ service admin {
     @doc(
         summary: "提现统计"
         description: "获取提现统计数据"
-        id: "admin.audit.withdrawal.stats"
+        id: "fams.withdrawal.stats"
     )
     @handler getWithdrawalStats
     get /stats (GetWithdrawalStatsReq) returns (GetWithdrawalStatsResp)
@@ -78,7 +78,7 @@ type (
         Keyword string `form:"keyword,optional"` // 关键词搜索（提现单号、客户邮箱、客户经理邮箱）
         Status string `form:"status,optional"` // 状态筛选：Requested-待审核, UnderReview-审核中, Approved-已通过, Rejected-已拒绝, Settled-已完成
         CustomerId int64 `form:"customerId,optional"` // 客户ID筛选
-        ManagerId int64 `form:"managerId,optional"` // 客户经理ID筛选
+        CustomerId int64 `form:"customerId,optional"` // 客户ID筛选
         AuditorId int64 `form:"auditorId,optional"` // 审核人ID筛选
         Symbol string `form:"symbol,optional"` // 币种筛选
         MinAmount string `form:"minAmount,optional"` // 最小金额
@@ -96,7 +96,7 @@ type (
         CustomerName string `json:"customerName"` // 客户姓名
         CustomerEmail string `json:"customerEmail"` // 客户邮箱
         CustomerPhone string `json:"customerPhone"` // 客户电话
-        ManagerId int64 `json:"managerId"` // 客户经理ID
+        CustomerId int64 `json:"customerId"` // 客户ID
         ManagerName string `json:"managerName"` // 客户经理姓名
         ManagerLevel string `json:"managerLevel"` // 客户经理级别
         UserWalletId int64 `json:"userWalletId"` // 用户钱包ID
@@ -143,7 +143,7 @@ type (
         CustomerName string `json:"customerName"` // 客户姓名
         CustomerEmail string `json:"customerEmail"` // 客户邮箱
         CustomerPhone string `json:"customerPhone"` // 客户电话
-        ManagerId int64 `json:"managerId"` // 客户经理ID
+        CustomerId int64 `json:"customerId"` // 客户ID
         ManagerName string `json:"managerName"` // 客户经理姓名
         ManagerLevel string `json:"managerLevel"` // 客户经理级别
         UserWalletId int64 `json:"userWalletId"` // 用户钱包ID
@@ -195,7 +195,7 @@ type (
         StartTime int64 `form:"startTime,optional"` // 开始时间（毫秒级时间戳）
         EndTime int64 `form:"endTime,optional"` // 结束时间（毫秒级时间戳）
         Symbol string `form:"symbol,optional"` // 币种筛选
-        ManagerId int64 `form:"managerId,optional"` // 客户经理ID筛选
+        CustomerId int64 `form:"customerId,optional"` // 客户ID筛选
     }
 
     // 获取提现统计响应
