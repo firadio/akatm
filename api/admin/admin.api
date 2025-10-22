@@ -37,7 +37,7 @@ import "docs/fams_user_wallet.api"
 // 银行管理
 import "docs/fams_bank_customer.api"
 import "docs/fams_bank_account.api"
-import "docs/fams_bank_account_application.api"
+import "docs/fams_bank_account-application.api"
 import "docs/fams_bank_deposit.api"
 
 // 用户提现

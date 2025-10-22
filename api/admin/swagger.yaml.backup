@@ -8663,6 +8663,659 @@ paths:
             type: object
       schemes:
       - https
+  /api/fams/bank/account-application/:
+    get:
+      operationId: listApplications
+      parameters:
+      - allowEmptyValue: true
+        default: 1
+        description: 页码
+        in: query
+        name: page
+        type: integer
+      - allowEmptyValue: true
+        default: 10
+        description: 每页数量
+        in: query
+        name: pageSize
+        type: integer
+      - allowEmptyValue: true
+        description: 申请状态：pending-待审核, approved-已通过, rejected-已拒绝
+        in: query
+        name: status
+        type: string
+      - allowEmptyValue: true
+        description: 币种筛选
+        in: query
+        name: currency
+        type: string
+      - allowEmptyValue: true
+        description: 客户ID筛选
+        in: query
+        name: customerId
+        type: integer
+      - allowEmptyValue: true
+        description: 用户ID筛选
+        in: query
+        name: userId
+        type: integer
+      - allowEmptyValue: true
+        description: 客户类型：individual-个人, enterprise-企业
+        in: query
+        name: customerType
+        type: string
+      - allowEmptyValue: true
+        description: 关键词（申请单号、客户名、邮箱）
+        in: query
+        name: keyword
+        type: string
+      - allowEmptyValue: true
+        description: 开始时间（毫秒级时间戳）
+        in: query
+        name: startTime
+        type: integer
+      - allowEmptyValue: true
+        description: 结束时间（毫秒级时间戳）
+        in: query
+        name: endTime
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+          schema:
+            properties:
+              code:
+                description: 响应码
+                type: integer
+              data:
+                description: 数据
+                properties:
+                  list:
+                    description: 列表
+                    items:
+                      properties:
+                        accountType:
+                          description: 账户类型：savings-储蓄, current-活期
+                          type: string
+                        applicationNumber:
+                          description: 申请单号
+                          type: string
+                        auditTime:
+                          description: 审核时间（毫秒级时间戳）
+                          type: integer
+                        auditorId:
+                          description: 审核人ID
+                          type: integer
+                        auditorName:
+                          description: 审核人姓名
+                          type: string
+                        createdAt:
+                          description: 创建时间
+                          type: string
+                        currency:
+                          description: 申请币种
+                          type: string
+                        customerEmail:
+                          description: 客户邮箱
+                          type: string
+                        customerId:
+                          description: 客户ID
+                          type: integer
+                        customerName:
+                          description: 客户姓名
+                          type: string
+                        customerType:
+                          description: 客户类型：individual-个人, enterprise-企业
+                          type: string
+                        customerTypeText:
+                          description: 客户类型文本
+                          type: string
+                        id:
+                          description: 申请ID
+                          type: integer
+                        status:
+                          description: 申请状态：pending-待审核, approved-已通过, rejected-已拒绝
+                          type: string
+                        statusText:
+                          description: 状态文本
+                          type: string
+                        updatedAt:
+                          description: 更新时间
+                          type: string
+                        userEmail:
+                          description: 用户邮箱
+                          type: string
+                        userId:
+                          description: 用户ID
+                          type: integer
+                        userName:
+                          description: 用户姓名
+                          type: string
+                        userType:
+                          description: 用户类型：super_agent-总代, agent-代理, manager-客户经理
+                          type: string
+                      required:
+                      - id
+                      - applicationNumber
+                      - customerId
+                      - customerName
+                      - customerEmail
+                      - customerType
+                      - customerTypeText
+                      - userId
+                      - userEmail
+                      - userName
+                      - userType
+                      - currency
+                      - accountType
+                      - status
+                      - statusText
+                      - createdAt
+                      - updatedAt
+                      type: object
+                    type: array
+                  total:
+                    description: 总记录数
+                    type: integer
+                required:
+                - total
+                - list
+                type: object
+              message:
+                description: 响应消息
+                type: string
+            type: object
+      schemes:
+      - https
+  /api/fams/bank/account-application/{id}:
+    get:
+      operationId: getApplication
+      parameters:
+      - description: 资源ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+          schema:
+            properties:
+              code:
+                description: 响应码
+                type: integer
+              data:
+                description: 数据
+                properties:
+                  accountId:
+                    description: 创建的账户ID
+                    type: integer
+                  accountNumber:
+                    description: 创建的账户号
+                    type: string
+                  accountType:
+                    description: 账户类型：savings-储蓄, current-活期
+                    type: string
+                  accountTypeText:
+                    description: 账户类型文本
+                    type: string
+                  applicationNumber:
+                    description: 申请单号
+                    type: string
+                  auditNote:
+                    description: 审核意见
+                    type: string
+                  auditTime:
+                    description: 审核时间（毫秒级时间戳）
+                    type: integer
+                  auditorId:
+                    description: 审核人ID
+                    type: integer
+                  auditorName:
+                    description: 审核人姓名
+                    type: string
+                  createdAt:
+                    description: 创建时间
+                    type: string
+                  currency:
+                    description: 申请币种
+                    type: string
+                  customerAddress:
+                    description: 客户地址
+                    type: string
+                  customerBusinessLicense:
+                    description: 营业执照号（企业）
+                    type: string
+                  customerEmail:
+                    description: 客户邮箱
+                    type: string
+                  customerId:
+                    description: 客户ID
+                    type: integer
+                  customerIdNumber:
+                    description: 客户证件号
+                    type: string
+                  customerName:
+                    description: 客户姓名
+                    type: string
+                  customerPhone:
+                    description: 客户电话
+                    type: string
+                  customerType:
+                    description: 客户类型：individual-个人, enterprise-企业
+                    type: string
+                  customerTypeText:
+                    description: 客户类型文本
+                    type: string
+                  id:
+                    description: 申请ID
+                    type: integer
+                  materials:
+                    description: 申请材料
+                    properties:
+                      bankStatement:
+                        description: 银行流水
+                        type: string
+                      businessLicense:
+                        description: 营业执照（企业）
+                        type: string
+                      idCardBack:
+                        description: 身份证背面
+                        type: string
+                      idCardFront:
+                        description: 身份证正面
+                        type: string
+                      other:
+                        description: 其他材料
+                        items:
+                          type: string
+                        type: array
+                      proofOfAddress:
+                        description: 地址证明
+                        type: string
+                    required:
+                    - idCardFront
+                    - idCardBack
+                    type: object
+                  note:
+                    description: 备注
+                    type: string
+                  requestedAccountNumber:
+                    description: 申请的账户号（可选）
+                    type: string
+                  status:
+                    description: 申请状态：pending-待审核, approved-已通过, rejected-已拒绝
+                    type: string
+                  statusText:
+                    description: 状态文本
+                    type: string
+                  updatedAt:
+                    description: 更新时间
+                    type: string
+                  userEmail:
+                    description: 用户邮箱
+                    type: string
+                  userId:
+                    description: 用户ID
+                    type: integer
+                  userName:
+                    description: 用户姓名
+                    type: string
+                  userType:
+                    description: 用户类型：super_agent-总代, agent-代理, manager-客户经理
+                    type: string
+                  userTypeText:
+                    description: 用户类型文本
+                    type: string
+                required:
+                - id
+                - applicationNumber
+                - customerId
+                - customerName
+                - customerEmail
+                - customerPhone
+                - customerAddress
+                - customerIdNumber
+                - customerType
+                - customerTypeText
+                - userId
+                - userEmail
+                - userName
+                - userType
+                - userTypeText
+                - currency
+                - accountType
+                - accountTypeText
+                - materials
+                - status
+                - statusText
+                - createdAt
+                - updatedAt
+                type: object
+              message:
+                description: 响应消息
+                type: string
+            type: object
+      schemes:
+      - https
+  /api/fams/bank/account-application/{id}/approve:
+    post:
+      consumes:
+      - application/json
+      operationId: approveApplication
+      parameters:
+      - description: 申请ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            accountNumber:
+              description: 账户号（不填则自动生成）
+              type: string
+            note:
+              description: 审核备注
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+          schema:
+            properties:
+              code:
+                description: 响应码 0-成功 非0-失败
+                type: integer
+              message:
+                description: 响应消息
+                type: string
+            type: object
+      schemes:
+      - https
+  /api/fams/bank/account-application/{id}/reject:
+    post:
+      consumes:
+      - application/json
+      operationId: rejectApplication
+      parameters:
+      - description: 申请ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            note:
+              description: 审核备注
+              type: string
+            reason:
+              description: 拒绝原因
+              type: string
+          required:
+          - reason
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+          schema:
+            properties:
+              code:
+                description: 响应码 0-成功 非0-失败
+                type: integer
+              message:
+                description: 响应消息
+                type: string
+            type: object
+      schemes:
+      - https
+  /api/fams/bank/account-application/batch-audit:
+    post:
+      consumes:
+      - application/json
+      operationId: batchAudit
+      parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            action:
+              description: 操作：approve-通过, reject-拒绝
+              type: string
+            applicationIds:
+              description: 申请ID列表
+              items:
+                type: integer
+              type: array
+            note:
+              description: 批量审核备注
+              type: string
+            reason:
+              description: 拒绝原因（拒绝时必填）
+              type: string
+          required:
+          - applicationIds
+          - action
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+          schema:
+            properties:
+              code:
+                description: 响应码 0-成功 非0-失败
+                type: integer
+              message:
+                description: 响应消息
+                type: string
+            type: object
+      schemes:
+      - https
+  /api/fams/bank/account-application/stats:
+    get:
+      operationId: getStats
+      parameters:
+      - allowEmptyValue: true
+        description: 开始时间（毫秒级时间戳）
+        in: query
+        name: startTime
+        type: integer
+      - allowEmptyValue: true
+        description: 结束时间（毫秒级时间戳）
+        in: query
+        name: endTime
+        type: integer
+      - allowEmptyValue: true
+        description: 币种筛选
+        in: query
+        name: currency
+        type: string
+      - allowEmptyValue: true
+        description: 客户类型筛选
+        in: query
+        name: customerType
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+          schema:
+            properties:
+              code:
+                description: 响应码
+                type: integer
+              data:
+                description: 数据
+                properties:
+                  approvalRate:
+                    description: 通过率
+                    type: string
+                  approvedCount:
+                    description: 已通过数量
+                    type: integer
+                  averageProcessTime:
+                    description: 平均处理时间（分钟）
+                    type: integer
+                  currencyStats:
+                    description: 币种统计
+                    items:
+                      properties:
+                        currency:
+                          description: 币种
+                          type: string
+                        depositAmount:
+                          description: 存款金额
+                          type: string
+                        feeAmount:
+                          description: 手续费金额
+                          type: string
+                        transactionCount:
+                          description: 交易笔数
+                          type: integer
+                        withdrawalAmount:
+                          description: 提现金额
+                          type: string
+                      required:
+                      - currency
+                      - depositAmount
+                      - withdrawalAmount
+                      - feeAmount
+                      - transactionCount
+                      type: object
+                    type: array
+                  customerTypeStats:
+                    description: 客户类型统计
+                    items:
+                      properties:
+                        count:
+                          description: 数量
+                          type: integer
+                        customerType:
+                          description: 客户类型
+                          type: string
+                        customerTypeText:
+                          description: 客户类型文本
+                          type: string
+                        percentage:
+                          description: 百分比
+                          type: string
+                      required:
+                      - customerType
+                      - customerTypeText
+                      - count
+                      - percentage
+                      type: object
+                    type: array
+                  dailyStats:
+                    description: 每日统计
+                    items:
+                      properties:
+                        amount:
+                          description: 金额（decimal字符串）
+                          type: string
+                        count:
+                          description: 数量
+                          type: integer
+                        date:
+                          description: 日期（YYYY-MM-DD）
+                          type: string
+                      required:
+                      - date
+                      - count
+                      - amount
+                      type: object
+                    type: array
+                  monthlyStats:
+                    description: 月度统计
+                    items:
+                      properties:
+                        amount:
+                          description: 金额（decimal字符串）
+                          type: string
+                        count:
+                          description: 数量
+                          type: integer
+                        month:
+                          description: 月份
+                          type: integer
+                        year:
+                          description: 年份
+                          type: integer
+                      required:
+                      - year
+                      - month
+                      - count
+                      - amount
+                      type: object
+                    type: array
+                  pendingCount:
+                    description: 待审核数量
+                    type: integer
+                  rejectedCount:
+                    description: 已拒绝数量
+                    type: integer
+                  statusStats:
+                    description: 状态统计
+                    items:
+                      properties:
+                        count:
+                          description: 数量
+                          type: integer
+                        percentage:
+                          description: 百分比
+                          type: string
+                        status:
+                          description: 状态
+                          type: string
+                        statusText:
+                          description: 状态文本
+                          type: string
+                      required:
+                      - status
+                      - statusText
+                      - count
+                      - percentage
+                      type: object
+                    type: array
+                  totalCount:
+                    description: 总申请数
+                    type: integer
+                required:
+                - totalCount
+                - pendingCount
+                - approvedCount
+                - rejectedCount
+                - approvalRate
+                - averageProcessTime
+                - statusStats
+                - currencyStats
+                - customerTypeStats
+                - dailyStats
+                - monthlyStats
+                type: object
+              message:
+                description: 响应消息
+                type: string
+            type: object
+      schemes:
+      - https
   /api/fams/bank/account/:
     get:
       operationId: listAccounts
@@ -9395,811 +10048,6 @@ paths:
                 required:
                 - total
                 - list
-                type: object
-              message:
-                description: 响应消息
-                type: string
-            type: object
-      schemes:
-      - https
-  /api/fams/bank/account/application/:
-    get:
-      operationId: listAccountApplications
-      parameters:
-      - allowEmptyValue: true
-        default: 1
-        description: 页码
-        in: query
-        name: page
-        type: integer
-      - allowEmptyValue: true
-        default: 10
-        description: 每页数量
-        in: query
-        name: pageSize
-        type: integer
-      - allowEmptyValue: true
-        description: 申请状态：Draft-草稿, Submitted-已提交, UnderReview-审核中, Approved-已通过,
-          Rejected-已拒绝
-        in: query
-        name: status
-        type: string
-      - allowEmptyValue: true
-        description: 申请状态（数字）：0-待审核 1-通过 2-拒绝（兼容旧版本）
-        in: query
-        name: applicationStatus
-        type: integer
-      - allowEmptyValue: true
-        description: 客户ID筛选
-        in: query
-        name: customerId
-        type: integer
-      - allowEmptyValue: true
-        description: 客户ID筛选
-        in: query
-        name: customerId
-        type: integer
-      - allowEmptyValue: true
-        description: 客户ID筛选
-        in: query
-        name: customerId
-        type: integer
-      - allowEmptyValue: true
-        description: 审核人ID筛选
-        in: query
-        name: auditorId
-        type: integer
-      - allowEmptyValue: true
-        description: 关键词搜索（申请单号、客户姓名、客户邮箱、审核人姓名）
-        in: query
-        name: keyword
-        type: string
-      - allowEmptyValue: true
-        description: 申请开始时间（时间戳）
-        in: query
-        name: applicationTimeStart
-        type: string
-      - allowEmptyValue: true
-        description: 申请结束时间（时间戳）
-        in: query
-        name: applicationTimeEnd
-        type: string
-      - allowEmptyValue: true
-        description: 审核开始时间（时间戳）
-        in: query
-        name: auditTimeStart
-        type: string
-      - allowEmptyValue: true
-        description: 审核结束时间（时间戳）
-        in: query
-        name: auditTimeEnd
-        type: string
-      - allowEmptyValue: true
-        description: 审核结果筛选：Approved-通过, Rejected-拒绝
-        in: query
-        name: auditResult
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: ""
-          schema:
-            properties:
-              code:
-                description: 响应码
-                type: integer
-              data:
-                description: 数据
-                properties:
-                  list:
-                    description: 列表
-                    items:
-                      properties:
-                        applicationNumber:
-                          description: 申请单号
-                          type: string
-                        applicationTime:
-                          description: 申请时间（毫秒级时间戳）
-                          type: integer
-                        auditNote:
-                          description: 审核意见
-                          type: string
-                        auditResult:
-                          description: 审核结果
-                          type: string
-                        auditTime:
-                          description: 审核时间（毫秒级时间戳）
-                          type: integer
-                        auditorId:
-                          description: 审核人ID
-                          type: integer
-                        auditorName:
-                          description: 审核人姓名
-                          type: string
-                        createdAt:
-                          description: 创建时间
-                          type: string
-                        customerEmail:
-                          description: 客户邮箱
-                          type: string
-                        customerId:
-                          description: 客户ID
-                          type: integer
-                        customerName:
-                          description: 客户姓名
-                          type: string
-                        customerPhone:
-                          description: 客户电话
-                          type: string
-                        id:
-                          description: ID
-                          type: integer
-                        managerLevel:
-                          description: 客户经理层级
-                          type: string
-                        managerName:
-                          description: 客户经理姓名
-                          type: string
-                        materials:
-                          description: 申请材料（JSON格式）
-                          type: string
-                        note:
-                          description: 备注
-                          type: string
-                        status:
-                          description: 申请状态：Draft-草稿, Submitted-已提交, UnderReview-审核中,
-                            Approved-已通过, Rejected-已拒绝
-                          type: string
-                        statusText:
-                          description: 状态文本
-                          type: string
-                        updatedAt:
-                          description: 更新时间
-                          type: string
-                      required:
-                      - id
-                      - applicationNumber
-                      - customerId
-                      - customerName
-                      - customerEmail
-                      - customerPhone
-                      - customerId
-                      - customerId
-                      - managerName
-                      - managerLevel
-                      - status
-                      - statusText
-                      - materials
-                      - applicationTime
-                      - auditorId
-                      - auditorName
-                      - auditTime
-                      - auditNote
-                      - auditResult
-                      - note
-                      - createdAt
-                      - updatedAt
-                      type: object
-                    type: array
-                  total:
-                    description: 总记录数
-                    type: integer
-                required:
-                - total
-                - list
-                type: object
-              message:
-                description: 响应消息
-                type: string
-            type: object
-      schemes:
-      - https
-  /api/fams/bank/account/application/{id}:
-    get:
-      operationId: getAccountApplication
-      parameters:
-      - description: 资源ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: ""
-          schema:
-            properties:
-              code:
-                description: 响应码
-                type: integer
-              data:
-                description: 数据
-                properties:
-                  applicationNumber:
-                    description: 申请单号
-                    type: string
-                  applicationTime:
-                    description: 申请时间（毫秒级时间戳）
-                    type: integer
-                  auditNote:
-                    description: 审核意见
-                    type: string
-                  auditResult:
-                    description: 审核结果
-                    type: string
-                  auditTime:
-                    description: 审核时间（毫秒级时间戳）
-                    type: integer
-                  auditorId:
-                    description: 审核人ID
-                    type: integer
-                  auditorName:
-                    description: 审核人姓名
-                    type: string
-                  createdAt:
-                    description: 创建时间
-                    type: string
-                  customerEmail:
-                    description: 客户邮箱
-                    type: string
-                  customerId:
-                    description: 客户ID
-                    type: integer
-                  customerName:
-                    description: 客户姓名
-                    type: string
-                  customerPhone:
-                    description: 客户电话
-                    type: string
-                  id:
-                    description: ID
-                    type: integer
-                  managerLevel:
-                    description: 客户经理层级
-                    type: string
-                  managerName:
-                    description: 客户经理姓名
-                    type: string
-                  materials:
-                    description: 申请材料（JSON格式）
-                    type: string
-                  note:
-                    description: 备注
-                    type: string
-                  status:
-                    description: 申请状态：Draft-草稿, Submitted-已提交, UnderReview-审核中, Approved-已通过,
-                      Rejected-已拒绝
-                    type: string
-                  statusText:
-                    description: 状态文本
-                    type: string
-                  updatedAt:
-                    description: 更新时间
-                    type: string
-                required:
-                - id
-                - applicationNumber
-                - customerId
-                - customerName
-                - customerEmail
-                - customerPhone
-                - customerId
-                - customerId
-                - managerName
-                - managerLevel
-                - status
-                - statusText
-                - materials
-                - applicationTime
-                - auditorId
-                - auditorName
-                - auditTime
-                - auditNote
-                - auditResult
-                - note
-                - createdAt
-                - updatedAt
-                type: object
-              message:
-                description: 响应消息
-                type: string
-            type: object
-      schemes:
-      - https
-  /api/fams/bank/account/application/{id}/approve:
-    post:
-      consumes:
-      - application/json
-      operationId: approveAccountApplication
-      parameters:
-      - description: ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - in: body
-        name: body
-        required: true
-        schema:
-          properties:
-            note:
-              description: 备注
-              type: string
-          type: object
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: ""
-          schema:
-            properties:
-              code:
-                description: 响应码 0-成功 非0-失败
-                type: integer
-              message:
-                description: 响应消息
-                type: string
-            type: object
-      schemes:
-      - https
-  /api/fams/bank/account/application/{id}/reject:
-    post:
-      consumes:
-      - application/json
-      operationId: rejectAccountApplication
-      parameters:
-      - description: ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - in: body
-        name: body
-        required: true
-        schema:
-          properties:
-            note:
-              description: 备注
-              type: string
-          required:
-          - note
-          type: object
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: ""
-          schema:
-            properties:
-              code:
-                description: 响应码 0-成功 非0-失败
-                type: integer
-              message:
-                description: 响应消息
-                type: string
-            type: object
-      schemes:
-      - https
-  /api/fams/bank/account/application/{id}/track:
-    get:
-      operationId: trackAccountApplication
-      parameters:
-      - description: 资源ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: ""
-          schema:
-            properties:
-              code:
-                description: 响应码
-                type: integer
-              data:
-                description: 数据
-                properties:
-                  applicationId:
-                    description: 申请ID
-                    type: integer
-                  applicationNumber:
-                    description: 申请单号
-                    type: string
-                  currentStatus:
-                    description: 当前状态
-                    type: string
-                  currentStatusText:
-                    description: 当前状态文本
-                    type: string
-                  estimatedCompletionTime:
-                    description: 预计完成时间（毫秒级时间戳）
-                    type: integer
-                  nextStep:
-                    description: 下一步操作
-                    type: string
-                  nextStepDescription:
-                    description: 下一步描述
-                    type: string
-                  processSteps:
-                    description: 流程步骤
-                    items:
-                      properties:
-                        attachments:
-                          description: 附件
-                          items:
-                            properties:
-                              id:
-                                description: 附件ID
-                                type: integer
-                              name:
-                                description: 附件名称
-                                type: string
-                              size:
-                                description: 附件大小（字节）
-                                type: integer
-                              type:
-                                description: 附件类型
-                                type: string
-                              uploadTime:
-                                description: 上传时间（毫秒级时间戳）
-                                type: integer
-                              url:
-                                description: 附件URL
-                                type: string
-                            required:
-                            - id
-                            - name
-                            - type
-                            - size
-                            - url
-                            - uploadTime
-                            type: object
-                          type: array
-                        duration:
-                          description: 持续时间
-                          type: string
-                        endTime:
-                          description: 结束时间（毫秒级时间戳）
-                          type: integer
-                        note:
-                          description: 备注
-                          type: string
-                        operatorId:
-                          description: 操作人ID
-                          type: integer
-                        operatorName:
-                          description: 操作人姓名
-                          type: string
-                        startTime:
-                          description: 开始时间（毫秒级时间戳）
-                          type: integer
-                        status:
-                          description: 步骤状态：pending-待处理, processing-处理中, completed-已完成,
-                            skipped-已跳过
-                          type: string
-                        statusText:
-                          description: 状态文本
-                          type: string
-                        stepDescription:
-                          description: 步骤描述
-                          type: string
-                        stepName:
-                          description: 步骤名称
-                          type: string
-                      required:
-                      - stepName
-                      - stepDescription
-                      - status
-                      - statusText
-                      type: object
-                    type: array
-                required:
-                - applicationId
-                - applicationNumber
-                - currentStatus
-                - currentStatusText
-                - processSteps
-                type: object
-              message:
-                description: 响应消息
-                type: string
-            type: object
-      schemes:
-      - https
-  /api/fams/bank/account/application/batch-approve:
-    post:
-      consumes:
-      - application/json
-      operationId: batchApproveAccountApplications
-      parameters:
-      - in: body
-        name: body
-        required: true
-        schema:
-          properties:
-            applicationIds:
-              description: 申请ID列表
-              items:
-                type: integer
-              type: array
-            note:
-              description: 批量审核备注
-              type: string
-          required:
-          - applicationIds
-          type: object
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: ""
-          schema:
-            properties:
-              code:
-                description: 响应码 0-成功 非0-失败
-                type: integer
-              message:
-                description: 响应消息
-                type: string
-            type: object
-      schemes:
-      - https
-  /api/fams/bank/account/application/batch-reject:
-    post:
-      consumes:
-      - application/json
-      operationId: batchRejectAccountApplications
-      parameters:
-      - in: body
-        name: body
-        required: true
-        schema:
-          properties:
-            applicationIds:
-              description: 申请ID列表
-              items:
-                type: integer
-              type: array
-            note:
-              description: 批量审核备注
-              type: string
-          required:
-          - applicationIds
-          - note
-          type: object
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: ""
-          schema:
-            properties:
-              code:
-                description: 响应码 0-成功 非0-失败
-                type: integer
-              message:
-                description: 响应消息
-                type: string
-            type: object
-      schemes:
-      - https
-  /api/fams/bank/account/application/stats:
-    get:
-      operationId: getAccountApplicationStats
-      parameters:
-      - allowEmptyValue: true
-        description: 开始时间（毫秒级时间戳）
-        in: query
-        name: startTime
-        type: integer
-      - allowEmptyValue: true
-        description: 结束时间（毫秒级时间戳）
-        in: query
-        name: endTime
-        type: integer
-      - allowEmptyValue: true
-        description: 客户ID筛选
-        in: query
-        name: customerId
-        type: integer
-      - allowEmptyValue: true
-        description: 客户类型筛选：individual-个人, enterprise-企业
-        in: query
-        name: customerType
-        type: string
-      - allowEmptyValue: true
-        description: 申请状态筛选
-        in: query
-        name: status
-        type: string
-      - allowEmptyValue: true
-        description: 审核结果筛选
-        in: query
-        name: auditResult
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: ""
-          schema:
-            properties:
-              code:
-                description: 响应码
-                type: integer
-              data:
-                description: 数据
-                properties:
-                  approvalRate:
-                    description: 通过率
-                    type: string
-                  approvedCount:
-                    description: 已通过数量
-                    type: integer
-                  averageProcessTime:
-                    description: 平均处理时间（小时）
-                    type: integer
-                  customerTypeStats:
-                    description: 客户类型统计
-                    items:
-                      properties:
-                        count:
-                          description: 数量
-                          type: integer
-                        customerType:
-                          description: 客户类型
-                          type: string
-                        customerTypeText:
-                          description: 客户类型文本
-                          type: string
-                        percentage:
-                          description: 百分比
-                          type: string
-                      required:
-                      - customerType
-                      - customerTypeText
-                      - count
-                      - percentage
-                      type: object
-                    type: array
-                  dailyStats:
-                    description: 每日统计
-                    items:
-                      properties:
-                        amount:
-                          description: 金额（decimal字符串）
-                          type: string
-                        count:
-                          description: 数量
-                          type: integer
-                        date:
-                          description: 日期（YYYY-MM-DD）
-                          type: string
-                      required:
-                      - date
-                      - count
-                      - amount
-                      type: object
-                    type: array
-                  draftCount:
-                    description: 草稿数量
-                    type: integer
-                  managerStats:
-                    description: 客户经理统计
-                    items:
-                      properties:
-                        approvalRate:
-                          description: 通过率
-                          type: string
-                        approvedCount:
-                          description: 通过数量
-                          type: integer
-                        averageProcessTime:
-                          description: 平均处理时间
-                          type: integer
-                        customerId:
-                          description: 客户ID
-                          type: integer
-                        managerLevel:
-                          description: 客户经理层级
-                          type: string
-                        managerName:
-                          description: 客户经理姓名
-                          type: string
-                        rejectedCount:
-                          description: 拒绝数量
-                          type: integer
-                        totalCount:
-                          description: 总申请数
-                          type: integer
-                      required:
-                      - customerId
-                      - managerName
-                      - managerLevel
-                      - totalCount
-                      - approvedCount
-                      - rejectedCount
-                      - approvalRate
-                      - averageProcessTime
-                      type: object
-                    type: array
-                  monthlyStats:
-                    description: 月度统计
-                    items:
-                      properties:
-                        amount:
-                          description: 金额（decimal字符串）
-                          type: string
-                        count:
-                          description: 数量
-                          type: integer
-                        month:
-                          description: 月份
-                          type: integer
-                        year:
-                          description: 年份
-                          type: integer
-                      required:
-                      - year
-                      - month
-                      - count
-                      - amount
-                      type: object
-                    type: array
-                  rejectedCount:
-                    description: 已拒绝数量
-                    type: integer
-                  statusStats:
-                    description: 状态统计
-                    items:
-                      properties:
-                        count:
-                          description: 数量
-                          type: integer
-                        percentage:
-                          description: 百分比
-                          type: string
-                        status:
-                          description: 状态
-                          type: string
-                        statusText:
-                          description: 状态文本
-                          type: string
-                      required:
-                      - status
-                      - statusText
-                      - count
-                      - percentage
-                      type: object
-                    type: array
-                  submittedCount:
-                    description: 已提交数量
-                    type: integer
-                  totalCount:
-                    description: 总申请数
-                    type: integer
-                  underReviewCount:
-                    description: 审核中数量
-                    type: integer
-                required:
-                - totalCount
-                - draftCount
-                - submittedCount
-                - underReviewCount
-                - approvedCount
-                - rejectedCount
-                - approvalRate
-                - averageProcessTime
-                - statusStats
-                - customerTypeStats
-                - managerStats
-                - dailyStats
-                - monthlyStats
                 type: object
               message:
                 description: 响应消息
@@ -16400,7 +16248,7 @@ produces:
 schemes:
 - https
 swagger: "2.0"
-x-date: "2025-10-22 12:18:48"
+x-date: "2025-10-22 12:54:23"
 x-description: This is a goctl generated swagger file.
 x-github: https://github.com/zeromicro/go-zero
 x-go-zero-doc: https://go-zero.dev/

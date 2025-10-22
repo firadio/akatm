@@ -9,7 +9,7 @@ info(
 import "../../common/types.api"
 
 @server(
-    prefix: /api/fams/bank/account/application
+    prefix: /api/fams/bank/account-application
     group: famsBankAccountApplication
     jwt: Auth
     middleware: SignCheck, JwtAuth
