@@ -9,92 +9,90 @@ info(
 import "../../common/types.api"
 
 @server(
-    prefix: /api/country
-    group: country
-    jwt: Auth
-    middleware: SignCheck, JwtAuth
+    prefix: /api/admin/data/country
+    group: dataCountry
     tags: "国家管理"
 )
 service admin {
     @doc(
         summary: "创建国家"
-        description: "创建新的开户国家。请求头: Authorization, X-Timestamp, X-Sign"
+        description: "创建新的开户国家"
         id: "admin.country.create"
     )
     @handler createCountry
-    post /countries (CreateCountryReq) returns (CreateCountryResp)
+    post / (CreateCountryReq) returns (CreateCountryResp)
 
     @doc(
         summary: "国家列表"
-        description: "获取开户国家列表。请求头: Authorization, X-Timestamp, X-Sign"
+        description: "获取开户国家列表"
         id: "admin.country.list"
     )
     @handler listCountries
-    get /countries (ListCountryReq) returns (ListCountryResp)
+    get / (ListCountryReq) returns (ListCountryResp)
 
     @doc(
         summary: "国家详情"
-        description: "根据ID获取国家详情。请求头: Authorization, X-Timestamp, X-Sign"
+        description: "根据ID获取国家详情"
         id: "admin.country.detail"
     )
     @handler getCountry
-    get /countries/:id (IdReq) returns (GetCountryResp)
+    get /:id (IdReq) returns (GetCountryResp)
 
     @doc(
         summary: "更新国家"
-        description: "更新国家信息。请求头: Authorization, X-Timestamp, X-Sign"
+        description: "更新国家信息"
         id: "admin.country.update"
     )
     @handler updateCountry
-    put /countries/:id (UpdateCountryReq) returns (BaseResp)
+    put /:id (UpdateCountryReq) returns (BaseResp)
 
     @doc(
         summary: "删除国家"
-        description: "删除国家。请求头: Authorization, X-Timestamp, X-Sign"
+        description: "删除国家"
         id: "admin.country.delete"
     )
     @handler deleteCountry
-    delete /countries/:id (IdReq) returns (BaseResp)
+    delete /:id (IdReq) returns (BaseResp)
 
     @doc(
         summary: "更新国家状态"
-        description: "启用或禁用国家。请求头: Authorization, X-Timestamp, X-Sign"
+        description: "启用或禁用国家"
         id: "admin.country.status"
     )
     @handler updateCountryStatus
-    put /countries/:id/status (UpdateCountryStatusReq) returns (BaseResp)
+    patch /:id/status (UpdateCountryStatusReq) returns (BaseResp)
 
     @doc(
         summary: "国家使用统计"
-        description: "获取国家使用统计信息。请求头: Authorization, X-Timestamp, X-Sign"
+        description: "获取国家使用统计信息"
         id: "admin.country.stats"
     )
     @handler getCountryStats
-    get /countries/stats (GetCountryStatsReq) returns (GetCountryStatsResp)
+    get /stats (GetCountryStatsReq) returns (GetCountryStatsResp)
 
     @doc(
         summary: "批量导入国家"
-        description: "批量导入国家数据。请求头: Authorization, X-Timestamp, X-Sign"
+        description: "批量导入国家数据"
         id: "admin.country.batchImport"
     )
     @handler batchImportCountries
-    post /countries/batch-import (BatchImportCountriesReq) returns (BatchImportCountriesResp)
+    post /batch-import (BatchImportCountriesReq) returns (BatchImportCountriesResp)
 
     @doc(
         summary: "更新国家排序"
-        description: "更新国家排序。请求头: Authorization, X-Timestamp, X-Sign"
+        description: "更新国家排序"
         id: "admin.country.updateSort"
     )
     @handler updateCountrySort
-    put /countries/sort (UpdateCountrySortReq) returns (BaseResp)
+    put /sort (UpdateCountrySortReq) returns (BaseResp)
 
     @doc(
         summary: "获取导入模板"
-        description: "获取批量导入模板文件。请求头: Authorization, X-Timestamp, X-Sign"
+        description: "获取批量导入模板文件"
         id: "admin.country.importTemplate"
     )
     @handler getImportTemplate
-    get /countries/import-template (GetImportTemplateReq) returns (GetImportTemplateResp)
+    get /import-template (GetImportTemplateReq) returns (GetImportTemplateResp)
 }
 
 type (
@@ -166,8 +164,8 @@ type (
 
     // 国家使用统计请求
     GetCountryStatsReq {
-        StartTime string `form:"startTime,optional"` // 开始时间
-        EndTime string `form:"endTime,optional"` // 结束时间
+        StartTime int64 `form:"startTime,optional"` // 开始时间（毫秒级时间戳）
+        EndTime int64 `form:"endTime,optional"` // 结束时间（毫秒级时间戳）
         CountryId int64 `form:"countryId,optional"` // 国家ID筛选
         Status int32 `form:"status,optional"` // 状态筛选
     }
@@ -206,7 +204,7 @@ type (
 
     // 国家使用趋势
     CountryUsageTrend {
-        Date string `json:"date"` // 日期
+        Date int64 `json:"date"` // 日期（毫秒级时间戳）
         CountryId int64 `json:"countryId"` // 国家ID
         CountryName string `json:"countryName"` // 国家名称
         UserCount int64 `json:"userCount"` // 用户数量
@@ -239,8 +237,8 @@ type (
         SkippedCount int64 `json:"skippedCount,optional"` // 跳过数量
         Status string `json:"status"` // 状态：pending-待处理, processing-处理中, completed-已完成, failed-失败
         Errors []ImportError `json:"errors,optional"` // 错误信息
-        StartTime string `json:"startTime"` // 开始时间
-        EndTime string `json:"endTime,optional"` // 结束时间
+        StartTime int64 `json:"startTime"` // 开始时间（毫秒级时间戳）
+        EndTime int64 `json:"endTime,optional"` // 结束时间（毫秒级时间戳）
     }
 
     // 导入错误
@@ -280,7 +278,7 @@ type (
         FileName string `json:"fileName"` // 文件名
         FileSize int64 `json:"fileSize"` // 文件大小
         ContentType string `json:"contentType"` // 内容类型
-        ExpireTime string `json:"expireTime"` // 过期时间
+        ExpireTime int64 `json:"expireTime"` // 过期时间（毫秒级时间戳）
         SampleData []map[string]interface{} `json:"sampleData"` // 示例数据
         FieldMapping map[string]string `json:"fieldMapping"` // 字段映射说明
     }

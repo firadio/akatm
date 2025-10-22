@@ -1,0 +1,66 @@
+syntax = "v1"
+
+info(
+    title: "管理员会话管理接口"
+    desc: "管理员登出、获取信息、修改密码等需要认证的接口"
+    version: "v1.0"
+)
+
+import "../../common/types.api"
+
+@server(
+    prefix: /api/admin/session
+    group: adminSession
+    tags: "会话管理"
+)
+service admin {
+    @doc(
+        summary: "管理员登出"
+        description: "退出登录，清除Cookie（需要Cookie认证，全局中间件处理）"
+        id: "admin.session.logout"
+    )
+    @handler logout
+    post /logout returns (BaseResp)
+
+    @doc(
+        summary: "获取当前管理员信息"
+        description: "获取登录管理员的信息、角色、权限（需要Cookie认证，全局中间件处理）"
+        id: "admin.session.getInfo"
+    )
+    @handler getInfo
+    get /info returns (AdminInfoResp)
+
+    @doc(
+        summary: "修改密码"
+        description: "修改当前管理员的登录密码（需要Cookie认证，全局中间件处理）"
+        id: "admin.session.changePassword"
+    )
+    @handler changePassword
+    patch /password (ChangePasswordReq) returns (BaseResp)
+}
+
+type (
+    AdminInfoResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data StaffInfo `json:"data"` // 数据
+    }
+
+    StaffInfo {
+        StaffId int64 `json:"staffId"`            // 员工ID（雪花算法生成）
+        Name string `json:"name"`                 // 姓名
+        Email string `json:"email"`               // 邮箱
+        Status int32 `json:"status"`              // 状态 1-启用 0-禁用
+        Roles []RoleInfo `json:"roles"`           // 角色列表
+        Menus []MenuInfo `json:"menus"`           // 菜单列表（用户权限菜单）
+        CreatedAt int64 `json:"createdAt"`        // 创建时间（毫秒级时间戳）
+        LastLoginAt int64 `json:"lastLoginAt,optional"` // 最后登录时间（毫秒级时间戳）
+        LastLoginIp string `json:"lastLoginIp,optional"` // 最后登录IP
+    }
+
+    ChangePasswordReq {
+        OldPassword string `json:"oldPassword"` // 旧密码
+        NewPassword string `json:"newPassword"` // 新密码 长度8-20位
+        ConfirmPassword string `json:"confirmPassword"` // 确认新密码
+    }
+)

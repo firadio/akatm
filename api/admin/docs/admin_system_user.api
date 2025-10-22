@@ -1,0 +1,200 @@
+syntax = "v1"
+
+info(
+    title: "用户管理接口"
+    desc: "提供后台用户的增删改查、重设密码、设置角色、启用/禁用等功能"
+    version: "v1.0"
+)
+
+import "../../common/types.api"
+
+@server(
+    prefix: /api/admin/system/user
+    group: adminSystemUser
+    tags: "用户管理"
+)
+service admin {
+    @doc(
+        summary: "添加用户"
+        description: "创建后台用户账号"
+        id: "admin.sys.user.create"
+    )
+    @handler createUser
+    post / (CreateAdminUserReq) returns (CreateAdminUserResp)
+
+    @doc(
+        summary: "用户列表"
+        description: "分页查询后台用户列表"
+        id: "admin.user.list"
+    )
+    @handler listUsers
+    get / (AdminListUsersReq) returns (AdminListUsersResp)
+
+    @doc(
+        summary: "用户详情"
+        description: "根据ID查询用户详情"
+        id: "admin.user.detail"
+    )
+    @handler getUser
+    get /:id (IdReq) returns (GetAdminUserResp)
+
+    @doc(
+        summary: "更新用户"
+        description: "更新用户基础信息"
+        id: "admin.user.update"
+    )
+    @handler updateUser
+    put /:id (UpdateAdminUserReq) returns (BaseResp)
+
+    @doc(
+        summary: "删除用户"
+        description: "删除用户（软删除）"
+        id: "admin.user.delete"
+    )
+    @handler deleteUser
+    delete /:id (IdReq) returns (BaseResp)
+
+    @doc(
+        summary: "重设密码"
+        description: "为用户重设登录密码"
+        id: "admin.user.resetPassword"
+    )
+    @handler resetUserPassword
+    patch /:id/password (ResetAdminUserPasswordReq) returns (BaseResp)
+
+    @doc(
+        summary: "设置角色"
+        description: "为用户分配角色"
+        id: "admin.user.setRoles"
+    )
+    @handler setUserRoles
+    patch /:id/role (SetAdminUserRolesReq) returns (BaseResp)
+
+    @doc(
+        summary: "更新状态"
+        description: "启用/禁用用户账号"
+        id: "admin.user.updateStatus"
+    )
+    @handler updateUserStatus
+    patch /:id/status (UpdateAdminUserStatusReq) returns (BaseResp)
+
+    @doc(
+        summary: "用户菜单"
+        description: "获取用户聚合后的菜单"
+        id: "admin.user.menus"
+    )
+    @handler getUserMenus
+    get /:id/menus (IdReq) returns (GetAdminUserMenusResp)
+}
+
+type (
+    // 创建用户请求
+    CreateAdminUserReq {
+        Name string `json:"name"`              // 姓名
+        Email string `json:"email"`            // 邮箱（唯一）
+        Password string `json:"password"`      // 密码
+        RoleIds []int64 `json:"roleIds"`       // 角色ID列表
+    }
+
+    // 创建用户响应
+    CreateAdminUserResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data AdminUserDetail `json:"data"` // 数据
+    }
+
+    // 用户信息
+    AdminUserDetail {
+        Id int64 `json:"id"` // ID
+        Name string `json:"name"` // 名称
+        Email string `json:"email"` // 邮箱
+        Status int32 `json:"status"` // 状态：1-启用, 0-禁用
+        StatusText string `json:"statusText"` // 状态文本
+        Roles []AdminUserRoleInfo `json:"roles,optional"` // 角色列表
+        CreatedAt int64 `json:"createdAt"` // 创建时间（毫秒级时间戳）
+        UpdatedAt int64 `json:"updatedAt"` // 更新时间（毫秒级时间戳）
+    }
+
+    // 用户角色信息
+    AdminUserRoleInfo {
+        Id int64 `json:"id"`       // 角色ID
+        Name string `json:"name"`  // 角色名称
+        Code string `json:"code"`  // 角色代码
+    }
+
+    // 用户菜单信息
+    AdminUserMenuInfo {
+        Id int64 `json:"id"` // ID
+        Name string `json:"name"` // 名称
+        Path string `json:"path"` // 路径
+        Icon string `json:"icon"` // 图标
+        Component string `json:"component"` // 组件路径
+        Type int32 `json:"type"` // 类型：1-菜单, 2-按钮
+        ParentId int64 `json:"parentId"` // 父级ID
+        Sort int32 `json:"sort"` // 排序
+        Status int32 `json:"status"` // 状态：1-启用, 0-禁用
+        StatusText string `json:"statusText"` // 状态文本
+        Children []AdminUserMenuInfo `json:"children,optional"` // 子菜单
+    }
+
+    // 列表请求
+    AdminListUsersReq {
+        Page int64 `form:"page,default=1,optional"` // 页码
+        PageSize int64 `form:"pageSize,default=10,optional"` // 每页数量
+        Keyword string `form:"keyword,optional"` // 姓名/邮箱模糊搜索
+        Status int32 `form:"status,optional"` // 状态筛选：1-启用, 0-禁用
+        RoleId int64 `form:"roleId,optional"` // 角色筛选
+    }
+
+    // 列表响应
+    AdminListUsersResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data AdminUserListData `json:"data"` // 数据
+    }
+
+    AdminUserListData {
+        Total int64 `json:"total"` // 总记录数
+        List []AdminUserDetail `json:"list"` // 列表
+    }
+
+    // 详情响应
+    GetAdminUserResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data AdminUserDetail `json:"data"` // 数据
+    }
+
+    // 更新用户请求
+    UpdateAdminUserReq {
+        Id int64 `path:"id"` // ID
+        Name string `json:"name,optional"` // 名称
+        Email string `json:"email,optional"` // 邮箱
+    }
+
+    // 重设密码请求
+    ResetAdminUserPasswordReq {
+        Id int64 `path:"id"` // ID
+        Password string `json:"password"` // 新密码
+        ConfirmPassword string `json:"confirmPassword"` // 确认密码
+    }
+
+    // 设置角色请求
+    SetAdminUserRolesReq {
+        Id int64 `path:"id"` // ID
+        RoleIds []int64 `json:"roleIds"`
+    }
+
+    // 更新状态请求
+    UpdateAdminUserStatusReq {
+        Id int64 `path:"id"` // ID
+        Status int32 `json:"status"`  // 1-启用 0-禁用
+    }
+
+    // 用户菜单响应
+    GetAdminUserMenusResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data []AdminUserMenuInfo `json:"data"` // 数据
+    }
+)

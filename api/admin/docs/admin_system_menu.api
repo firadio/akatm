@@ -9,52 +9,50 @@ info(
 import "../../common/types.api"
 
 @server(
-    prefix: /api/menu
-    group: menu
-    jwt: Auth
-    middleware: SignCheck, JwtAuth
+    prefix: /api/admin/system/menu
+    group: adminSystemMenu
     tags: "菜单管理"
 )
 service admin {
     @doc(
         summary: "创建菜单"
-        description: "创建新的菜单项。请求头: Authorization, X-Timestamp, X-Sign"
+        description: "创建新的菜单项"
         id: "admin.menu.create"
     )
     @handler createMenu
-    post /menus (CreateMenuReq) returns (CreateMenuResp)
+    post / (CreateMenuReq) returns (CreateMenuResp)
 
     @doc(
         summary: "菜单树"
-        description: "获取菜单树结构。请求头: Authorization, X-Timestamp, X-Sign"
+        description: "获取菜单树结构"
         id: "admin.menu.tree"
     )
     @handler getMenuTree
-    get /menus (ListMenuReq) returns (ListMenuResp)
+    get / (ListMenuReq) returns (ListMenuResp)
 
     @doc(
         summary: "菜单详情"
-        description: "根据ID获取菜单详情。请求头: Authorization, X-Timestamp, X-Sign"
+        description: "根据ID获取菜单详情"
         id: "admin.menu.detail"
     )
     @handler getMenu
-    get /menus/:id (IdReq) returns (GetMenuResp)
+    get /:id (IdReq) returns (GetMenuResp)
 
     @doc(
         summary: "更新菜单"
-        description: "更新菜单信息。请求头: Authorization, X-Timestamp, X-Sign"
+        description: "更新菜单信息"
         id: "admin.menu.update"
     )
     @handler updateMenu
-    put /menus/:id (UpdateMenuReq) returns (BaseResp)
+    put /:id (UpdateMenuReq) returns (BaseResp)
 
     @doc(
         summary: "删除菜单"
-        description: "删除菜单。请求头: Authorization, X-Timestamp, X-Sign"
+        description: "删除菜单"
         id: "admin.menu.delete"
     )
     @handler deleteMenu
-    delete /menus/:id (IdReq) returns (BaseResp)
+    delete /:id (IdReq) returns (BaseResp)
 }
 
 type (

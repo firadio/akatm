@@ -9,68 +9,66 @@ info(
 import "../../common/types.api"
 
 @server(
-    prefix: /api/system
-    group: system
-    jwt: Auth
-    middleware: SignCheck, JwtAuth
+    prefix: /api/admin/system
+    group: adminSystemConfig
     tags: "系统配置"
 )
 service admin {
     @doc(
         summary: "获取系统配置"
-        description: "获取系统配置参数列表。请求头: Authorization, X-Timestamp, X-Sign"
+        description: "获取系统配置参数列表"
         id: "admin.system.getConfig"
     )
     @handler getSystemConfig
-    get /system/config (GetSystemConfigReq) returns (GetSystemConfigResp)
+    get /config (GetSystemConfigReq) returns (GetSystemConfigResp)
 
     @doc(
         summary: "获取分类配置"
-        description: "获取指定分类的系统配置参数。请求头: Authorization, X-Timestamp, X-Sign"
+        description: "获取指定分类的系统配置参数"
         id: "admin.system.getConfigByCategory"
     )
     @handler getSystemConfigByCategory
-    get /system/config/:category (GetSystemConfigByCategoryReq) returns (GetSystemConfigByCategoryResp)
+    get /config/:category (GetSystemConfigByCategoryReq) returns (GetSystemConfigByCategoryResp)
 
     @doc(
         summary: "更新系统配置"
-        description: "更新系统配置参数。请求头: Authorization, X-Timestamp, X-Sign"
+        description: "更新系统配置参数"
         id: "admin.system.updateConfig"
     )
     @handler updateSystemConfig
-    put /system/config (UpdateSystemConfigReq) returns (BaseResp)
+    put /config (UpdateSystemConfigReq) returns (BaseResp)
 
     @doc(
         summary: "按分类更新系统配置"
-        description: "按分类更新系统配置参数。请求头: Authorization, X-Timestamp, X-Sign"
+        description: "按分类更新系统配置参数"
         id: "admin.system.updateConfigByCategory"
     )
     @handler updateSystemConfigByCategory
-    put /system/config/:category (UpdateSystemConfigByCategoryReq) returns (BaseResp)
+    put /config/:category (UpdateSystemConfigByCategoryReq) returns (BaseResp)
 
     @doc(
         summary: "获取系统状态"
-        description: "获取系统运行状态信息。请求头: Authorization, X-Timestamp, X-Sign"
+        description: "获取系统运行状态信息"
         id: "admin.system.getStatus"
     )
     @handler getSystemStatus
-    get /system/status returns (GetSystemStatusResp)
+    get /status returns (GetSystemStatusResp)
 
     @doc(
         summary: "重置系统配置"
-        description: "重置系统配置为默认值。请求头: Authorization, X-Timestamp, X-Sign"
+        description: "重置系统配置为默认值"
         id: "admin.system.resetConfig"
     )
     @handler resetSystemConfig
-    post /system/config/reset returns (BaseResp)
+    post /config/reset returns (BaseResp)
 
     @doc(
         summary: "获取配置历史"
-        description: "获取系统配置变更历史记录。请求头: Authorization, X-Timestamp, X-Sign"
+        description: "获取系统配置变更历史记录"
         id: "admin.system.getConfigHistory"
     )
     @handler getConfigHistory
-    get /system/config/history (GetConfigHistoryReq) returns (GetConfigHistoryResp)
+    get /config/history (GetConfigHistoryReq) returns (GetConfigHistoryResp)
 }
 
 type (
@@ -172,7 +170,7 @@ type (
         Arch string `json:"arch"` // 架构
         GoVersion string `json:"goVersion"` // Go版本
         Uptime int64 `json:"uptime"` // 运行时间（秒）
-        StartTime string `json:"startTime"` // 启动时间
+        StartTime int64 `json:"startTime"` // 启动时间（毫秒级时间戳）
     }
 
     // 数据库信息
@@ -216,8 +214,8 @@ type (
         PageSize int64 `form:"pageSize,default=10,optional"` // 每页数量
         ConfigId int64 `form:"configId,optional"` // 配置ID筛选
         OperatorId int64 `form:"operatorId,optional"` // 操作人ID筛选
-        StartTime string `form:"startTime,optional"` // 开始时间
-        EndTime string `form:"endTime,optional"` // 结束时间
+        StartTime int64 `form:"startTime,optional"` // 开始时间（毫秒级时间戳）
+        EndTime int64 `form:"endTime,optional"` // 结束时间（毫秒级时间戳）
     }
 
     // 获取配置历史响应

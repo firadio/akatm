@@ -9,8 +9,8 @@ info(
 import "../../common/types.api"
 
 @server(
-    prefix: /admin
-    group: account
+    prefix: /api/fams/bank/account
+    group: famsBankAccount
     jwt: Auth
     middleware: SignCheck, JwtAuth
     tags: "银行账户"
@@ -18,75 +18,75 @@ import "../../common/types.api"
 service admin {
     @doc(
         summary: "账户列表"
-        description: "分页查看所有银行账户。请求头: Authorization, X-Timestamp, X-Sign"
-        id: "admin.account.list"
+        description: "分页查看所有银行账户"
+        id: "fams.bank.account.list"
     )
     @handler listAccounts
-    get /accounts (ListAccountsReq) returns (ListAccountsResp)
+    get / (ListAccountsReq) returns (ListAccountsResp)
 
     @doc(
         summary: "账户详情"
-        description: "查看银行账户详情。请求头: Authorization, X-Timestamp, X-Sign"
-        id: "admin.account.detail"
+        description: "查看银行账户详情"
+        id: "fams.bank.account.detail"
     )
     @handler getAccount
-    get /accounts/:id (IdReq) returns (GetAccountResp)
+    get /:id (IdReq) returns (GetAccountResp)
 
     @doc(
         summary: "更新账户状态"
-        description: "变更账户状态（冻结/关闭等）。请求头: Authorization, X-Timestamp, X-Sign"
-        id: "admin.account.updateStatus"
+        description: "变更账户状态（冻结/关闭等）"
+        id: "fams.bank.account.updateStatus"
     )
     @handler updateAccountStatus
-    patch /accounts/:id/status (UpdateAccountStatusReq) returns (BaseResp)
+    patch /:id/status (UpdateAccountStatusReq) returns (BaseResp)
 
     @doc(
         summary: "账户余额"
-        description: "查看账户余额。请求头: Authorization, X-Timestamp, X-Sign"
-        id: "admin.account.balance"
+        description: "查看账户余额"
+        id: "fams.bank.account.balance"
     )
     @handler getAccountBalance
-    get /accounts/:id/balance (IdReq) returns (GetAccountBalanceResp)
+    get /:id/balance (IdReq) returns (GetAccountBalanceResp)
 
     @doc(
         summary: "账户流水"
-        description: "查看账户交易流水。请求头: Authorization, X-Timestamp, X-Sign"
-        id: "admin.account.transactions"
+        description: "查看账户交易流水"
+        id: "fams.bank.account.transactions"
     )
     @handler listAccountTransactions
-    get /accounts/:id/transactions (ListAccountTransactionsReq) returns (ListAccountTransactionsResp)
+    get /:id/transactions (ListAccountTransactionsReq) returns (ListAccountTransactionsResp)
 
     @doc(
         summary: "创建账户"
-        description: "为客户创建新的银行账户。请求头: Authorization, X-Timestamp, X-Sign"
-        id: "admin.account.create"
+        description: "为客户创建新的银行账户"
+        id: "fams.bank.account.create"
     )
     @handler createAccount
-    post /accounts (CreateAccountReq) returns (CreateAccountResp)
+    post / (CreateAccountReq) returns (CreateAccountResp)
 
     @doc(
         summary: "更新账户信息"
-        description: "更新银行账户信息。请求头: Authorization, X-Timestamp, X-Sign"
-        id: "admin.account.update"
+        description: "更新银行账户信息"
+        id: "fams.bank.account.update"
     )
     @handler updateAccount
-    put /accounts/:id (UpdateAccountReq) returns (BaseResp)
+    put /:id (UpdateAccountReq) returns (BaseResp)
 
     @doc(
         summary: "删除账户"
-        description: "删除银行账户（软删除）。请求头: Authorization, X-Timestamp, X-Sign"
-        id: "admin.account.delete"
+        description: "删除银行账户（软删除）"
+        id: "fams.bank.account.delete"
     )
     @handler deleteAccount
-    delete /accounts/:id (IdReq) returns (BaseResp)
+    delete /:id (IdReq) returns (BaseResp)
 
     @doc(
         summary: "账户统计"
-        description: "获取账户统计信息。请求头: Authorization, X-Timestamp, X-Sign"
-        id: "admin.account.stats"
+        description: "获取账户统计信息"
+        id: "fams.bank.account.stats"
     )
     @handler getAccountStats
-    get /accounts/stats (GetAccountStatsReq) returns (GetAccountStatsResp)
+    get /stats (GetAccountStatsReq) returns (GetAccountStatsResp)
 }
 
 type (
@@ -101,8 +101,8 @@ type (
         ManagerId int64 `form:"managerId,optional"` // 客户经理ID筛选
         CustomerType string `form:"customerType,optional"` // 客户类型筛选：individual-个人, enterprise-企业
         KycStatus string `form:"kycStatus,optional"` // KYC状态筛选：pending-待审核, verified-已认证, rejected-已拒绝
-        StartTime string `form:"startTime,optional"` // 创建开始时间
-        EndTime string `form:"endTime,optional"` // 创建结束时间
+        StartTime int64 `form:"startTime,optional"` // 创建开始时间（毫秒级时间戳）
+        EndTime int64 `form:"endTime,optional"` // 创建结束时间（毫秒级时间戳）
     }
 
     // 账户摘要
@@ -229,8 +229,8 @@ type (
         PageSize int64 `form:"pageSize,default=10,optional"` // 每页数量
         TransactionType string `form:"transactionType,optional"` // 交易类型筛选：deposit-存款, withdrawal-提现, transfer-转账, fee-手续费
         Status string `form:"status,optional"` // 状态筛选：pending-待处理, success-成功, failed-失败, cancelled-已取消
-        StartTime string `form:"startTime,optional"` // 开始时间（时间戳）
-        EndTime string `form:"endTime,optional"` // 结束时间（时间戳）
+        StartTime int64 `form:"startTime,optional"` // 开始时间（毫秒级时间戳）（时间戳）
+        EndTime int64 `form:"endTime,optional"` // 结束时间（毫秒级时间戳）（时间戳）
         MinAmount string `form:"minAmount,optional"` // 最小金额
         MaxAmount string `form:"maxAmount,optional"` // 最大金额
         Keyword string `form:"keyword,optional"` // 关键词搜索（交易单号、备注等）
@@ -289,8 +289,8 @@ type (
 
     // 账户统计请求
     GetAccountStatsReq {
-        StartTime string `form:"startTime,optional"` // 开始时间
-        EndTime string `form:"endTime,optional"` // 结束时间
+        StartTime int64 `form:"startTime,optional"` // 开始时间（毫秒级时间戳）
+        EndTime int64 `form:"endTime,optional"` // 结束时间（毫秒级时间戳）
         Currency string `form:"currency,optional"` // 币种筛选
         CustomerType string `form:"customerType,optional"` // 客户类型筛选
         KycStatus string `form:"kycStatus,optional"` // KYC状态筛选

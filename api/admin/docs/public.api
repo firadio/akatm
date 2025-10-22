@@ -1,0 +1,209 @@
+syntax = "v1"
+
+info(
+    title: "公开接口"
+    desc: "所有无需认证的公开接口集合"
+    version: "v1.0"
+)
+
+import "../../common/types.api"
+
+// ==================== Admin 公开接口 ====================
+
+@server(
+    prefix: /api/public/admin
+    group: publicAdmin
+    tags: "公开接口-管理员"
+)
+service admin {
+    @doc(
+        summary: "获取图片验证码"
+        description: "生成图片验证码用于管理员登录（公开接口，无需认证）"
+        id: "public.admin.getCaptcha"
+    )
+    @handler getAdminCaptcha
+    get /captcha returns (CaptchaResp)
+
+    @doc(
+        summary: "管理员登录"
+        description: "通过账号、密码和图片验证码登录。登录成功后自动设置Cookie: user_id, session_token（公开接口，无需认证）"
+        id: "public.admin.login"
+    )
+    @handler adminLogin
+    post /login (AdminLoginReq) returns (AdminLoginResp)
+}
+
+// ==================== IAM 公开接口 ====================
+
+@server(
+    prefix: /api/public/iam
+    group: publicIam
+    tags: "公开接口-用户"
+)
+service admin {
+    @doc(
+        summary: "获取图片验证码"
+        description: "生成图片验证码用于用户登录（公开接口，无需认证）"
+        id: "public.iam.getCaptcha"
+    )
+    @handler getIamCaptcha
+    get /captcha returns (CaptchaResp)
+
+    @doc(
+        summary: "用户登录"
+        description: "用户通过邮箱、密码和验证码登录。登录成功后自动设置Cookie（公开接口，无需认证）"
+        id: "public.iam.login"
+    )
+    @handler iamLogin
+    post /login (IamLoginReq) returns (IamLoginResp)
+
+    @doc(
+        summary: "用户注册"
+        description: "通过邀请码注册新用户（公开接口，无需认证）"
+        id: "public.iam.register"
+    )
+    @handler iamRegister
+    post /register (IamRegisterReq) returns (IamRegisterResp)
+}
+
+@server(
+    prefix: /api/public/iam/email
+    group: publicIamEmail
+    tags: "公开接口-邮箱验证"
+)
+service admin {
+    @doc(
+        summary: "发送邮箱验证码"
+        description: "发送邮箱验证码，用于注册、登录、重置密码等场景（公开接口，无需认证）"
+        id: "public.iam.email.send"
+    )
+    @handler sendEmailCode
+    post /send (SendEmailCodeReq) returns (BaseResp)
+
+    @doc(
+        summary: "验证邮箱验证码"
+        description: "验证邮箱验证码是否正确（公开接口，无需认证）"
+        id: "public.iam.email.verify"
+    )
+    @handler verifyEmailCode
+    post /verify (VerifyEmailCodeReq) returns (BaseResp)
+}
+
+// ==================== 类型定义 ====================
+
+type (
+    // ========== 验证码相关 ==========
+
+    CaptchaResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data CaptchaData `json:"data"` // 数据
+    }
+
+    CaptchaData {
+        CaptchaId string `json:"captchaId"`       // 验证码ID 有效期5分钟
+        CaptchaImage string `json:"captchaImage"` // 验证码图片base64
+        ExpiresAt int64 `json:"expiresAt"`        // 过期时间（毫秒级时间戳）
+    }
+
+    // ========== 管理员登录相关 ==========
+
+    AdminLoginReq {
+        Email string `json:"email"`         // 邮箱
+        Password string `json:"password"`   // 密码
+        CaptchaId string `json:"captchaId"` // 验证码ID
+        Captcha string `json:"captcha"`     // 验证码值（不区分大小写）
+    }
+
+    AdminLoginResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data AdminLoginData `json:"data"` // 数据
+    }
+
+    AdminLoginData {
+        StaffId int64 `json:"staffId"`            // 员工ID（雪花算法生成）
+        Name string `json:"name"`                 // 姓名
+        Email string `json:"email"`               // 邮箱
+        Status int32 `json:"status"`              // 状态 1-启用 0-禁用
+        Roles []RoleInfo `json:"roles"`           // 角色列表
+        Menus []MenuInfo `json:"menus"`           // 菜单列表（用户权限菜单）
+        ExpiresAt int64 `json:"expiresAt"`        // 会话过期时间（毫秒级时间戳）
+        // 注意：user_id 和 session_token 会通过 Set-Cookie 响应头自动设置到客户端
+        // Set-Cookie: user_id={staffId}; Path=/; HttpOnly; Secure; SameSite=Strict
+        // Set-Cookie: session_token={SHA256(token)}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=86400
+    }
+
+    RoleInfo {
+        Id int64 `json:"id"`       // 角色ID
+        Name string `json:"name"`  // 角色名称
+        Code string `json:"code"`  // 角色代码
+    }
+
+    // ========== 用户登录相关 ==========
+
+    IamLoginReq {
+        Email string `json:"email"`         // 邮箱
+        Password string `json:"password"`   // 密码
+        CaptchaId string `json:"captchaId"` // 验证码ID
+        Captcha string `json:"captcha"`     // 验证码值
+    }
+
+    IamLoginResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data IamLoginData `json:"data"` // 数据
+    }
+
+    IamLoginData {
+        UserId int64 `json:"userId"`              // 用户ID（雪花算法生成）
+        UserType string `json:"userType"`         // 用户类型：super_agent-总代, agent-代理, manager-客户经理, customer-客户
+        Email string `json:"email"`               // 邮箱
+        Nickname string `json:"nickname"`         // 昵称
+        Status int32 `json:"status"`              // 状态 1-启用 0-禁用
+        ParentId int64 `json:"parentId"`          // 上级ID
+        ParentName string `json:"parentName"`     // 上级姓名
+        ExpiresAt int64 `json:"expiresAt"`        // 会话过期时间（毫秒级时间戳）
+        // 注意：user_id 和 session_token 会通过 Set-Cookie 响应头自动设置到客户端
+    }
+
+    // ========== 用户注册相关 ==========
+
+    IamRegisterReq {
+        InviteCode string `json:"inviteCode"` // 邀请码（必填）
+        Email string `json:"email"`           // 邮箱
+        Password string `json:"password"`     // 密码（8-20位）
+        ConfirmPassword string `json:"confirmPassword"` // 确认密码
+        EmailCode string `json:"emailCode"`   // 邮箱验证码
+        Nickname string `json:"nickname,optional"` // 昵称（可选）
+        Phone string `json:"phone,optional"`  // 手机号（可选）
+    }
+
+    IamRegisterResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data IamRegisterData `json:"data"` // 数据
+    }
+
+    IamRegisterData {
+        UserId int64 `json:"userId"`       // 用户ID
+        UserType string `json:"userType"`  // 用户类型
+        Email string `json:"email"`        // 邮箱
+        Nickname string `json:"nickname"`  // 昵称
+        ParentId int64 `json:"parentId"`   // 上级ID
+        CreatedAt int64 `json:"createdAt"` // 创建时间（毫秒级时间戳）
+    }
+
+    // ========== 邮箱验证相关 ==========
+
+    SendEmailCodeReq {
+        Email string `json:"email"` // 邮箱地址
+        Scene string `json:"scene"` // 场景：register-注册, login-登录, reset_password-重置密码, bind_email-绑定邮箱
+    }
+
+    VerifyEmailCodeReq {
+        Email string `json:"email"` // 邮箱地址
+        Code string `json:"code"`   // 验证码
+        Scene string `json:"scene"` // 场景（必须与发送时一致）
+    }
+)

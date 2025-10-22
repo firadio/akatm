@@ -9,44 +9,42 @@ info(
 import "../../common/types.api"
 
 @server(
-    prefix: /api/deposit
-    group: auditDeposit
-    jwt: Auth
-    middleware: SignCheck, JwtAuth
-    tags: "入账审核"
+    prefix: /api/fams/bank/deposit
+    group: famsBankDeposit
+    tags: "银行存款"
 )
 service admin {
     @doc(
         summary: "入账审核列表"
-        description: "分页查看入账审核列表。请求头: Authorization, X-Timestamp, X-Sign"
+        description: "分页查看入账审核列表"
         id: "admin.audit.deposit.list"
     )
     @handler listDeposits
-    get /audits/deposits (ListDepositsReq) returns (ListDepositsResp)
+    get / (ListDepositsReq) returns (ListDepositsResp)
 
     @doc(
         summary: "入账审核详情"
-        description: "查看入账审核详情。请求头: Authorization, X-Timestamp, X-Sign"
+        description: "查看入账审核详情"
         id: "admin.audit.deposit.detail"
     )
     @handler getDeposit
-    get /audits/deposits/:id (IdReq) returns (GetDepositResp)
+    get /:id (IdReq) returns (GetDepositResp)
 
     @doc(
         summary: "审核通过"
-        description: "审核通过后执行汇率转换，扣手续费并入账USDT。请求头: Authorization, X-Timestamp, X-Sign"
+        description: "审核通过后执行汇率转换，扣手续费并入账USDT"
         id: "admin.audit.deposit.approve"
     )
     @handler approveDeposit
-    post /audits/deposits/:id/approve (ApproveDepositReq) returns (BaseResp)
+    post /:id/approve (ApproveDepositReq) returns (BaseResp)
 
     @doc(
         summary: "审核拒绝"
-        description: "入账审核拒绝。请求头: Authorization, X-Timestamp, X-Sign"
+        description: "入账审核拒绝"
         id: "admin.audit.deposit.reject"
     )
     @handler rejectDeposit
-    post /audits/deposits/:id/reject (RejectDepositReq) returns (BaseResp)
+    post /:id/reject (RejectDepositReq) returns (BaseResp)
 }
 
 type (
@@ -93,10 +91,10 @@ type (
         ExchangeFee string `json:"exchangeFee"` // 换汇手续费
         Status string `json:"status"` // 审核状态：pending-待审核, approved-已通过, rejected-已拒绝
         StatusText string `json:"statusText"` // 状态文本
-        DepositTime string `json:"depositTime"` // 存款时间
+        DepositTime int64 `json:"depositTime"` // 存款时间（毫秒级时间戳）
         AuditorId int64 `json:"auditorId"` // 审核人ID
         AuditorName string `json:"auditorName"` // 审核人姓名
-        AuditTime string `json:"auditTime"` // 审核时间
+        AuditTime int64 `json:"auditTime"` // 审核时间（毫秒级时间戳）
         AuditNote string `json:"auditNote"` // 审核意见
         AuditResult string `json:"auditResult"` // 审核结果
         Note string `json:"note"` // 备注
@@ -146,11 +144,11 @@ type (
         WithdrawFee string `json:"withdrawFee"` // 提现手续费
         Status string `json:"status"` // 审核状态：pending-待审核, approved-已通过, rejected-已拒绝
         StatusText string `json:"statusText"` // 状态文本
-        DepositTime string `json:"depositTime"` // 存款时间
+        DepositTime int64 `json:"depositTime"` // 存款时间（毫秒级时间戳）
         AuditorId int64 `json:"auditorId"` // 审核人ID
         AuditorName string `json:"auditorName"` // 审核人姓名
         AuditorEmail string `json:"auditorEmail"` // 审核人邮箱
-        AuditTime string `json:"auditTime"` // 审核时间
+        AuditTime int64 `json:"auditTime"` // 审核时间（毫秒级时间戳）
         AuditNote string `json:"auditNote"` // 审核意见
         AuditResult string `json:"auditResult"` // 审核结果
         Note string `json:"note"` // 备注

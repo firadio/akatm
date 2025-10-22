@@ -9,113 +9,58 @@ info(
 import "../../common/types.api"
 
 @server(
-    prefix: /api/dashboard
-    group: dashboard
+    prefix: /api/admin/dashboard
+    group: adminDashboard
     jwt: Auth
     middleware: SignCheck, JwtAuth
-    tags: "仪表盘"
+    tags: "Admin-仪表盘"
 )
 service admin {
     @doc(
-        summary: "仪表盘概览"
-        description: "获取仪表盘数据概览。请求头: Authorization, X-Timestamp, X-Sign"
-        id: "admin.dashboard.overview"
+        summary: "仪表盘数据"
+        description: "获取仪表盘所有数据，通过modules参数控制返回模块：overview-概览,user-用户,fund-资金,transaction-交易,audit-审核,customer-客户,account-账户,kyc-KYC认证,realtime-实时监控,alerts-告警。不传参数返回所有核心数据"
+        id: "admin.dashboard.getData"
     )
-    @handler getDashboardOverview
-    get /dashboard/overview (GetDashboardOverviewReq) returns (GetDashboardOverviewResp)
-
-    @doc(
-        summary: "用户统计"
-        description: "获取用户相关统计数据。请求头: Authorization, X-Timestamp, X-Sign"
-        id: "admin.dashboard.userStats"
-    )
-    @handler getUserStats
-    get /dashboard/user-stats (GetUserStatsReq) returns (GetUserStatsResp)
-
-    @doc(
-        summary: "资金统计"
-        description: "获取资金相关统计数据。请求头: Authorization, X-Timestamp, X-Sign"
-        id: "admin.dashboard.fundStats"
-    )
-    @handler getFundStats
-    get /dashboard/fund-stats (GetFundStatsReq) returns (GetFundStatsResp)
-
-    @doc(
-        summary: "交易统计"
-        description: "获取交易相关统计数据。请求头: Authorization, X-Timestamp, X-Sign"
-        id: "admin.dashboard.transactionStats"
-    )
-    @handler getTransactionStats
-    get /dashboard/transaction-stats (GetTransactionStatsReq) returns (GetTransactionStatsResp)
-
-    @doc(
-        summary: "审核统计"
-        description: "获取审核相关统计数据。请求头: Authorization, X-Timestamp, X-Sign"
-        id: "admin.dashboard.auditStats"
-    )
-    @handler getAuditStats
-    get /dashboard/audit-stats (GetAuditStatsReq) returns (GetAuditStatsResp)
-
-    @doc(
-        summary: "趋势图表"
-        description: "获取数据趋势图表。请求头: Authorization, X-Timestamp, X-Sign"
-        id: "admin.dashboard.trendCharts"
-    )
-    @handler getTrendCharts
-    get /dashboard/trend-charts (GetTrendChartsReq) returns (GetTrendChartsResp)
-
-    @doc(
-        summary: "实时监控"
-        description: "获取系统实时监控数据。请求头: Authorization, X-Timestamp, X-Sign"
-        id: "admin.dashboard.realtimeMonitor"
-    )
-    @handler getRealtimeMonitor
-    get /dashboard/realtime-monitor returns (GetRealtimeMonitorResp)
-
-    @doc(
-        summary: "告警信息"
-        description: "获取系统告警信息。请求头: Authorization, X-Timestamp, X-Sign"
-        id: "admin.dashboard.alerts"
-    )
-    @handler getAlerts
-    get /dashboard/alerts (GetAlertsReq) returns (GetAlertsResp)
-
-    @doc(
-        summary: "客户统计"
-        description: "获取客户相关统计数据。请求头: Authorization, X-Timestamp, X-Sign"
-        id: "admin.dashboard.customerStats"
-    )
-    @handler getCustomerStats
-    get /dashboard/customer-stats (GetCustomerStatsReq) returns (GetCustomerStatsResp)
-
-    @doc(
-        summary: "账户统计"
-        description: "获取银行账户相关统计数据。请求头: Authorization, X-Timestamp, X-Sign"
-        id: "admin.dashboard.accountStats"
-    )
-    @handler getAccountStats
-    get /dashboard/account-stats (GetAccountStatsReq) returns (GetAccountStatsResp)
-
-    @doc(
-        summary: "KYC统计"
-        description: "获取KYC认证相关统计数据。请求头: Authorization, X-Timestamp, X-Sign"
-        id: "admin.dashboard.kycStats"
-    )
-    @handler getKycStats
-    get /dashboard/kyc-stats (GetKycStatsReq) returns (GetKycStatsResp)
+    @handler getDashboardData
+    get / (GetDashboardDataReq) returns (GetDashboardDataResp)
 }
 
 type (
-    // 仪表盘概览请求
-    GetDashboardOverviewReq {
+    // 仪表盘数据请求
+    GetDashboardDataReq {
+        Modules string `form:"modules,optional"` // 需要返回的模块，逗号分隔：overview,user,fund,transaction,audit,customer,account,kyc,realtime,alerts。不传则返回核心模块
         TimeRange string `form:"timeRange,default=7d,optional"` // 时间范围：1d、7d、30d、90d
     }
 
-    // 仪表盘概览响应
-    GetDashboardOverviewResp {
+    // 仪表盘数据响应
+    GetDashboardDataResp {
         Code int32 `json:"code"` // 响应码
         Message string `json:"message"` // 响应消息
-        Data DashboardOverviewData `json:"data"` // 数据
+        Data DashboardData `json:"data"` // 数据
+    }
+
+    // 仪表盘数据
+    DashboardData {
+        Overview DashboardOverviewData `json:"overview,optional"` // 概览数据
+        UserStats UserStatsData `json:"userStats,optional"` // 用户统计
+        FundStats FundStatsData `json:"fundStats,optional"` // 资金统计
+        TransactionStats TransactionStatsData `json:"transactionStats,optional"` // 交易统计
+        AuditStats AuditStatsData `json:"auditStats,optional"` // 审核统计
+        CustomerStats CustomerStatsData `json:"customerStats,optional"` // 客户统计
+        AccountStats AccountStatsData `json:"accountStats,optional"` // 账户统计
+        KycStats KycStatsData `json:"kycStats,optional"` // KYC统计
+        RealtimeMonitor RealtimeMonitorData `json:"realtimeMonitor,optional"` // 实时监控
+        Alerts AlertListData `json:"alerts,optional"` // 告警信息
+    }
+
+    // 账户统计数据
+    AccountStatsData {
+        TotalAccounts int64 `json:"totalAccounts"` // 总账户数
+        ActiveAccounts int64 `json:"activeAccounts"` // 活跃账户数
+        FrozenAccounts int64 `json:"frozenAccounts"` // 冻结账户数
+        AccountGrowth []GrowthData `json:"accountGrowth"` // 账户增长趋势
+        AccountTypeDistribution []DistributionData `json:"accountTypeDistribution"` // 账户类型分布
+        AccountStatusDistribution []DistributionData `json:"accountStatusDistribution"` // 账户状态分布
     }
 
     // 仪表盘概览数据
@@ -154,7 +99,7 @@ type (
         Description string `json:"description"` // 描述
         UserName string `json:"userName"` // 用户名
         UserType string `json:"userType"` // 用户类型
-        Time string `json:"time"` // 时间
+        Time int64 `json:"time"` // 时间（毫秒级时间戳）
         Status string `json:"status"` // 状态
     }
 
@@ -169,19 +114,6 @@ type (
         LastCheck string `json:"lastCheck"` // 最后检查时间
     }
 
-    // 用户统计请求
-    GetUserStatsReq {
-        TimeRange string `form:"timeRange,default=30d,optional"` // 时间范围
-        UserType string `form:"userType,optional"` // 用户类型筛选
-    }
-
-    // 用户统计响应
-    GetUserStatsResp {
-        Code int32 `json:"code"` // 响应码
-        Message string `json:"message"` // 响应消息
-        Data UserStatsData `json:"data"` // 数据
-    }
-
     // 用户统计数据
     UserStatsData {
         TotalUsers int64 `json:"totalUsers"` // 总用户数
@@ -194,7 +126,7 @@ type (
 
     // 增长数据
     GrowthData {
-        Date string `json:"date"` // 日期
+        Date int64 `json:"date"` // 日期（毫秒级时间戳）
         Value int64 `json:"value"` // 数值
     }
 
@@ -212,19 +144,6 @@ type (
         UserType string `json:"userType"` // 用户类型
         ActivityCount int64 `json:"activityCount"` // 活动次数
         LastActive string `json:"lastActive"` // 最后活跃时间
-    }
-
-    // 资金统计请求
-    GetFundStatsReq {
-        TimeRange string `form:"timeRange,default=30d,optional"` // 时间范围
-        Currency string `form:"currency,optional"` // 币种筛选
-    }
-
-    // 资金统计响应
-    GetFundStatsResp {
-        Code int32 `json:"code"` // 响应码
-        Message string `json:"message"` // 响应消息
-        Data FundStatsData `json:"data"` // 数据
     }
 
     // 资金统计数据
@@ -247,24 +166,11 @@ type (
 
     // 每日资金数据
     DailyFundData {
-        Date string `json:"date"` // 日期
+        Date int64 `json:"date"` // 日期（毫秒级时间戳）
         Deposit string `json:"deposit"` // 存款
         Withdrawal string `json:"withdrawal"` // 提现
         Fee string `json:"fee"` // 手续费
         Net string `json:"net"` // 净额
-    }
-
-    // 交易统计请求
-    GetTransactionStatsReq {
-        TimeRange string `form:"timeRange,default=30d,optional"` // 时间范围
-        TransactionType string `form:"transactionType,optional"` // 交易类型筛选
-    }
-
-    // 交易统计响应
-    GetTransactionStatsResp {
-        Code int32 `json:"code"` // 响应码
-        Message string `json:"message"` // 响应消息
-        Data TransactionStatsData `json:"data"` // 数据
     }
 
     // 交易统计数据
@@ -280,7 +186,7 @@ type (
 
     // 交易趋势数据
     TransactionTrendData {
-        Date string `json:"date"` // 日期
+        Date int64 `json:"date"` // 日期（毫秒级时间戳）
         Count int64 `json:"count"` // 交易数
         Amount string `json:"amount"` // 交易金额
     }
@@ -327,7 +233,7 @@ type (
 
     // 审核趋势数据
     AuditTrendData {
-        Date string `json:"date"` // 日期
+        Date int64 `json:"date"` // 日期（毫秒级时间戳）
         Pending int64 `json:"pending"` // 待审核
         Approved int64 `json:"approved"` // 已通过
         Rejected int64 `json:"rejected"` // 已拒绝
@@ -539,7 +445,7 @@ type (
 
     // KYC趋势数据
     KycTrendData {
-        Date string `json:"date"` // 日期
+        Date int64 `json:"date"` // 日期（毫秒级时间戳）
         Pending int64 `json:"pending"` // 待审核
         Approved int64 `json:"approved"` // 已通过
         Rejected int64 `json:"rejected"` // 已拒绝

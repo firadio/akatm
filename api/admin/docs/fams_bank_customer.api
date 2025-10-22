@@ -9,140 +9,138 @@ info(
 import "../../common/types.api"
 
 @server(
-    prefix: /api/customer
-    group: customer
-    jwt: Auth
-    middleware: SignCheck, JwtAuth
+    prefix: /api/fams/bank/customer
+    group: famsBankCustomer
     tags: "客户管理"
 )
 service admin {
     @doc(
         summary: "客户列表"
-        description: "分页查看所有银行客户。请求头: Authorization, X-Timestamp, X-Sign"
+        description: "分页查看所有银行客户"
         id: "admin.customer.list"
     )
     @handler listCustomers
-    get /customers (ListCustomersReq) returns (ListCustomersResp)
+    get / (ListCustomersReq) returns (ListCustomersResp)
 
     @doc(
         summary: "客户详情"
-        description: "查看银行客户详情。请求头: Authorization, X-Timestamp, X-Sign"
+        description: "查看银行客户详情"
         id: "admin.customer.detail"
     )
     @handler getCustomer
-    get /customers/:id (IdReq) returns (GetCustomerResp)
+    get /:id (IdReq) returns (GetCustomerResp)
 
     @doc(
         summary: "更新客户信息"
-        description: "更新银行客户基础信息。请求头: Authorization, X-Timestamp, X-Sign"
+        description: "更新银行客户基础信息"
         id: "admin.customer.update"
     )
     @handler updateCustomer
-    put /customers/:id (UpdateCustomerReq) returns (BaseResp)
+    put /:id (UpdateCustomerReq) returns (BaseResp)
 
     @doc(
         summary: "客户账户列表"
-        description: "查看客户的银行账户列表。请求头: Authorization, X-Timestamp, X-Sign"
+        description: "查看客户的银行账户列表"
         id: "admin.customer.accounts"
     )
     @handler listCustomerAccounts
-    get /customers/:id/accounts (IdReq) returns (ListCustomerAccountsResp)
+    get /:id/accounts (IdReq) returns (ListCustomerAccountsResp)
 
     @doc(
         summary: "客户账户详情"
-        description: "查看客户的银行账户详情。请求头: Authorization, X-Timestamp, X-Sign"
+        description: "查看客户的银行账户详情"
         id: "admin.customer.accountDetail"
     )
     @handler getCustomerAccount
-    get /customers/:customerId/accounts/:accountId (GetCustomerAccountReq) returns (GetCustomerAccountResp)
+    get /:customerId/accounts/:accountId (GetCustomerAccountReq) returns (GetCustomerAccountResp)
 
     @doc(
         summary: "更新KYC状态"
-        description: "更新客户KYC认证状态。请求头: Authorization, X-Timestamp, X-Sign"
+        description: "更新客户KYC认证状态"
         id: "admin.customer.updateKycStatus"
     )
     @handler updateCustomerKycStatus
-    put /customers/:id/kyc-status (UpdateCustomerKycStatusReq) returns (BaseResp)
+    patch /:id/kyc-status (UpdateCustomerKycStatusReq) returns (BaseResp)
 
     @doc(
         summary: "KYC审核"
-        description: "审核客户KYC材料。请求头: Authorization, X-Timestamp, X-Sign"
+        description: "审核客户KYC材料"
         id: "admin.customer.auditKyc"
     )
     @handler auditCustomerKyc
-    post /customers/:id/kyc-audit (AuditCustomerKycReq) returns (BaseResp)
+    post /:id/kyc-audit (AuditCustomerKycReq) returns (BaseResp)
 
     @doc(
         summary: "客户标签列表"
-        description: "获取客户标签列表。请求头: Authorization, X-Timestamp, X-Sign"
+        description: "获取客户标签列表"
         id: "admin.customer.tags"
     )
     @handler listCustomerTags
-    get /customers/tags (ListCustomerTagsReq) returns (ListCustomerTagsResp)
+    get /tags (ListCustomerTagsReq) returns (ListCustomerTagsResp)
 
     @doc(
         summary: "创建客户标签"
-        description: "创建新的客户标签。请求头: Authorization, X-Timestamp, X-Sign"
+        description: "创建新的客户标签"
         id: "admin.customer.createTag"
     )
     @handler createCustomerTag
-    post /customers/tags (CreateCustomerTagReq) returns (CreateCustomerTagResp)
+    post /tags (CreateCustomerTagReq) returns (CreateCustomerTagResp)
 
     @doc(
         summary: "更新客户标签"
-        description: "更新客户标签信息。请求头: Authorization, X-Timestamp, X-Sign"
+        description: "更新客户标签信息"
         id: "admin.customer.updateTag"
     )
     @handler updateCustomerTag
-    put /customers/tags/:id (UpdateCustomerTagReq) returns (BaseResp)
+    put /tags/:id (UpdateCustomerTagReq) returns (BaseResp)
 
     @doc(
         summary: "删除客户标签"
-        description: "删除客户标签。请求头: Authorization, X-Timestamp, X-Sign"
+        description: "删除客户标签"
         id: "admin.customer.deleteTag"
     )
     @handler deleteCustomerTag
-    delete /customers/tags/:id (IdReq) returns (BaseResp)
+    delete /tags/:id (IdReq) returns (BaseResp)
 
     @doc(
         summary: "为客户添加标签"
-        description: "为客户添加标签。请求头: Authorization, X-Timestamp, X-Sign"
+        description: "为客户添加标签"
         id: "admin.customer.addTags"
     )
     @handler addCustomerTags
-    post /customers/:id/tags (AddCustomerTagsReq) returns (BaseResp)
+    post /:id/tags (AddCustomerTagsReq) returns (BaseResp)
 
     @doc(
         summary: "移除客户标签"
-        description: "移除客户标签。请求头: Authorization, X-Timestamp, X-Sign"
+        description: "移除客户标签"
         id: "admin.customer.removeTags"
     )
     @handler removeCustomerTags
-    delete /customers/:id/tags (RemoveCustomerTagsReq) returns (BaseResp)
+    delete /:id/tags (RemoveCustomerTagsReq) returns (BaseResp)
 
     @doc(
         summary: "获取客户标签"
-        description: "获取客户的标签列表。请求头: Authorization, X-Timestamp, X-Sign"
+        description: "获取客户的标签列表"
         id: "admin.customer.getTags"
     )
     @handler getCustomerTags
-    get /customers/:id/tags (IdReq) returns (GetCustomerTagsResp)
+    get /:id/tags (IdReq) returns (GetCustomerTagsResp)
 
     @doc(
         summary: "搜索可用标签"
-        description: "搜索可用的标签供客户经理选择。请求头: Authorization, X-Timestamp, X-Sign"
+        description: "搜索可用的标签供客户经理选择"
         id: "admin.customer.searchTags"
     )
     @handler searchCustomerTags
-    get /customers/tags/search (SearchCustomerTagsReq) returns (SearchCustomerTagsResp)
+    get /tags/search (SearchCustomerTagsReq) returns (SearchCustomerTagsResp)
 
     @doc(
         summary: "获取标签使用统计"
-        description: "获取标签的使用统计信息。请求头: Authorization, X-Timestamp, X-Sign"
+        description: "获取标签的使用统计信息"
         id: "admin.customer.getTagStats"
     )
     @handler getCustomerTagStats
-    get /customers/tags/stats (GetCustomerTagStatsReq) returns (GetCustomerTagStatsResp)
+    get /tags/stats (GetCustomerTagStatsReq) returns (GetCustomerTagStatsResp)
 }
 
 type (
@@ -160,8 +158,8 @@ type (
         ManagerId int64 `form:"managerId,optional"` // 客户经理ID筛选
         
         // 时间范围筛选
-        StartTime string `form:"startTime,optional"` // 创建开始时间（时间戳）
-        EndTime string `form:"endTime,optional"` // 创建结束时间（时间戳）
+        StartTime int64 `form:"startTime,optional"` // 创建开始时间（毫秒级时间戳）（时间戳）
+        EndTime int64 `form:"endTime,optional"` // 创建结束时间（毫秒级时间戳）（时间戳）
     }
 
     // 客户信息（只读）
@@ -311,7 +309,7 @@ type (
         TotalFeeAmount string `json:"totalFeeAmount"` // 累计手续费
         DailyTransactionLimit string `json:"dailyTransactionLimit"` // 日交易限额
         MonthlyTransactionLimit string `json:"monthlyTransactionLimit"` // 月交易限额
-        AccountOpeningDate string `json:"accountOpeningDate"` // 开户日期
+        AccountOpeningDate int64 `json:"accountOpeningDate"` // 开户日期（毫秒级时间戳）
         RiskLevel string `json:"riskLevel"` // 风险等级：low-低, medium-中, high-高
         ComplianceStatus string `json:"complianceStatus"` // 合规状态：compliant-合规, non_compliant-不合规, pending-待审核
         CreatedAt string `json:"createdAt"` // 创建时间
@@ -463,8 +461,8 @@ type (
     // 获取标签使用统计请求
     GetCustomerTagStatsReq {
         ManagerId int64 `form:"managerId,optional"` // 客户经理ID筛选
-        StartTime string `form:"startTime,optional"` // 开始时间
-        EndTime string `form:"endTime,optional"` // 结束时间
+        StartTime int64 `form:"startTime,optional"` // 开始时间（毫秒级时间戳）
+        EndTime int64 `form:"endTime,optional"` // 结束时间（毫秒级时间戳）
     }
 
     // 获取标签使用统计响应

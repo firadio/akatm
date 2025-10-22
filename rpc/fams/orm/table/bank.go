@@ -191,131 +191,13 @@ type BankWebhookRecord struct {
 	Note string `gorm:"size:255"`
 }
 
-// UserWalletDeposit 用户钱包存款记录
-type UserWalletDeposit struct {
-	gorm.Model
-	// 存款单号
-	DepositNumber string `gorm:"size:30;uniqueIndex"`
-	// 关联的用户ID
-	UserId uint `gorm:"index"`
-	// 关联的客户经理ID
-	ManagerId uint `gorm:"index"`
-	// 关联的银行账户ID
-	BankAccountId uint `gorm:"index"`
-	// 关联的银行存款记录ID
-	BankDepositId uint `gorm:"index"`
-	// 存款金额
-	DepositAmount decimal.Decimal `gorm:"type:decimal(20,8)"`
-	// 换汇后金额
-	ExchangeAmount decimal.Decimal `gorm:"type:decimal(20,8)"`
-	// 换汇手续费
-	ExchangeFee decimal.Decimal `gorm:"type:decimal(20,8)"`
-	// 存款时间
-	DepositTime int64 `gorm:"index"`
-	// 审核状态（Pending、Approved、Rejected）
-	AuditStatus string `gorm:"size:20;index"`
-	// 审核人ID
-	AuditorId uint `gorm:"index"`
-	// 审核人姓名
-	AuditorName string `gorm:"size:50"`
-	// 审核时间
-	AuditTime int64 `gorm:"index"`
-	// 审核意见
-	AuditNote string `gorm:"size:255"`
-	// 审核结果
-	AuditResult string `gorm:"size:20"`
-	// 备注
-	Note string `gorm:"size:255"`
-}
-
-// BankWithdrawal 银行账户提现记录
-type BankWithdrawal struct {
-	gorm.Model
-	// 提现单号
-	WithdrawNumber string `gorm:"size:30;uniqueIndex"`
-	// 关联的用户ID
-	UserId uint `gorm:"index"`
-	// 关联的客户ID
-	CustomerId uint `gorm:"index"`
-	// 关联的客户经理ID
-	ManagerId uint `gorm:"index"`
-	// 关联的银行账户ID
-	BankAccountId uint `gorm:"index"`
-	// 提现金额（USDT）
-	WithdrawAmount decimal.Decimal `gorm:"type:decimal(20,8)"`
-	// 提现手续费
-	WithdrawFee decimal.Decimal `gorm:"type:decimal(20,8)"`
-	// 实际到账金额
-	ActualAmount decimal.Decimal `gorm:"type:decimal(20,8)"`
-	// 目标虚拟钱包地址
-	CryptoAddress string `gorm:"size:255"`
-	// 网络类型（如：ERC20、TRC20、BEP20等）
-	Network string `gorm:"size:10"`
-	// 地址标签/备注
-	Tag string `gorm:"size:100"`
-	// 提现状态（Requested-已申请、UnderReview-审核中、Approved-已通过、Rejected-已拒绝、Settled-已结算）
-	Status string `gorm:"size:20;index"`
-	// 提现时间
-	WithdrawTime int64 `gorm:"index"`
-	// 审核人ID
-	AuditorId uint `gorm:"index"`
-	// 审核人姓名
-	AuditorName string `gorm:"size:50"`
-	// 审核时间
-	AuditTime int64 `gorm:"index"`
-	// 审核意见
-	AuditNote string `gorm:"size:255"`
-	// 审核结果
-	AuditResult string `gorm:"size:20"`
-	// 备注
-	Note string `gorm:"size:255"`
-}
-
-// FundDetail 资金明细记录
-type FundDetail struct {
-	gorm.Model
-	// 交易单号
-	TransactionNumber string `gorm:"size:30;uniqueIndex"`
-	// 关联的用户ID
-	UserId uint `gorm:"index"`
-	// 用户类型（super_agent、agent、manager、customer）
-	UserType string `gorm:"size:20;index"`
-	// 父级用户ID
-	ParentUserId uint `gorm:"index"`
-	// 交易类型（deposit、withdrawal、exchange、fee）
-	TransactionType string `gorm:"size:20;index"`
-	// 交易金额
-	Amount decimal.Decimal `gorm:"type:decimal(20,8)"`
-	// 币种
-	Currency string `gorm:"size:10;index"`
-	// 手续费
-	Fee decimal.Decimal `gorm:"type:decimal(20,8);default:0"`
-	// 实际到账金额
-	ActualAmount decimal.Decimal `gorm:"type:decimal(20,8)"`
-	// 状态（pending、completed、failed、cancelled）
-	Status string `gorm:"size:20;index"`
-	// 描述
-	Description string `gorm:"size:255"`
-	// 关联的存款记录ID（如果是存款交易）
-	DepositId uint `gorm:"index;default:null"`
-	// 关联的提现记录ID（如果是提现交易）
-	WithdrawalId uint `gorm:"index;default:null"`
-	// 交易时间
-	TransactionTime int64 `gorm:"index"`
-	// 备注
-	Note string `gorm:"size:255"`
-}
-
 func init() {
 	orm.RegisterTables(
 		BankCustomer{},
 		BankAccount{},
+		BankAccountApplication{},
 		BankDeposit{},
 		BankDepositAudit{},
-		BankAccountApplication{},
 		BankWebhookRecord{},
-		UserWalletDeposit{},
-		BankWithdrawal{},
-		FundDetail{},
 	)
 }

@@ -1,60 +1,50 @@
 syntax = "v1"
 
 info(
-    title: "报表查询接口"
-    desc: "提供代理和用户的客户存款、提现量等报表查询功能"
+    title: "代理报表查询接口"
+    desc: "提供代理、总代及平台的存款、提现量等报表查询功能"
     version: "v1.0"
 )
 
 import "../../common/types.api"
 
 @server(
-    prefix: /api/report
-    group: report
-    jwt: Auth
-    middleware: SignCheck, JwtAuth
-    tags: "报表管理"
+    prefix: /api/fams/agent/report
+    group: famsAgentReport
+    tags: "代理报表"
 )
 service admin {
     @doc(
         summary: "代理报表"
-        description: "查询代理及其下级用户的存款、提现量报表。请求头: Authorization, X-Timestamp, X-Sign"
-        id: "admin.report.agent"
+        description: "查询代理及其下级用户的存款、提现量报表"
+        id: "fams.report.agent"
     )
     @handler getAgentReport
-    get /reports/agents/:agentId (GetAgentReportReq) returns (GetAgentReportResp)
-
-    @doc(
-        summary: "用户报表"
-        description: "查询指定用户的存款、提现量报表。请求头: Authorization, X-Timestamp, X-Sign"
-        id: "admin.report.user"
-    )
-    @handler getUserReport
-    get /reports/users/:userId (GetUserReportReq) returns (GetUserReportResp)
+    get /:agentId (GetAgentReportReq) returns (GetAgentReportResp)
 
     @doc(
         summary: "总代报表"
-        description: "查询总代及其所有下级用户的综合报表。请求头: Authorization, X-Timestamp, X-Sign"
-        id: "admin.report.superAgent"
+        description: "查询总代及其所有下级用户的综合报表"
+        id: "fams.report.superAgent"
     )
     @handler getSuperAgentReport
-    get /reports/super-agents/:superAgentId (GetSuperAgentReportReq) returns (GetSuperAgentReportResp)
+    get /super-agent/:superAgentId (GetSuperAgentReportReq) returns (GetSuperAgentReportResp)
 
     @doc(
         summary: "平台总览报表"
-        description: "查询平台整体的存款、提现量报表。请求头: Authorization, X-Timestamp, X-Sign"
-        id: "admin.report.platform"
+        description: "查询平台整体的存款、提现量报表"
+        id: "fams.report.platform"
     )
     @handler getPlatformReport
-    get /reports/platform (GetPlatformReportReq) returns (GetPlatformReportResp)
+    get /platform (GetPlatformReportReq) returns (GetPlatformReportResp)
 }
 
 type (
     // 代理报表请求
     GetAgentReportReq {
         AgentId int64 `path:"agentId"` // 代理ID
-        StartTime string `form:"startTime,optional"` // 开始时间（时间戳）
-        EndTime string `form:"endTime,optional"` // 结束时间（时间戳）
+        StartTime int64 `form:"startTime,optional"` // 开始时间（毫秒级时间戳）
+        EndTime int64 `form:"endTime,optional"` // 结束时间（毫秒级时间戳）
         IncludeSubAgents bool `form:"includeSubAgents,default=true,optional"` // 是否包含下级代理
         Currency string `form:"currency,optional"` // 币种筛选
         TransactionType string `form:"transactionType,optional"` // 交易类型筛选：deposit-存款, withdrawal-提现, exchange-换汇, fee-手续费
@@ -94,49 +84,11 @@ type (
         SubAgents []AgentReportData `json:"subAgents"` // 下级代理报表
     }
 
-    // 用户报表请求
-    GetUserReportReq {
-        UserId int64 `path:"userId"` // 用户ID
-        StartTime string `form:"startTime,optional"` // 开始时间（时间戳）
-        EndTime string `form:"endTime,optional"` // 结束时间（时间戳）
-        Currency string `form:"currency,optional"` // 币种筛选
-        TransactionType string `form:"transactionType,optional"` // 交易类型筛选：deposit-存款, withdrawal-提现, exchange-换汇, fee-手续费
-        Status string `form:"status,optional"` // 交易状态筛选：pending-待处理, completed-已完成, failed-失败, cancelled-已取消
-    }
-
-    // 用户报表响应
-    GetUserReportResp {
-        Code int32 `json:"code"` // 响应码
-        Message string `json:"message"` // 响应消息
-        Data UserReportData `json:"data"` // 数据
-    }
-
-    // 用户报表数据
-    UserReportData {
-        UserId int64 `json:"userId"` // 用户ID
-        UserEmail string `json:"userEmail"` // 用户邮箱
-        UserName string `json:"userName"` // 用户姓名
-        UserType string `json:"userType"` // 用户类型：super_agent-总代, agent-代理, manager-客户经理, customer-客户
-        UserStatus int32 `json:"userStatus"` // 用户状态：1-启用, 0-禁用
-        ParentId int64 `json:"parentId"` // 父级用户ID
-        ParentTree string `json:"parentTree"` // 父级用户树
-        TotalDeposit string `json:"totalDeposit"` // 总存款
-        TotalWithdrawal string `json:"totalWithdrawal"` // 总提现
-        TotalFee string `json:"totalFee"` // 总手续费
-        NetAmount string `json:"netAmount"` // 净金额（存款-提现）
-        TransactionCount int64 `json:"transactionCount"` // 交易笔数
-        SuccessTransactionCount int64 `json:"successTransactionCount"` // 成功交易笔数
-        SuccessRate string `json:"successRate"` // 成功率
-        AverageTransactionAmount string `json:"averageTransactionAmount"` // 平均交易金额
-        CurrencyStats []CurrencyStat `json:"currencyStats"` // 币种统计
-        MonthlyStats []MonthlyStat `json:"monthlyStats"` // 月度统计
-    }
-
     // 总代报表请求
     GetSuperAgentReportReq {
         SuperAgentId int64 `path:"superAgentId"` // 总代ID
-        StartTime string `form:"startTime,optional"` // 开始时间（时间戳）
-        EndTime string `form:"endTime,optional"` // 结束时间（时间戳）
+        StartTime int64 `form:"startTime,optional"` // 开始时间（毫秒级时间戳）
+        EndTime int64 `form:"endTime,optional"` // 结束时间（毫秒级时间戳）
         Currency string `form:"currency,optional"` // 币种筛选
         TransactionType string `form:"transactionType,optional"` // 交易类型筛选：deposit-存款, withdrawal-提现, exchange-换汇, fee-手续费
         Status string `form:"status,optional"` // 交易状态筛选：pending-待处理, completed-已完成, failed-失败, cancelled-已取消
@@ -174,8 +126,8 @@ type (
 
     // 平台报表请求
     GetPlatformReportReq {
-        StartTime string `form:"startTime,optional"` // 开始时间（时间戳）
-        EndTime string `form:"endTime,optional"` // 结束时间（时间戳）
+        StartTime int64 `form:"startTime,optional"` // 开始时间（毫秒级时间戳）
+        EndTime int64 `form:"endTime,optional"` // 结束时间（毫秒级时间戳）
         Currency string `form:"currency,optional"` // 币种筛选
         TransactionType string `form:"transactionType,optional"` // 交易类型筛选：deposit-存款, withdrawal-提现, exchange-换汇, fee-手续费
         Status string `form:"status,optional"` // 交易状态筛选：pending-待处理, completed-已完成, failed-失败, cancelled-已取消

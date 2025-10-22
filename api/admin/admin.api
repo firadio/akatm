@@ -1,20 +1,45 @@
 syntax = "v1"
 
+// ==================== 公共类型定义 ====================
 import "../common/types.api"
-import "docs/auth.api"
-import "docs/role.api"
-import "docs/menu.api"
-import "docs/staff.api"
-import "docs/invite.api"
-import "docs/customer.api"
-import "docs/account.api"
-import "docs/accountApplication.api"
-import "docs/deposit.api"
-import "docs/withdrawal.api"
-import "docs/country.api"
-import "docs/fund.api"
-import "docs/user.api"
-import "docs/report.api"
-import "docs/system.api"
-import "docs/audit.api"
-import "docs/dashboard.api"
+
+// ==================== 公开接口（无需认证） ====================
+import "docs/public.api"
+
+// ==================== Admin RPC ====================
+// 会话管理
+import "docs/admin_session.api"
+
+// 系统管理
+import "docs/admin_system_user.api"
+import "docs/admin_system_role.api"
+import "docs/admin_system_menu.api"
+import "docs/admin_system_config.api"
+
+// 数据管理
+import "docs/admin_data_country.api"
+
+// 仪表板
+import "docs/admin_dashboard.api"
+
+// 审计日志
+import "docs/admin_system_audit.api"
+
+// ==================== IAM RPC ====================
+// 用户管理
+import "docs/iam_user.api"
+import "docs/iam_user_invite.api"
+
+// ==================== FAMS RPC ====================
+// 用户钱包
+import "docs/fams_user_wallet.api"
+
+// 银行管理
+import "docs/fams_bank_customer.api"
+import "docs/fams_bank_account.api"
+import "docs/fams_bank_account_application.api"
+import "docs/fams_bank_deposit.api"
+import "docs/fams_bank_withdrawal.api"
+
+// 代理收益
+import "docs/fams_agent_earnings.api"

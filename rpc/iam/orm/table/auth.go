@@ -6,7 +6,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type EmailVerify struct {
+type AuthEmail struct {
 	gorm.Model
 	// 邮箱地址
 	Email string `gorm:"size:50;unique"`
@@ -19,5 +19,5 @@ type EmailVerify struct {
 }
 
 func init() {
-	orm.RegisterTables(EmailVerify{})
+	orm.RegisterTables(AuthEmail{})
 }

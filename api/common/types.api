@@ -80,14 +80,22 @@ type (
         CreatedAt string `json:"createdAt"` // 创建时间
         UpdatedAt string `json:"updatedAt"` // 更新时间
         Children []MenuInfo `json:"children,optional"` // 子菜单
+    }
 
-        }
-                    // 每日统计
-        DailyStat {
-            Date string `json:"date"` // 日期（YYYY-MM-DD）
-            Count int64 `json:"count"` // 数量
-            Amount string `json:"amount"` // 金额（decimal字符串）
-        }
+    // 每日统计
+    DailyStat {
+        Date string `json:"date"` // 日期（YYYY-MM-DD）
+        Count int64 `json:"count"` // 数量
+        Amount string `json:"amount"` // 金额（decimal字符串）
+    }
+
+    // 月度统计
+    MonthlyStat {
+        Year int32 `json:"year"` // 年份
+        Month int32 `json:"month"` // 月份
+        Count int64 `json:"count"` // 数量
+        Amount string `json:"amount"` // 金额（decimal字符串）
+    }
 )
 
 // 状态枚举说明：

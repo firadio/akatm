@@ -9,8 +9,8 @@ info(
 import "../../common/types.api"
 
 @server(
-    prefix: /admin
-    group: audit
+    prefix: /api/admin/system/audit
+    group: adminsystemAudit
     jwt: Auth
     middleware: SignCheck, JwtAuth
     tags: "日志审核"
@@ -18,91 +18,91 @@ import "../../common/types.api"
 service admin {
     @doc(
         summary: "操作日志列表"
-        description: "分页查询系统操作日志。请求头: Authorization, X-Timestamp, X-Sign"
-        id: "admin.audit.operationLogs"
+        description: "分页查询系统操作日志"
+        id: "admin.system.audit.operationLogs"
     )
     @handler listOperationLogs
-    get /audit/operation-logs (ListOperationLogsReq) returns (ListOperationLogsResp)
+    get /operation-logs (ListOperationLogsReq) returns (ListOperationLogsResp)
 
     @doc(
         summary: "操作日志详情"
-        description: "获取操作日志详细信息。请求头: Authorization, X-Timestamp, X-Sign"
-        id: "admin.audit.operationLogDetail"
+        description: "获取操作日志详细信息"
+        id: "admin.system.audit.operationLogDetail"
     )
     @handler getOperationLog
-    get /audit/operation-logs/:id (IdReq) returns (GetOperationLogResp)
+    get /operation-logs/:id (IdReq) returns (GetOperationLogResp)
 
     @doc(
         summary: "审计日志列表"
-        description: "分页查询系统审计日志。请求头: Authorization, X-Timestamp, X-Sign"
-        id: "admin.audit.auditLogs"
+        description: "分页查询系统审计日志"
+        id: "admin.system.audit.auditLogs"
     )
     @handler listAuditLogs
-    get /audit/audit-logs (ListAuditLogsReq) returns (ListAuditLogsResp)
+    get /audit-logs (ListAuditLogsReq) returns (ListAuditLogsResp)
 
     @doc(
         summary: "审计日志详情"
-        description: "获取审计日志详细信息。请求头: Authorization, X-Timestamp, X-Sign"
-        id: "admin.audit.auditLogDetail"
+        description: "获取审计日志详细信息"
+        id: "admin.system.audit.auditLogDetail"
     )
     @handler getAuditLog
-    get /audit/audit-logs/:id (IdReq) returns (GetAuditLogResp)
+    get /audit-logs/:id (IdReq) returns (GetAuditLogResp)
 
     @doc(
         summary: "登录日志列表"
-        description: "分页查询用户登录日志。请求头: Authorization, X-Timestamp, X-Sign"
-        id: "admin.audit.loginLogs"
+        description: "分页查询用户登录日志"
+        id: "admin.system.audit.loginLogs"
     )
     @handler listLoginLogs
-    get /audit/login-logs (ListLoginLogsReq) returns (ListLoginLogsResp)
+    get /login-logs (ListLoginLogsReq) returns (ListLoginLogsResp)
 
     @doc(
         summary: "登录日志详情"
-        description: "获取登录日志详细信息。请求头: Authorization, X-Timestamp, X-Sign"
-        id: "admin.audit.loginLogDetail"
+        description: "获取登录日志详细信息"
+        id: "admin.system.audit.loginLogDetail"
     )
     @handler getLoginLog
-    get /audit/login-logs/:id (IdReq) returns (GetLoginLogResp)
+    get /login-logs/:id (IdReq) returns (GetLoginLogResp)
 
     @doc(
         summary: "日志统计"
-        description: "获取日志统计信息。请求头: Authorization, X-Timestamp, X-Sign"
-        id: "admin.audit.logStats"
+        description: "获取日志统计信息"
+        id: "admin.system.audit.logStats"
     )
     @handler getLogStats
-    get /audit/stats (GetLogStatsReq) returns (GetLogStatsResp)
+    get /stats (GetLogStatsReq) returns (GetLogStatsResp)
 
     @doc(
         summary: "导出日志"
-        description: "导出日志数据。请求头: Authorization, X-Timestamp, X-Sign"
-        id: "admin.audit.exportLogs"
+        description: "导出日志数据"
+        id: "admin.system.audit.exportLogs"
     )
     @handler exportLogs
-    post /audit/export (ExportLogsReq) returns (ExportLogsResp)
+    post /export (ExportLogsReq) returns (ExportLogsResp)
 
     @doc(
         summary: "清理日志"
-        description: "清理过期日志数据。请求头: Authorization, X-Timestamp, X-Sign"
-        id: "admin.audit.cleanLogs"
+        description: "清理过期日志数据"
+        id: "admin.system.audit.cleanLogs"
     )
     @handler cleanLogs
-    post /audit/clean (CleanLogsReq) returns (CleanLogsResp)
+    post /clean (CleanLogsReq) returns (CleanLogsResp)
 
     @doc(
         summary: "获取导出任务状态"
-        description: "获取日志导出任务状态。请求头: Authorization, X-Timestamp, X-Sign"
-        id: "admin.audit.exportTaskStatus"
+        description: "获取日志导出任务状态"
+        id: "admin.system.audit.exportTaskStatus"
     )
     @handler getExportTaskStatus
-    get /audit/export/:taskId/status (GetExportTaskStatusReq) returns (GetExportTaskStatusResp)
+    get /export/:taskId/status (GetExportTaskStatusReq) returns (GetExportTaskStatusResp)
 
     @doc(
         summary: "下载导出文件"
-        description: "下载导出的日志文件。请求头: Authorization, X-Timestamp, X-Sign"
-        id: "admin.audit.downloadExport"
+        description: "下载导出的日志文件"
+        id: "admin.system.audit.downloadExport"
     )
     @handler downloadExport
-    get /audit/export/:taskId/download (GetExportTaskStatusReq) returns (DownloadExportResp)
+    get /export/:taskId/download (GetExportTaskStatusReq) returns (DownloadExportResp)
 }
 
 type (
@@ -115,8 +115,8 @@ type (
         Action string `form:"action,optional"` // 操作类型筛选
         OperatorId int64 `form:"operatorId,optional"` // 操作人ID筛选
         Status string `form:"status,optional"` // 状态筛选
-        StartTime string `form:"startTime,optional"` // 开始时间
-        EndTime string `form:"endTime,optional"` // 结束时间
+        StartTime int64 `form:"startTime,optional"` // 开始时间（毫秒级时间戳）
+        EndTime int64 `form:"endTime,optional"` // 结束时间（毫秒级时间戳）
     }
 
     // 操作日志列表响应
@@ -144,7 +144,7 @@ type (
         IpAddress string `json:"ipAddress"` // IP地址
         UserAgent string `json:"userAgent"` // 用户代理
         ExecutionTime int64 `json:"executionTime"` // 执行时间（毫秒）
-        CreatedAt string `json:"createdAt"` // 创建时间
+        CreatedAt int64 `json:"createdAt"` // 创建时间（毫秒级时间戳）
     }
 
     // 操作日志列表数据
@@ -169,8 +169,8 @@ type (
         ResourceType string `form:"resourceType,optional"` // 资源类型筛选
         ResourceId int64 `form:"resourceId,optional"` // 资源ID筛选
         OperatorId int64 `form:"operatorId,optional"` // 操作人ID筛选
-        StartTime string `form:"startTime,optional"` // 开始时间
-        EndTime string `form:"endTime,optional"` // 结束时间
+        StartTime int64 `form:"startTime,optional"` // 开始时间（毫秒级时间戳）
+        EndTime int64 `form:"endTime,optional"` // 结束时间（毫秒级时间戳）
     }
 
     // 审计日志列表响应
@@ -196,7 +196,7 @@ type (
         OperatorType string `json:"operatorType"` // 操作人类型
         IpAddress string `json:"ipAddress"` // IP地址
         UserAgent string `json:"userAgent"` // 用户代理
-        CreatedAt string `json:"createdAt"` // 创建时间
+        CreatedAt int64 `json:"createdAt"` // 创建时间（毫秒级时间戳）
     }
 
     // 审计日志列表数据
@@ -219,8 +219,8 @@ type (
         Keyword string `form:"keyword,optional"` // 关键词搜索
         UserType string `form:"userType,optional"` // 用户类型筛选
         Status string `form:"status,optional"` // 状态筛选：success、failed
-        StartTime string `form:"startTime,optional"` // 开始时间
-        EndTime string `form:"endTime,optional"` // 结束时间
+        StartTime int64 `form:"startTime,optional"` // 开始时间（毫秒级时间戳）
+        EndTime int64 `form:"endTime,optional"` // 结束时间（毫秒级时间戳）
     }
 
     // 登录日志列表响应
@@ -244,8 +244,8 @@ type (
         Location string `json:"location"` // 登录地点
         Device string `json:"device"` // 设备信息
         Browser string `json:"browser"` // 浏览器信息
-        LoginTime string `json:"loginTime"` // 登录时间
-        LogoutTime string `json:"logoutTime,optional"` // 登出时间
+        LoginTime int64 `json:"loginTime"` // 登录时间（毫秒级时间戳）
+        LogoutTime int64 `json:"logoutTime,optional"` // 登出时间（毫秒级时间戳）
         SessionDuration int64 `json:"sessionDuration,optional"` // 会话时长（秒）
     }
 
@@ -264,8 +264,8 @@ type (
 
     // 日志统计请求
     GetLogStatsReq {
-        StartTime string `form:"startTime,optional"` // 开始时间
-        EndTime string `form:"endTime,optional"` // 结束时间
+        StartTime int64 `form:"startTime,optional"` // 开始时间（毫秒级时间戳）
+        EndTime int64 `form:"endTime,optional"` // 结束时间（毫秒级时间戳）
         GroupBy string `form:"groupBy,default=day,optional"` // 分组方式：day、hour、month
     }
 
@@ -304,8 +304,8 @@ type (
     // 导出日志请求
     ExportLogsReq {
         LogType string `json:"logType"` // 日志类型：operation、audit、login
-        StartTime string `form:"startTime,optional"` // 开始时间
-        EndTime string `form:"endTime,optional"` // 结束时间
+        StartTime int64 `form:"startTime,optional"` // 开始时间（毫秒级时间戳）
+        EndTime int64 `form:"endTime,optional"` // 结束时间（毫秒级时间戳）
         Format string `json:"format,default=excel,optional"` // 导出格式：excel、csv、json
         Fields []string `json:"fields,optional"` // 导出字段
         Filters map[string]interface{} `json:"filters,optional"` // 筛选条件
@@ -322,7 +322,7 @@ type (
     ExportLogsData {
         TaskId string `json:"taskId"` // 任务ID
         DownloadUrl string `json:"downloadUrl"` // 下载链接
-        ExpireTime string `json:"expireTime"` // 过期时间
+        ExpireTime int64 `json:"expireTime"` // 过期时间（毫秒级时间戳）
         FileSize int64 `json:"fileSize"` // 文件大小
         RecordCount int64 `json:"recordCount"` // 记录数量
     }
@@ -330,7 +330,7 @@ type (
     // 清理日志请求
     CleanLogsReq {
         LogType string `json:"logType"` // 日志类型：operation、audit、login、all
-        BeforeTime string `json:"beforeTime"` // 清理此时间之前的日志
+        BeforeTime int64 `json:"beforeTime"` // 清理此时间之前的日志（毫秒级时间戳）
         DryRun bool `json:"dryRun,default=false,optional"` // 是否只是预览（不实际删除）
         Reason string `json:"reason,optional"` // 清理原因
     }
@@ -349,8 +349,8 @@ type (
         ActualCount int64 `json:"actualCount,optional"` // 实际清理数量
         FreedSpace int64 `json:"freedSpace,optional"` // 释放空间（字节）
         Status string `json:"status"` // 状态：pending-待处理, processing-处理中, completed-已完成, failed-失败
-        StartTime string `json:"startTime,optional"` // 开始时间
-        EndTime string `json:"endTime,optional"` // 结束时间
+        StartTime int64 `json:"startTime,optional"` // 开始时间（毫秒级时间戳）
+        EndTime int64 `json:"endTime,optional"` // 结束时间（毫秒级时间戳）
         ErrorMessage string `json:"errorMessage,optional"` // 错误信息
     }
 
@@ -375,9 +375,9 @@ type (
         ProcessedRecords int64 `json:"processedRecords"` // 已处理记录数
         DownloadUrl string `json:"downloadUrl,optional"` // 下载链接
         FileSize int64 `json:"fileSize,optional"` // 文件大小
-        ExpireTime string `json:"expireTime,optional"` // 过期时间
-        StartTime string `json:"startTime"` // 开始时间
-        EndTime string `json:"endTime,optional"` // 结束时间
+        ExpireTime int64 `json:"expireTime,optional"` // 过期时间（毫秒级时间戳）
+        StartTime int64 `json:"startTime"` // 开始时间（毫秒级时间戳）
+        EndTime int64 `json:"endTime,optional"` // 结束时间（毫秒级时间戳）
         ErrorMessage string `json:"errorMessage,optional"` // 错误信息
     }
 
@@ -394,6 +394,6 @@ type (
         FileName string `json:"fileName"` // 文件名
         FileSize int64 `json:"fileSize"` // 文件大小
         ContentType string `json:"contentType"` // 内容类型
-        ExpireTime string `json:"expireTime"` // 过期时间
+        ExpireTime int64 `json:"expireTime"` // 过期时间（毫秒级时间戳）
     }
 )

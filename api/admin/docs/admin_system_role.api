@@ -9,68 +9,66 @@ info(
 import "../../common/types.api"
 
 @server(
-    prefix: /api/role
-    group: role
-    jwt: Auth
-    middleware: SignCheck, JwtAuth
+    prefix: /api/admin/system/role
+    group: adminSystemRole
     tags: "角色管理"
 )
 service admin {
     @doc(
         summary: "创建角色"
-        description: "创建新的管理角色。请求头: Authorization, X-Timestamp, X-Sign"
+        description: "创建新的管理角色"
         id: "admin.role.create"
     )
     @handler createRole
-    post /roles (CreateRoleReq) returns (CreateRoleResp)
+    post / (CreateRoleReq) returns (CreateRoleResp)
 
     @doc(
         summary: "获取角色列表"
-        description: "分页获取角色列表。请求头: Authorization, X-Timestamp, X-Sign"
+        description: "分页获取角色列表"
         id: "admin.role.list"
     )
     @handler listRoles
-    get /roles (ListRolesReq) returns (ListRolesResp)
+    get / (ListRolesReq) returns (ListRolesResp)
 
     @doc(
         summary: "获取角色详情"
-        description: "根据ID获取角色详细信息。请求头: Authorization, X-Timestamp, X-Sign"
+        description: "根据ID获取角色详细信息"
         id: "admin.role.detail"
     )
     @handler getRole
-    get /roles/:id (IdReq) returns (GetRoleResp)
+    get /:id (IdReq) returns (GetRoleResp)
 
     @doc(
         summary: "更新角色"
-        description: "更新角色信息。请求头: Authorization, X-Timestamp, X-Sign"
+        description: "更新角色信息"
         id: "admin.role.update"
     )
     @handler updateRole
-    put /roles/:id (UpdateRoleReq) returns (BaseResp)
+    put /:id (UpdateRoleReq) returns (BaseResp)
 
     @doc(
         summary: "删除角色"
-        description: "删除指定角色。请求头: Authorization, X-Timestamp, X-Sign"
+        description: "删除指定角色"
         id: "admin.role.delete"
     )
     @handler deleteRole
-    delete /roles/:id (IdReq) returns (BaseResp)
+    delete /:id (IdReq) returns (BaseResp)
 
     @doc(
         summary: "分配菜单"
-        description: "为角色分配菜单权限。请求头: Authorization, X-Timestamp, X-Sign"
+        description: "为角色分配菜单权限"
         id: "admin.role.assignMenus"
     )
     @handler assignMenus
-    post /roles/:id/menus (AssignMenusReq) returns (BaseResp)
+    patch /:id/menus (AssignMenusReq) returns (BaseResp)
 
     @doc(
         summary: "获取角色菜单"
-        description: "根据角色ID获取菜单。请求头: Authorization, X-Timestamp, X-Sign"
+        description: "根据角色ID获取菜单"
         id: "admin.role.getMenus"
     )
     @handler getRoleMenus
-    get /roles/:id/menus (IdReq) returns (GetRoleMenusResp)
+    get /:id/menus (IdReq) returns (GetRoleMenusResp)
 }
 
 type (
@@ -97,8 +95,8 @@ type (
         Description string `json:"description"` // 描述
         Status int32 `json:"status"`       // 状态：1-启用, 0-禁用
         StatusText string `json:"statusText"` // 状态文本
-        CreatedAt string `json:"createdAt"` // 创建时间
-        UpdatedAt string `json:"updatedAt"` // 更新时间
+        CreatedAt int64 `json:"createdAt"` // 创建时间（毫秒级时间戳）
+        UpdatedAt int64 `json:"updatedAt"` // 更新时间（毫秒级时间戳）
     }
 
     // 列表请求

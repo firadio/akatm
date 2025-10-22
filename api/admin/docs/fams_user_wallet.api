@@ -1,0 +1,199 @@
+syntax = "v1"
+
+info(
+    title: "用户钱包管理接口"
+    desc: "管理用户的USDT钱包"
+    version: "v1.0"
+)
+
+import "../../common/types.api"
+
+@server(
+    prefix: /api/fams/user/wallet
+    group: famsUserWallet
+    tags: "用户钱包"
+)
+service admin {
+    @doc(
+        summary: "创建钱包"
+        description: "为用户创建USDT钱包"
+        id: "fams.user.wallet.create"
+    )
+    @handler createUserWallet
+    post / (CreateUserWalletReq) returns (CreateUserWalletResp)
+
+    @doc(
+        summary: "钱包列表"
+        description: "分页查询用户钱包列表"
+        id: "fams.user.wallet.list"
+    )
+    @handler listUserWallets
+    get / (ListUserWalletsReq) returns (ListUserWalletsResp)
+
+    @doc(
+        summary: "钱包详情"
+        description: "获取钱包详细信息"
+        id: "fams.user.wallet.detail"
+    )
+    @handler getUserWallet
+    get /:id (IdReq) returns (GetUserWalletResp)
+
+    @doc(
+        summary: "钱包余额"
+        description: "获取钱包余额信息"
+        id: "fams.user.wallet.balance"
+    )
+    @handler getUserWalletBalance
+    get /:id/balance (IdReq) returns (GetUserWalletBalanceResp)
+
+    @doc(
+        summary: "账变记录"
+        description: "获取钱包账变流水"
+        id: "fams.user.wallet.ledger"
+    )
+    @handler listWalletLedgers
+    get /:id/ledger (ListWalletLedgersReq) returns (ListWalletLedgersResp)
+
+    @doc(
+        summary: "冻结余额"
+        description: "冻结钱包余额（用于提现等场景）"
+        id: "fams.user.wallet.freeze"
+    )
+    @handler freezeWalletBalance
+    patch /:id/freeze (FreezeWalletBalanceReq) returns (BaseResp)
+
+    @doc(
+        summary: "解冻余额"
+        description: "解冻钱包余额"
+        id: "fams.user.wallet.unfreeze"
+    )
+    @handler unfreezeWalletBalance
+    patch /:id/unfreeze (UnfreezeWalletBalanceReq) returns (BaseResp)
+}
+
+type (
+    // 创建用户钱包请求
+    CreateUserWalletReq {
+        UserId int64 `json:"userId"` // 用户ID
+        CustomerId int64 `json:"customerId"` // 银行客户ID
+        ManagerId int64 `json:"managerId"` // 客户经理ID
+        Symbol string `json:"symbol"` // 币种（默认USDT）
+    }
+
+    // 创建用户钱包响应
+    CreateUserWalletResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data UserWalletInfo `json:"data"` // 钱包信息
+    }
+
+    // 钱包列表请求
+    ListUserWalletsReq {
+        Page int64 `form:"page,default=1,optional"` // 页码
+        PageSize int64 `form:"pageSize,default=10,optional"` // 每页数量
+        UserId int64 `form:"userId,optional"` // 用户ID筛选
+        CustomerId int64 `form:"customerId,optional"` // 客户ID筛选
+        ManagerId int64 `form:"managerId,optional"` // 经理ID筛选
+        Symbol string `form:"symbol,optional"` // 币种筛选
+    }
+
+    // 钱包信息
+    UserWalletInfo {
+        Id int64 `json:"id"` // 钱包ID
+        UserId int64 `json:"userId"` // 用户ID
+        UserEmail string `json:"userEmail"` // 用户邮箱
+        CustomerId int64 `json:"customerId"` // 银行客户ID
+        CustomerName string `json:"customerName"` // 客户姓名
+        ManagerId int64 `json:"managerId"` // 客户经理ID
+        ManagerName string `json:"managerName"` // 经理姓名
+        Symbol string `json:"symbol"` // 币种
+        AvailableBalance string `json:"availableBalance"` // 可用余额
+        FrozenAmount string `json:"frozenAmount"` // 冻结金额
+        TotalBalance string `json:"totalBalance"` // 总余额
+        CreatedAt int64 `json:"createdAt"` // 创建时间（毫秒级时间戳）
+        UpdatedAt int64 `json:"updatedAt"` // 更新时间（毫秒级时间戳）
+    }
+
+    // 钱包列表响应
+    ListUserWalletsResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data UserWalletListData `json:"data"` // 数据
+    }
+
+    UserWalletListData {
+        Total int64 `json:"total"` // 总记录数
+        List []UserWalletInfo `json:"list"` // 钱包列表
+    }
+
+    // 钱包详情响应
+    GetUserWalletResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data UserWalletInfo `json:"data"` // 钱包信息
+    }
+
+    // 钱包余额响应
+    GetUserWalletBalanceResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data WalletBalanceInfo `json:"data"` // 余额信息
+    }
+
+    WalletBalanceInfo {
+        Available string `json:"available"` // 可用余额
+        Frozen string `json:"frozen"` // 冻结余额
+        Total string `json:"total"` // 总余额
+        Symbol string `json:"symbol"` // 币种
+    }
+
+    // 账变记录列表请求
+    ListWalletLedgersReq {
+        Id int64 `path:"id"` // 钱包ID
+        Page int64 `form:"page,default=1,optional"` // 页码
+        PageSize int64 `form:"pageSize,default=10,optional"` // 每页数量
+        TransactionType string `form:"transactionType,optional"` // 交易类型筛选
+        StartTime int64 `form:"startTime,optional"` // 开始时间（毫秒级时间戳）
+        EndTime int64 `form:"endTime,optional"` // 结束时间（毫秒级时间戳）
+    }
+
+    // 账变记录信息
+    WalletLedgerInfo {
+        Id int64 `json:"id"` // 记录ID
+        UserWalletId int64 `json:"userWalletId"` // 钱包ID
+        UserId int64 `json:"userId"` // 用户ID
+        TransactionType string `json:"transactionType"` // 交易类型：deposit-存款, withdrawal-提现, fee-手续费
+        Amount string `json:"amount"` // 变动金额
+        BeforeBalance string `json:"beforeBalance"` // 变动前余额
+        AfterBalance string `json:"afterBalance"` // 变动后余额
+        RelatedOrderId int64 `json:"relatedOrderId"` // 关联订单ID
+        Note string `json:"note"` // 备注
+        CreatedAt int64 `json:"createdAt"` // 创建时间（毫秒级时间戳）
+    }
+
+    // 账变记录列表响应
+    ListWalletLedgersResp {
+        Code int32 `json:"code"` // 响应码
+        Message string `json:"message"` // 响应消息
+        Data WalletLedgerListData `json:"data"` // 数据
+    }
+
+    WalletLedgerListData {
+        Total int64 `json:"total"` // 总记录数
+        List []WalletLedgerInfo `json:"list"` // 账变记录列表
+    }
+
+    // 冻结余额请求
+    FreezeWalletBalanceReq {
+        Id int64 `path:"id"` // 钱包ID
+        Amount string `json:"amount"` // 冻结金额
+        Reason string `json:"reason"` // 冻结原因
+    }
+
+    // 解冻余额请求
+    UnfreezeWalletBalanceReq {
+        Id int64 `path:"id"` // 钱包ID
+        Amount string `json:"amount"` // 解冻金额
+        Reason string `json:"reason"` // 解冻原因
+    }
+)

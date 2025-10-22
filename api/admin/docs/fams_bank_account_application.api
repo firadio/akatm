@@ -9,8 +9,8 @@ info(
 import "../../common/types.api"
 
 @server(
-    prefix: /admin
-    group: auditAccountApplication
+    prefix: /api/fams/bank/account/application
+    group: famsBankAccountApplication
     jwt: Auth
     middleware: SignCheck, JwtAuth
     tags: "开户申请"
@@ -18,67 +18,67 @@ import "../../common/types.api"
 service admin {
     @doc(
         summary: "开户申请列表"
-        description: "分页查看开户申请列表。请求头: Authorization, X-Timestamp, X-Sign"
-        id: "admin.audit.accountApplication.list"
+        description: "分页查看开户申请列表"
+        id: "fams.bank.application.list"
     )
     @handler listAccountApplications
-    get /audits/account-applications (ListAccountApplicationsReq) returns (ListAccountApplicationsResp)
+    get / (ListAccountApplicationsReq) returns (ListAccountApplicationsResp)
 
     @doc(
         summary: "开户申请详情"
-        description: "查看开户申请详情。请求头: Authorization, X-Timestamp, X-Sign"
-        id: "admin.audit.accountApplication.detail"
+        description: "查看开户申请详情"
+        id: "fams.bank.application.detail"
     )
     @handler getAccountApplication
-    get /audits/account-applications/:id (IdReq) returns (GetAccountApplicationResp)
+    get /:id (IdReq) returns (GetAccountApplicationResp)
 
     @doc(
         summary: "审核通过"
-        description: "开户申请审核通过。请求头: Authorization, X-Timestamp, X-Sign"
-        id: "admin.audit.accountApplication.approve"
+        description: "开户申请审核通过"
+        id: "fams.bank.application.approve"
     )
     @handler approveAccountApplication
-    post /audits/account-applications/:id/approve (ApproveAccountApplicationReq) returns (BaseResp)
+    post /:id/approve (ApproveAccountApplicationReq) returns (BaseResp)
 
     @doc(
         summary: "审核拒绝"
-        description: "开户申请审核拒绝。请求头: Authorization, X-Timestamp, X-Sign"
-        id: "admin.audit.accountApplication.reject"
+        description: "开户申请审核拒绝"
+        id: "fams.bank.application.reject"
     )
     @handler rejectAccountApplication
-    post /audits/account-applications/:id/reject (RejectAccountApplicationReq) returns (BaseResp)
+    post /:id/reject (RejectAccountApplicationReq) returns (BaseResp)
 
     @doc(
         summary: "批量审核通过"
-        description: "批量审核通过开户申请。请求头: Authorization, X-Timestamp, X-Sign"
-        id: "admin.audit.accountApplication.batchApprove"
+        description: "批量审核通过开户申请"
+        id: "fams.bank.application.batchApprove"
     )
     @handler batchApproveAccountApplications
-    post /audits/account-applications/batch-approve (BatchApproveAccountApplicationsReq) returns (BaseResp)
+    post /batch-approve (BatchApproveAccountApplicationsReq) returns (BaseResp)
 
     @doc(
         summary: "批量审核拒绝"
-        description: "批量审核拒绝开户申请。请求头: Authorization, X-Timestamp, X-Sign"
-        id: "admin.audit.accountApplication.batchReject"
+        description: "批量审核拒绝开户申请"
+        id: "fams.bank.application.batchReject"
     )
     @handler batchRejectAccountApplications
-    post /audits/account-applications/batch-reject (BatchRejectAccountApplicationsReq) returns (BaseResp)
+    post /batch-reject (BatchRejectAccountApplicationsReq) returns (BaseResp)
 
     @doc(
         summary: "申请统计"
-        description: "获取开户申请统计信息。请求头: Authorization, X-Timestamp, X-Sign"
-        id: "admin.audit.accountApplication.stats"
+        description: "获取开户申请统计信息"
+        id: "fams.bank.application.stats"
     )
     @handler getAccountApplicationStats
-    get /audits/account-applications/stats (GetAccountApplicationStatsReq) returns (GetAccountApplicationStatsResp)
+    get /stats (GetAccountApplicationStatsReq) returns (GetAccountApplicationStatsResp)
 
     @doc(
         summary: "申请流程跟踪"
-        description: "获取开户申请流程跟踪信息。请求头: Authorization, X-Timestamp, X-Sign"
-        id: "admin.audit.accountApplication.track"
+        description: "获取开户申请流程跟踪信息"
+        id: "fams.bank.application.track"
     )
     @handler trackAccountApplication
-    get /audits/account-applications/:id/track (IdReq) returns (TrackAccountApplicationResp)
+    get /:id/track (IdReq) returns (TrackAccountApplicationResp)
 }
 
 type (
@@ -125,10 +125,10 @@ type (
         Status string `json:"status"` // 申请状态：Draft-草稿, Submitted-已提交, UnderReview-审核中, Approved-已通过, Rejected-已拒绝
         StatusText string `json:"statusText"` // 状态文本
         Materials string `json:"materials"` // 申请材料（JSON格式）
-        ApplicationTime string `json:"applicationTime"` // 申请时间
+        ApplicationTime int64 `json:"applicationTime"` // 申请时间（毫秒级时间戳）
         AuditorId int64 `json:"auditorId"` // 审核人ID
         AuditorName string `json:"auditorName"` // 审核人姓名
-        AuditTime string `json:"auditTime"` // 审核时间
+        AuditTime int64 `json:"auditTime"` // 审核时间（毫秒级时间戳）
         AuditNote string `json:"auditNote"` // 审核意见
         AuditResult string `json:"auditResult"` // 审核结果
         Note string `json:"note"` // 备注
@@ -169,10 +169,10 @@ type (
         Status string `json:"status"` // 申请状态：Draft-草稿, Submitted-已提交, UnderReview-审核中, Approved-已通过, Rejected-已拒绝
         StatusText string `json:"statusText"` // 状态文本
         Materials string `json:"materials"` // 申请材料（JSON格式）
-        ApplicationTime string `json:"applicationTime"` // 申请时间
+        ApplicationTime int64 `json:"applicationTime"` // 申请时间（毫秒级时间戳）
         AuditorId int64 `json:"auditorId"` // 审核人ID
         AuditorName string `json:"auditorName"` // 审核人姓名
-        AuditTime string `json:"auditTime"` // 审核时间
+        AuditTime int64 `json:"auditTime"` // 审核时间（毫秒级时间戳）
         AuditNote string `json:"auditNote"` // 审核意见
         AuditResult string `json:"auditResult"` // 审核结果
         Note string `json:"note"` // 备注
@@ -206,8 +206,8 @@ type (
 
     // 申请统计请求
     GetAccountApplicationStatsReq {
-        StartTime string `form:"startTime,optional"` // 开始时间
-        EndTime string `form:"endTime,optional"` // 结束时间
+        StartTime int64 `form:"startTime,optional"` // 开始时间（毫秒级时间戳）
+        EndTime int64 `form:"endTime,optional"` // 结束时间（毫秒级时间戳）
         ManagerId int64 `form:"managerId,optional"` // 客户经理ID筛选
         CustomerType string `form:"customerType,optional"` // 客户类型筛选：individual-个人, enterprise-企业
         Status string `form:"status,optional"` // 申请状态筛选
@@ -230,7 +230,7 @@ type (
         ApprovedCount int64 `json:"approvedCount"` // 已通过数量
         RejectedCount int64 `json:"rejectedCount"` // 已拒绝数量
         ApprovalRate string `json:"approvalRate"` // 通过率
-        AverageProcessTime string `json:"averageProcessTime"` // 平均处理时间（小时）
+        AverageProcessTime int64 `json:"averageProcessTime"` // 平均处理时间（小时）
         StatusStats []StatusStat `json:"statusStats"` // 状态统计
         CustomerTypeStats []CustomerTypeStat `json:"customerTypeStats"` // 客户类型统计
         ManagerStats []ManagerStat `json:"managerStats"` // 客户经理统计
@@ -255,7 +255,7 @@ type (
         ApprovedCount int64 `json:"approvedCount"` // 通过数量
         RejectedCount int64 `json:"rejectedCount"` // 拒绝数量
         ApprovalRate string `json:"approvalRate"` // 通过率
-        AverageProcessTime string `json:"averageProcessTime"` // 平均处理时间
+        AverageProcessTime int64 `json:"averageProcessTime"` // 平均处理时间
     }
 
     // 申请流程跟踪响应
@@ -272,7 +272,7 @@ type (
         CurrentStatus string `json:"currentStatus"` // 当前状态
         CurrentStatusText string `json:"currentStatusText"` // 当前状态文本
         ProcessSteps []ProcessStep `json:"processSteps"` // 流程步骤
-        EstimatedCompletionTime string `json:"estimatedCompletionTime,optional"` // 预计完成时间
+        EstimatedCompletionTime int64 `json:"estimatedCompletionTime,optional"` // 预计完成时间（毫秒级时间戳）
         NextStep string `json:"nextStep,optional"` // 下一步操作
         NextStepDescription string `json:"nextStepDescription,optional"` // 下一步描述
     }
@@ -283,8 +283,8 @@ type (
         StepDescription string `json:"stepDescription"` // 步骤描述
         Status string `json:"status"` // 步骤状态：pending-待处理, processing-处理中, completed-已完成, skipped-已跳过
         StatusText string `json:"statusText"` // 状态文本
-        StartTime string `json:"startTime,optional"` // 开始时间
-        EndTime string `json:"endTime,optional"` // 结束时间
+        StartTime int64 `json:"startTime,optional"` // 开始时间（毫秒级时间戳）
+        EndTime int64 `json:"endTime,optional"` // 结束时间（毫秒级时间戳）
         Duration string `json:"duration,optional"` // 持续时间
         OperatorId int64 `json:"operatorId,optional"` // 操作人ID
         OperatorName string `json:"operatorName,optional"` // 操作人姓名
@@ -299,6 +299,6 @@ type (
         Type string `json:"type"` // 附件类型
         Size int64 `json:"size"` // 附件大小（字节）
         Url string `json:"url"` // 附件URL
-        UploadTime string `json:"uploadTime"` // 上传时间
+        UploadTime int64 `json:"uploadTime"` // 上传时间（毫秒级时间戳）
     }
 )

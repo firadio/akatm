@@ -9,68 +9,66 @@ info(
 import "../../common/types.api"
 
 @server(
-    prefix: /api/withdrawal
-    group: auditWithdrawal
-    jwt: Auth
-    middleware: SignCheck, JwtAuth
-    tags: "提现列表"
+    prefix: /api/fams/bank/withdrawal
+    group: famsBankWithdrawal
+    tags: "银行提现"
 )
 service admin {
     @doc(
         summary: "提现审核列表"
-        description: "分页查看提现审核列表。请求头: Authorization, X-Timestamp, X-Sign"
+        description: "分页查看提现审核列表"
         id: "admin.audit.withdrawal.list"
     )
     @handler listWithdrawals
-    get /audits/withdrawals (ListWithdrawalsReq) returns (ListWithdrawalsResp)
+    get / (ListWithdrawalsReq) returns (ListWithdrawalsResp)
 
     @doc(
         summary: "提现审核详情"
-        description: "查看提现审核详情。请求头: Authorization, X-Timestamp, X-Sign"
+        description: "查看提现审核详情"
         id: "admin.audit.withdrawal.detail"
     )
     @handler getWithdrawal
-    get /audits/withdrawals/:id (IdReq) returns (GetWithdrawalResp)
+    get /:id (IdReq) returns (GetWithdrawalResp)
 
     @doc(
         summary: "审核通过"
-        description: "提现审核通过，扣减冻结余额并下发出金指令。请求头: Authorization, X-Timestamp, X-Sign"
+        description: "提现审核通过，扣减冻结余额并下发出金指令"
         id: "admin.audit.withdrawal.approve"
     )
     @handler approveWithdrawal
-    post /audits/withdrawals/:id/approve (ApproveWithdrawalReq) returns (BaseResp)
+    post /:id/approve (ApproveWithdrawalReq) returns (BaseResp)
 
     @doc(
         summary: "审核拒绝"
-        description: "提现审核拒绝，解冻返还余额。请求头: Authorization, X-Timestamp, X-Sign"
+        description: "提现审核拒绝，解冻返还余额"
         id: "admin.audit.withdrawal.reject"
     )
     @handler rejectWithdrawal
-    post /audits/withdrawals/:id/reject (RejectWithdrawalReq) returns (BaseResp)
+    post /:id/reject (RejectWithdrawalReq) returns (BaseResp)
 
     @doc(
         summary: "批量审核通过"
-        description: "批量审核通过多个提现申请。请求头: Authorization, X-Timestamp, X-Sign"
+        description: "批量审量通过多个提现申请"
         id: "admin.audit.withdrawal.batchApprove"
     )
     @handler batchApproveWithdrawals
-    post /audits/withdrawals/batch-approve (BatchApproveWithdrawalsReq) returns (BaseResp)
+    post /batch-approve (BatchApproveWithdrawalsReq) returns (BaseResp)
 
     @doc(
         summary: "批量审核拒绝"
-        description: "批量审核拒绝多个提现申请。请求头: Authorization, X-Timestamp, X-Sign"
+        description: "批量审核拒绝多个提现申请"
         id: "admin.audit.withdrawal.batchReject"
     )
     @handler batchRejectWithdrawals
-    post /audits/withdrawals/batch-reject (BatchRejectWithdrawalsReq) returns (BaseResp)
+    post /batch-reject (BatchRejectWithdrawalsReq) returns (BaseResp)
 
     @doc(
         summary: "提现统计"
-        description: "获取提现统计数据。请求头: Authorization, X-Timestamp, X-Sign"
+        description: "获取提现统计数据"
         id: "admin.audit.withdrawal.stats"
     )
     @handler getWithdrawalStats
-    get /audits/withdrawals/stats (GetWithdrawalStatsReq) returns (GetWithdrawalStatsResp)
+    get /stats (GetWithdrawalStatsReq) returns (GetWithdrawalStatsResp)
 }
 
 type (
@@ -110,10 +108,10 @@ type (
         Symbol string `json:"symbol"` // 币种
         Status string `json:"status"` // 状态：Requested-待审核, UnderReview-审核中, Approved-已通过, Rejected-已拒绝, Settled-已完成
         StatusText string `json:"statusText"` // 状态文本
-        WithdrawTime string `json:"withdrawTime"` // 提现时间
+        WithdrawTime int64 `json:"withdrawTime"` // 提现时间（毫秒级时间戳）
         AuditorId int64 `json:"auditorId"` // 审核人ID
         AuditorName string `json:"auditorName"` // 审核人姓名
-        AuditTime string `json:"auditTime"` // 审核时间
+        AuditTime int64 `json:"auditTime"` // 审核时间（毫秒级时间戳）
         AuditNote string `json:"auditNote"` // 审核意见
         AuditResult string `json:"auditResult"` // 审核结果
         Note string `json:"note"` // 备注
@@ -159,10 +157,10 @@ type (
         Symbol string `json:"symbol"` // 币种
         Status string `json:"status"` // 状态：Requested-待审核, UnderReview-审核中, Approved-已通过, Rejected-已拒绝, Settled-已完成
         StatusText string `json:"statusText"` // 状态文本
-        WithdrawTime string `json:"withdrawTime"` // 提现时间
+        WithdrawTime int64 `json:"withdrawTime"` // 提现时间（毫秒级时间戳）
         AuditorId int64 `json:"auditorId"` // 审核人ID
         AuditorName string `json:"auditorName"` // 审核人姓名
-        AuditTime string `json:"auditTime"` // 审核时间
+        AuditTime int64 `json:"auditTime"` // 审核时间（毫秒级时间戳）
         AuditNote string `json:"auditNote"` // 审核意见
         AuditResult string `json:"auditResult"` // 审核结果
         Note string `json:"note"` // 备注
@@ -194,8 +192,8 @@ type (
 
     // 获取提现统计请求
     GetWithdrawalStatsReq {
-        StartTime string `form:"startTime,optional"` // 开始时间
-        EndTime string `form:"endTime,optional"` // 结束时间
+        StartTime int64 `form:"startTime,optional"` // 开始时间（毫秒级时间戳）
+        EndTime int64 `form:"endTime,optional"` // 结束时间（毫秒级时间戳）
         Symbol string `form:"symbol,optional"` // 币种筛选
         ManagerId int64 `form:"managerId,optional"` // 客户经理ID筛选
     }

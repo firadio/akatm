@@ -9,52 +9,50 @@ info(
 import "../../common/types.api"
 
 @server(
-    prefix: /api/invite
-    group: invite
-    jwt: Auth
-    middleware: SignCheck, JwtAuth
+    prefix: /api/iam/user/invite
+    group: iamUserInvite
     tags: "邀请管理"
 )
 service admin {
     @doc(
         summary: "生成邀请链接"
-        description: "为总代、代理、客户经理生成注册链接，支持总代邀请代理、代理邀请客户经理、客户经理邀请其他客户经理。客户由客户经理直接添加，不需要邀请链接。请求头: Authorization, X-Timestamp, X-Sign"
+        description: "为总代、代理、客户经理生成注册链接，支持总代邀请代理、代理邀请客户经理、客户经理邀请其他客户经理。客户由客户经理直接添加，不需要邀请链接"
         id: "admin.invite.create"
     )
     @handler createInvite
-    post /invites (CreateInviteReq) returns (CreateInviteResp)
+    post / (CreateInviteReq) returns (CreateInviteResp)
 
     @doc(
         summary: "邀请链接列表"
-        description: "分页查询邀请链接列表，支持按邀请人、目标用户类型筛选。请求头: Authorization, X-Timestamp, X-Sign"
+        description: "分页查询邀请链接列表，支持按邀请人、目标用户类型筛选"
         id: "admin.invite.list"
     )
     @handler listInvites
-    get /invites (ListInvitesReq) returns (ListInvitesResp)
+    get / (ListInvitesReq) returns (ListInvitesResp)
 
     @doc(
         summary: "邀请详情"
-        description: "根据ID查询邀请详情。请求头: Authorization, X-Timestamp, X-Sign"
+        description: "根据ID查询邀请详情"
         id: "admin.invite.detail"
     )
     @handler getInvite
-    get /invites/:id (IdReq) returns (GetInviteResp)
+    get /:id (IdReq) returns (GetInviteResp)
 
     @doc(
         summary: "撤销邀请"
-        description: "撤销未使用的邀请链接。请求头: Authorization, X-Timestamp, X-Sign"
+        description: "撤销未使用的邀请链接"
         id: "admin.invite.revoke"
     )
     @handler revokeInvite
-    patch /invites/:id/revoke (IdReq) returns (BaseResp)
+    patch /:id/revoke (IdReq) returns (BaseResp)
 
     @doc(
         summary: "修改邀请链接"
-        description: "修改邀请链接的换汇手续费、提现手续费和授权国家。请求头: Authorization, X-Timestamp, X-Sign"
+        description: "修改邀请链接的换汇手续费、提现手续费和授权国家"
         id: "admin.invite.update"
     )
     @handler updateInvite
-    put /invites/:id (UpdateInviteReq) returns (BaseResp)
+    put /:id (UpdateInviteReq) returns (BaseResp)
 }
 
 type (
@@ -118,8 +116,8 @@ type (
         IsUsed bool `form:"isUsed,optional"` // 是否已使用筛选
         
         // 时间范围筛选
-        StartTime string `form:"startTime,optional"` // 开始时间（时间戳）
-        EndTime string `form:"endTime,optional"` // 结束时间（时间戳）
+        StartTime int64 `form:"startTime,optional"` // 开始时间（毫秒级时间戳）（时间戳）
+        EndTime int64 `form:"endTime,optional"` // 结束时间（毫秒级时间戳）（时间戳）
         ExpireTimeStart string `form:"expireTimeStart,optional"` // 过期开始时间（时间戳）
         ExpireTimeEnd string `form:"expireTimeEnd,optional"` // 过期结束时间（时间戳）
     }
